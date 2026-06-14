@@ -59,10 +59,10 @@
 }
 
 :root {
-  --color-bg: #FCFAF7;
+  --color-bg: #F0EFEB;
   --color-white: #FFFFFF;
-  --color-verde: #12534C;
-  --color-verde-light: rgba(18, 83, 76, 0.08);
+  --color-verde: #12535C;
+  --color-verde-light: rgba(18, 83, 92, 0.08);
   --color-cremita: rgb(243, 230, 207);
   --color-cremita-2: #F0E6D0;
   --color-terracota: #8C482A;
@@ -118,4 +118,12 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--color-cremita);
   border-radius: 3px;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

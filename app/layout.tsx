@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <SiteNavbar />
-        <main className="pt-16 flex-1">{children}</main>
+        <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>
     </html>
