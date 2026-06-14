@@ -1,0 +1,121 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'PP Editorial New';
+  src: url('/fonts/PPEditorialNew-Ultralight.otf') format('opentype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Editorial New';
+  src: url('/fonts/PPEditorialNew-UltralightItalic.otf') format('opentype');
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Editorial New';
+  src: url('/fonts/PPEditorialNew-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Editorial New';
+  src: url('/fonts/PPEditorialNew-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Editorial New';
+  src: url('/fonts/PPEditorialNew-Ultrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Editorial New';
+  src: url('/fonts/PPEditorialNew-UltraboldItalic.otf') format('opentype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Canela Condensed';
+  src: url('/fonts/CanelaCondensed-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Canela Condensed';
+  src: url('/fonts/CanelaCondensed-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --color-bg: #FCFAF7;
+  --color-white: #FFFFFF;
+  --color-verde: #12534C;
+  --color-verde-light: rgba(18, 83, 76, 0.08);
+  --color-cremita: rgb(243, 230, 207);
+  --color-cremita-2: #F0E6D0;
+  --color-terracota: #8C482A;
+  --color-text: rgb(64, 60, 60);
+  --color-muted: rgb(110, 100, 95);
+  --color-border: rgb(232, 220, 200);
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-white: var(--color-white);
+  --color-verde: var(--color-verde);
+  --color-verde-light: var(--color-verde-light);
+  --color-cremita: var(--color-cremita);
+  --color-cremita-2: var(--color-cremita-2);
+  --color-terracota: var(--color-terracota);
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+
+  --font-serif: 'PP Editorial New', Georgia, serif;
+  --font-sans: 'Satoshi', system-ui, sans-serif;
+  --font-display: 'Canela Condensed', Georgia, serif;
+
+  --shadow-card: 0 2px 12px rgba(18, 83, 76, 0.07);
+  --shadow-card-hover: 0 8px 28px rgba(18, 83, 76, 0.13);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-cremita);
+  border-radius: 3px;
+}
