@@ -53,7 +53,7 @@ export default function ProductDrawer() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.35, ease: [0.76, 0, 0.24, 1] }}
-            className="fixed right-0 bottom-0 h-[80%] sm:top-0 sm:h-full w-full max-w-lg bg-[var(--color-bg)] z-[9999] flex flex-col shadow-2xl rounded-t-3xl sm:rounded-none"
+            className="fixed right-0 top-0 h-full left-[15%] sm:left-auto sm:w-full sm:max-w-lg bg-[var(--color-bg)] z-[9999] flex flex-col shadow-2xl rounded-l-3xl sm:rounded-none"
           >
             {/* Image + close button on top */}
             <div className="relative w-full aspect-square flex-shrink-0 bg-[var(--color-cremita-2)]">
