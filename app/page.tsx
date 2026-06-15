@@ -109,7 +109,7 @@ export default async function HomePage() {
           viewBox="-67 133 1526 294"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="absolute bottom-0 left-0 right-0 w-full h-auto pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 w-full pointer-events-none h-[160px] md:h-auto"
           preserveAspectRatio="none"
         >
           <path
