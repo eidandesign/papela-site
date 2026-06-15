@@ -24,7 +24,7 @@ export default async function ClasesPage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#4F8674] flex flex-col items-center justify-center text-center px-8 md:px-16 h-[80vh]" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
+      <section className="mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#4F8674] flex flex-col items-center justify-center text-center px-8 md:px-16 h-[80vh] pt-32 md:pt-0" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
         <span className="inline-flex items-center border border-[var(--color-cremita)]/60 rounded-full px-6 py-2 mb-8">
           <span className="font-sans text-[var(--color-cremita)] text-[13px] tracking-[2px] uppercase">
             Clases Creativas
