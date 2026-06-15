@@ -76,15 +76,32 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* ── Hero ── */}
-      <section className="mx-5 md:mx-20 mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#5d7c80] flex flex-col items-center justify-center text-center px-8 md:px-16 pt-36 pb-24">
-        <h1 className="font-serif italic text-[clamp(2.8rem,6.5vw,5.5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-4xl mb-4">
-          {maestra.nombre}
-        </h1>
-        {maestra.tecnicas?.length > 0 && (
-          <p className="font-sans text-[var(--color-cremita)]/75 text-lg">
-            {maestra.tecnicas.join(" · ")}
-          </p>
+      <section className="mx-5 md:mx-20 mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden relative flex flex-col items-center justify-end text-center px-8 md:px-16 pt-36 pb-16" style={{ minHeight: 380 }}>
+        {/* Background image or fallback color */}
+        {maestra.foto ? (
+          <Image
+            src={maestra.foto}
+            alt={maestra.nombre}
+            fill
+            className="object-cover object-center"
+            priority
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[#5d7c80]" />
         )}
+        {/* Gradient overlay so text is readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        {/* Text */}
+        <div className="relative z-10">
+          <h1 className="font-serif italic text-[clamp(2.8rem,6.5vw,5.5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-4xl mb-2">
+            {maestra.nombre}
+          </h1>
+          {maestra.tecnicas?.length > 0 && (
+            <p className="font-sans text-[var(--color-cremita)]/80 text-lg">
+              {maestra.tecnicas.join(" · ")}
+            </p>
+          )}
+        </div>
       </section>
 
       {/* ── Content ── */}
@@ -92,17 +109,6 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           {/* Left — Photo + info */}
           <div className="flex flex-col gap-8">
-            {maestra.foto && (
-              <div className="relative h-[380px] rounded-2xl overflow-hidden">
-                <Image
-                  src={maestra.foto}
-                  alt={maestra.nombre}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
-
             {maestra.descripcion && (
               <div>
                 <span className="bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px]">
