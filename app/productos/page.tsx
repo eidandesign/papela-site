@@ -1,42 +1,39 @@
-import Link from "next/link";
-import Image from "next/image";
 import { getProductos } from "@/lib/productos";
+import ProductosCatalog from "@/components/site/ProductosCatalog";
 
 export const revalidate = 60;
 
 export default async function ProductosPage() {
   const productos = await getProductos();
+  const categorias = [...new Set(productos.map((p) => p.categoria).filter(Boolean))] as string[];
 
   return (
-    <section className="pt-32 md:pt-40 pb-20 w-[90%] mx-auto">
-      <h1 className="font-serif font-extralight text-[clamp(2.5rem,5vw,4rem)] text-[#403C3C] mb-12">
-        Catálogo
-      </h1>
+    <>
+      {/* ── Hero ── */}
+      <section
+        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden h-[80vh] flex flex-col items-center justify-center text-center px-8 md:px-20"
+        style={{ backgroundColor: "var(--color-verde)", width: "98vw", marginLeft: "1vw", marginRight: "1vw" }}
+      >
+        <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
+          <span className="font-sans text-[10px] font-medium tracking-[0.22em] uppercase text-[var(--color-cremita)]/70">
+            Catálogo
+          </span>
+        </span>
+        <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-3xl mb-6">
+          Todo lo que necesitas para crear, regalar e inspirarte
+        </h1>
+        <p className="font-sans text-[var(--color-cremita)]/70 text-base md:text-lg max-w-xl leading-relaxed">
+          Libretas, stickers, materiales, papelería y mucho más. Encuentra algo bonito para cada momento.
+        </p>
+      </section>
 
-      {productos.length === 0 ? (
-        <p className="text-[var(--color-muted)]">No hay productos disponibles.</p>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {productos.map((p) => (
-            <Link key={p.id} href={`/productos/${p.id}`} className="group">
-              <div className="aspect-[3/4] rounded-2xl bg-[var(--color-cremita-2)] overflow-hidden mb-3 relative">
-                {p.imagen_url ? (
-                  <Image
-                    src={p.imagen_url}
-                    alt={p.nombre}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
-                )}
-              </div>
-              <p className="text-sm font-medium text-[var(--color-text)] leading-tight">{p.nombre}</p>
-              <p className="text-sm text-[var(--color-muted)] mt-0.5">${p.precio.toLocaleString()} MXN</p>
-            </Link>
-          ))}
-        </div>
-      )}
-    </section>
+      <section className="pt-16 pb-20 w-[90%] mx-auto">
+        {productos.length === 0 ? (
+          <p className="text-[var(--color-muted)]">No hay productos disponibles.</p>
+        ) : (
+          <ProductosCatalog productos={productos} categorias={categorias} />
+        )}
+      </section>
+    </>
   );
 }

@@ -72,7 +72,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero card — matches Figma 1392×855 rx=48 card with mx-24px ──── */}
-      <section className="relative mt-6 mx-5 md:mx-20 rounded-[32px] md:rounded-[48px] bg-[var(--color-verde)] overflow-hidden min-h-[600px] md:min-h-[700px] flex flex-col">
+      <section className="relative mt-6 mx-[1vw] rounded-[32px] md:rounded-[48px] bg-[var(--color-verde)] overflow-hidden h-[80vh] flex flex-col" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
 
         {/* Hero content */}
         <div className="relative flex-1 flex flex-col items-center justify-center text-center px-6 pt-[140px] md:pt-[180px] pb-20 md:pb-40">

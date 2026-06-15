@@ -33,8 +33,8 @@ export default async function TalleresPage() {
     <>
       {/* Hero */}
       <section
-        className="relative mx-5 md:mx-20 mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[400px] md:min-h-[480px] flex flex-col justify-center"
-        style={{ backgroundColor: "#C4846A" }}
+        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden h-[80vh] flex flex-col justify-center"
+        style={{ backgroundColor: "#C4846A", width: '98vw', marginLeft: '1vw', marginRight: '1vw' }}
       >
         <div className="px-10 md:px-20 py-20 md:py-28 flex flex-col items-center text-center">
           <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">

@@ -10,7 +10,7 @@ export default async function ClasesPage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="mx-5 md:mx-20 mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#5d7c80] flex flex-col items-center justify-center text-center px-8 md:px-16 pt-36 pb-24 md:pb-28">
+      <section className="mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#4F8674] flex flex-col items-center justify-center text-center px-8 md:px-16 h-[80vh]" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
         <span className="inline-flex items-center border border-[var(--color-cremita)]/60 rounded-full px-6 py-2 mb-8">
           <span className="font-sans text-[var(--color-cremita)] text-[13px] tracking-[2px] uppercase">
             Clases Creativas
@@ -26,32 +26,8 @@ export default async function ClasesPage() {
         </p>
       </section>
 
-      {/* ── Intro card ── */}
-      <section className="w-[90%] mx-auto py-12 md:py-16">
-        <div className="bg-[#f2f0e9] rounded-2xl overflow-hidden flex flex-col md:flex-row items-center gap-8 px-8 md:pl-16 md:pr-3 py-10 md:py-3">
-          {/* Text */}
-          <div className="flex-1 flex flex-col gap-5 py-8">
-            <h2 className="font-serif font-extralight text-[clamp(2rem,3.5vw,3rem)] text-black leading-snug">
-              A veces solo hace falta una mesa, buenos materiales y alguien que te guíe.
-            </h2>
-            <p className="font-sans text-[var(--color-text)] text-[17px] leading-relaxed">
-              Nuestras clases están pensadas para que cada persona avance a su ritmo: desde quien quiere aprender una técnica desde cero, hasta quien busca un momento creativo para desconectarse, practicar y crear algo propio.
-            </p>
-          </div>
-          {/* Image */}
-          <div className="flex-1 relative h-[320px] md:h-[344px] w-full rounded-xl md:rounded-2xl overflow-hidden flex-shrink-0 md:max-w-[45%]">
-            <Image
-              src="/images/clases.avif"
-              alt="Clase en Papela Atelier"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* ── Maestras grid ── */}
-      <section className="w-[90%] mx-auto pb-20">
+      <section className="w-[90%] mx-auto pt-20 pb-20">
         {/* Section heading */}
         <div className="flex flex-col items-center text-center mb-12 gap-4">
           <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,3rem)] text-black leading-tight">
@@ -124,12 +100,36 @@ export default async function ClasesPage() {
                   href={`/clases/${maestra.slug}`}
                   className="mt-auto w-full bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-base text-center py-3 px-4 rounded-lg hover:opacity-90 transition-opacity"
                 >
-                  Apartar clase con {maestra.nombre}
+                  Ver detalles de clases
                 </Link>
               </article>
             ))}
           </div>
         )}
+      </section>
+
+      {/* ── Intro card ── */}
+      <section className="w-[90%] mx-auto py-12 md:py-16">
+        <div className="bg-[#EAE6DC] rounded-2xl flex flex-col md:flex-row items-center gap-10 md:gap-[148px] px-8 md:px-20 py-14 md:py-[72px]">
+          {/* Text */}
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
+            <h2 className="font-serif font-extralight text-[clamp(2rem,3.5vw,3rem)] text-black leading-[1.17]">
+              A veces solo hace falta una mesa, buenos materiales y alguien que te guíe.
+            </h2>
+            <p className="font-sans text-[var(--color-text)] text-[clamp(1rem,1.3vw,1.5rem)] leading-[1.35]">
+              Nuestras clases están pensadas para que cada persona avance a su ritmo: desde quien quiere aprender una técnica desde cero, hasta quien busca un momento creativo para desconectarse, practicar y crear algo propio.
+            </p>
+          </div>
+          {/* Image */}
+          <div className="relative w-full md:w-[486px] h-[320px] md:h-[440px] flex-shrink-0 rounded-[20px] overflow-hidden">
+            <Image
+              src="/images/clases.avif"
+              alt="Clase en Papela Atelier"
+              fill
+              className="object-cover"
+            />
+          </div>
+        </div>
       </section>
     </>
   );

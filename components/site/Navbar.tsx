@@ -289,7 +289,7 @@ export default function SiteNavbar() {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="fixed top-0 inset-x-0 z-50 bg-transparent"
           >
-            <nav className="w-full grid grid-cols-[1fr_auto_1fr] items-center px-6 md:px-10 h-[140px] md:h-[170px]">
+            <nav className="w-[96%] mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-6 md:px-10 h-[140px] md:h-[170px]">
               {/* Left links — desktop only */}
               <div className="hidden md:flex items-center justify-end gap-32 pr-16">
                 {[
