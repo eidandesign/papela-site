@@ -116,9 +116,22 @@ export default async function TalleresPage() {
                             <Image src={taller.instructor_foto_url} alt={taller.instructor_nombre} fill className="object-cover" />
                           )}
                         </div>
-                        <span className="text-sm font-medium text-[var(--color-muted)] uppercase tracking-wide">
-                          {taller.instructor_nombre}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-[var(--color-muted)] uppercase tracking-wide">
+                            {taller.instructor_nombre}
+                          </span>
+                          {taller.instructor_instagram && (
+                            <a
+                              href={`https://instagram.com/${taller.instructor_instagram}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`Instagram de ${taller.instructor_nombre}`}
+                              className="text-xs text-[var(--color-terracota)] hover:opacity-70 transition-opacity"
+                            >
+                              @{taller.instructor_instagram}
+                            </a>
+                          )}
+                        </div>
                       </div>
                     )}
 

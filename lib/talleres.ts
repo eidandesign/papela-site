@@ -13,6 +13,7 @@ export type Taller = {
   nivel: string | null;
   instructor_nombre: string | null;
   instructor_foto_url: string | null;
+  instructor_instagram: string | null;
   activo: boolean;
   cupo_total: number | null;
 };
