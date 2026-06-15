@@ -109,8 +109,8 @@ export default async function HomePage() {
           viewBox="-67 133 1526 294"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="absolute bottom-0 left-0 right-0 w-full pointer-events-none h-[160px] md:h-auto"
-          preserveAspectRatio="none"
+          className="absolute bottom-0 left-0 right-0 w-full pointer-events-none h-[110px] md:h-auto"
+          preserveAspectRatio="xMidYMax slice"
         >
           <path
             d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911"
