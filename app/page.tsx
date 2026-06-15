@@ -1,7 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
+import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import TextCarousel from "@/components/site/TextCarousel";
+import { getProductos } from "@/lib/productos";
 
-// ─── Static data (replace with Supabase queries later) ────────────────────────
+export const revalidate = 60;
 
 const INFO_CARDS = [
   {
@@ -9,40 +12,30 @@ const INFO_CARDS = [
     title: "Talleres",
     body: "Experiencias creativas con invitadxs cada mes.",
     href: "/talleres",
-    bg: "bg-[var(--color-verde)]",
-    text: "text-[var(--color-cremita)]",
+    bg: "#F0D9CC",
+    text: "#3a2e2b",
+    image: "/images/talleres.avif",
   },
   {
     slug: "clases",
     title: "Clases",
     body: "Aprende técnicas nuevas y crea a tu ritmo.",
     href: "/clases",
-    bg: "bg-[var(--color-cremita)]",
-    text: "text-[var(--color-verde)]",
+    bg: "#C9D3C0",
+    text: "#2b3a2e",
+    image: "/images/clases.avif",
   },
   {
     slug: "personaliza",
     title: "Personaliza",
     body: "Stickers, toppers y detalles hechos a la medida.",
     href: "/productos",
-    bg: "bg-[var(--color-terracota)]",
-    text: "text-[var(--color-cremita)]",
+    bg: "#CED8D9",
+    text: "#1e2d36",
+    image: "/images/personaliza.avif",
   },
 ];
 
-const LIBRETAS = [
-  { name: "Special Melody", price: "$200.00 MXN", slug: "special-melody" },
-  { name: "Painting Dreams", price: "$145.00 MXN", slug: "painting-dreams" },
-  { name: "F.Champenois",   price: "$380.00 MXN", slug: "f-champenois" },
-  { name: "Van Gogh 1",     price: "$280.00 MXN", slug: "van-gogh-1" },
-];
-
-const FAVORITOS = [
-  { name: "Special Melody", price: "$200.00 MXN", slug: "special-melody" },
-  { name: "Tom & Jerry",    price: "$320.00 MXN", slug: "tom-jerry" },
-  { name: "Moonlit",        price: "$200.00 MXN", slug: "moonlit" },
-  { name: "Cowboy Set",     price: "$145.00 MXN", slug: "cowboy-set" },
-];
 
 const IG_POSTS = [
   { id: 1, likes: 17, caption: "psic.fatimamtz" },
@@ -52,32 +45,37 @@ const IG_POSTS = [
 
 // ─── Subcomponents ─────────────────────────────────────────────────────────────
 
-function ProductCard({ name, price, slug }: { name: string; price: string; slug: string }) {
+function ProductCard({ id, nombre, precio, imagen_url }: { id: string; nombre: string; precio: number; imagen_url: string | null }) {
   return (
-    <Link
-      href={`/productos/${slug}`}
-      className="group flex-shrink-0 w-[220px] md:w-[240px]"
-    >
-      <div className="w-full aspect-[3/4] rounded-2xl bg-[var(--color-cremita-2)] mb-3 overflow-hidden">
-        {/* Product image — replace src with real image from Supabase Storage */}
-        <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)] group-hover:scale-105 transition-transform duration-500" />
+    <Link href={`/productos/${id}`} className="group flex-shrink-0 w-[220px] md:w-[240px]">
+      <div className="w-full aspect-[3/4] rounded-2xl bg-[var(--color-cremita-2)] mb-3 overflow-hidden relative">
+        {imagen_url ? (
+          <Image src={imagen_url} alt={nombre} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)] group-hover:scale-105 transition-transform duration-500" />
+        )}
       </div>
-      <p className="text-sm font-medium text-[var(--color-text)] leading-tight">{name}</p>
-      <p className="text-sm text-[var(--color-muted)] mt-0.5">{price}</p>
+      <p className="text-sm font-medium text-[var(--color-text)] leading-tight">{nombre}</p>
+      <p className="text-sm text-[var(--color-muted)] mt-0.5">${precio.toLocaleString()} MXN</p>
     </Link>
   );
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [libretas, favoritos] = await Promise.all([
+    getProductos("Papelería"),
+    getProductos(),
+  ]);
+
   return (
     <>
       {/* ── Hero card — matches Figma 1392×855 rx=48 card with mx-24px ──── */}
-      <section className="relative mt-6 mx-4 md:mx-6 rounded-[32px] md:rounded-[48px] bg-[var(--color-verde)] overflow-hidden min-h-[600px] md:min-h-[700px] flex flex-col">
+      <section className="relative mt-6 mx-5 md:mx-20 rounded-[32px] md:rounded-[48px] bg-[var(--color-verde)] overflow-hidden min-h-[600px] md:min-h-[700px] flex flex-col">
 
         {/* Hero content */}
-        <div className="relative flex-1 flex flex-col items-center justify-center text-center px-6 pt-[160px] md:pt-[180px] pb-32 md:pb-40">
+        <div className="relative flex-1 flex flex-col items-center justify-center text-center px-6 pt-[140px] md:pt-[180px] pb-20 md:pb-40">
           {/* Pill badge — outline style */}
           <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8 md:mb-10">
             <span className="font-sans text-[10px] font-medium tracking-[0.22em] uppercase text-[var(--color-cremita)]/70">
@@ -92,7 +90,7 @@ export default function HomePage() {
           </h1>
 
           {/* Description — Satoshi regular (not italic) for visibility */}
-          <p className="font-sans font-normal text-[var(--color-cremita)]/70 text-[24px] max-w-2xl leading-relaxed">
+          <p className="font-sans font-normal text-[var(--color-cremita)]/70 text-base md:text-[22px] max-w-2xl leading-relaxed">
             Desde una cartulina de último minuto hasta stickers, regalos,
             talleres y clases creativas.
           </p>
@@ -120,40 +118,46 @@ export default function HomePage() {
       <TextCarousel />
 
       {/* ── Info Cards ────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 py-16 md:py-20">
+      <section className="w-[90%] mx-auto py-16 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {INFO_CARDS.map((card) => (
             <Link
               key={card.slug}
               href={card.href}
-              className={`group relative ${card.bg} ${card.text} rounded-2xl p-8 min-h-[240px] flex flex-col justify-between overflow-hidden hover:scale-[1.01] transition-transform duration-300`}
+              className="group relative rounded-2xl overflow-hidden flex flex-row hover:scale-[1.01] transition-transform duration-300"
+              style={{ backgroundColor: card.bg, color: card.text, height: "320px" }}
             >
-              {/* Decorative circle */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
-
-              <div>
-                <h3 className="font-serif italic text-3xl mb-3">{card.title}</h3>
-                <p className="text-sm opacity-75 leading-relaxed max-w-[200px]">{card.body}</p>
+              {/* Text side */}
+              <div className="flex flex-col justify-between p-8 flex-1 min-w-0">
+                <div>
+                  <h3 className="font-serif italic text-[2rem] mb-4 leading-tight">{card.title}</h3>
+                  <p className="text-[16px] md:text-[18px] leading-relaxed opacity-80">{card.body}</p>
+                </div>
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-verde)] mt-8 group-hover:opacity-80 transition-opacity">
+                  <ArrowRightIcon className="w-4 h-4 text-[var(--color-cremita)]" />
+                </span>
               </div>
-              <span className="flex items-center gap-1.5 text-sm font-medium mt-6 opacity-80 group-hover:opacity-100 transition-opacity">
-                Ver más
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </span>
+              {/* Image side */}
+              <div className="w-[52%] flex-shrink-0 p-3 pl-0 h-full">
+                <div className="relative w-full h-full rounded-xl overflow-hidden">
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </div>
             </Link>
           ))}
         </div>
       </section>
 
       {/* ── Nosotros ──────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 py-10 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <section className="w-[90%] mx-auto py-10 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-4">
-              Sobre nosotros
-            </p>
-            <h2 className="font-serif italic text-[clamp(2.5rem,5vw,4rem)] text-[var(--color-verde)] leading-tight mb-6">
+<h2 className="font-serif font-extralight text-[clamp(2.5rem,5vw,4rem)] text-[#403C3C] leading-tight mb-6">
               Nosotros
             </h2>
             <p className="text-[var(--color-muted)] leading-relaxed text-base mb-8 max-w-md">
@@ -164,31 +168,32 @@ export default function HomePage() {
             </p>
             <Link
               href="/nosotros"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-verde)] border border-[var(--color-verde)] rounded-full px-5 py-2.5 hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition-colors"
+              className="group inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-verde)] border border-[var(--color-verde)] rounded-full px-5 py-2.5 overflow-hidden relative hover:text-[var(--color-cremita)] transition-colors duration-500"
+              style={{ isolation: "isolate" }}
             >
+              <span className="absolute inset-0 bg-[var(--color-verde)] -z-10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]" />
               Conoce nuestra historia
+              <ArrowRightIcon className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
 
-          {/* Video / Image placeholder */}
-          <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-[var(--color-cremita-2)]">
-            <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-cremita)] via-[var(--color-cremita-2)] to-[var(--color-verde)]/20" />
-            {/* Replace with <video> pointing to Cloudinary/Supabase Storage URL */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-white/80 flex items-center justify-center shadow-lg">
-                <svg className="w-5 h-5 text-[var(--color-verde)] ml-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-            </div>
+          <div className="relative rounded-2xl overflow-hidden aspect-[4/3]">
+            <video
+              src="https://res.cloudinary.com/duxnks729/video/upload/v1778470212/magnific_stop-motions-aniamtion-th_2846395737_tmswe7.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
           </div>
         </div>
       </section>
 
       {/* ── Libretas ──────────────────────────────────────────────────────── */}
       <section className="py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-6 mb-6 flex items-end justify-between">
-          <h2 className="font-serif italic text-[clamp(1.8rem,3.5vw,2.8rem)] text-[var(--color-verde)]">
+        <div className="w-[90%] mx-auto mb-6 flex items-end justify-between">
+          <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
             Libretas
           </h2>
           <Link
@@ -198,17 +203,17 @@ export default function HomePage() {
             Ver todo →
           </Link>
         </div>
-        <div className="pl-6 md:pl-[max(24px,calc((100vw-1280px)/2+24px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {LIBRETAS.map((p) => (
-            <ProductCard key={p.slug} {...p} />
+        <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          {libretas.map((p) => (
+            <ProductCard key={p.id} {...p} />
           ))}
         </div>
       </section>
 
       {/* ── Los Favoritos ─────────────────────────────────────────────────── */}
       <section className="py-8 md:py-12 bg-[var(--color-cremita)]/40">
-        <div className="max-w-7xl mx-auto px-6 mb-6 flex items-end justify-between">
-          <h2 className="font-serif italic text-[clamp(1.8rem,3.5vw,2.8rem)] text-[var(--color-verde)]">
+        <div className="w-[90%] mx-auto mb-6 flex items-end justify-between">
+          <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
             Los favoritos
           </h2>
           <Link
@@ -218,20 +223,20 @@ export default function HomePage() {
             Ver todo →
           </Link>
         </div>
-        <div className="pl-6 md:pl-[max(24px,calc((100vw-1280px)/2+24px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {FAVORITOS.map((p) => (
-            <ProductCard key={p.slug} {...p} />
+        <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          {favoritos.map((p) => (
+            <ProductCard key={p.id} {...p} />
           ))}
         </div>
       </section>
 
       {/* ── Instagram ─────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 py-16 md:py-20">
+      <section className="w-[90%] mx-auto py-16 md:py-20">
         <div className="text-center mb-10">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-3">
             Redes Sociales
           </p>
-          <h2 className="font-serif italic text-[clamp(1.8rem,3.5vw,2.8rem)] text-[var(--color-verde)] mb-2">
+          <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C] mb-2">
             Únete a nuestra comunidad
           </h2>
           <p className="text-[var(--color-muted)] text-sm mb-5">
@@ -251,7 +256,7 @@ export default function HomePage() {
         </div>
 
         {/* IG post grid — placeholders until real embed or API */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="grid grid-cols-3 gap-3 md:gap-4">
           {IG_POSTS.map((post) => (
             <a
               key={post.id}
