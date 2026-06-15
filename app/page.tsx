@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
@@ -5,6 +6,13 @@ import TextCarousel from "@/components/site/TextCarousel";
 import { getProductos } from "@/lib/productos";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Papela Atelier — Papelería creativa, talleres y clases de arte en Puebla",
+  description:
+    "Descubre Papela Atelier: papelería creativa, libretas artesanales, talleres de acuarela, acrílico, cerámica y clases de arte en Puebla. Un espacio para crear y expresarte.",
+  alternates: { canonical: "https://www.papela-atelier.com" },
+};
 
 const INFO_CARDS = [
   {

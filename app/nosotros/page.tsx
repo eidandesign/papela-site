@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,6 +10,13 @@ import {
 } from "@heroicons/react/24/solid";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Quiénes somos — La historia de Papela Atelier en Puebla",
+  description:
+    "Conoce Papela Atelier: un espacio creativo en Puebla dedicado a la papelería, el arte y la expresión. Nuestra historia, misión y el equipo detrás de cada taller y clase.",
+  alternates: { canonical: "https://www.papela-atelier.com/nosotros" },
+};
 
 const VALORES = [
   {

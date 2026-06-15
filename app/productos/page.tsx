@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import { getProductos } from "@/lib/productos";
 import ProductosCatalog from "@/components/site/ProductosCatalog";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Catálogo de papelería y materiales de arte en Puebla",
+  description:
+    "Explora el catálogo de Papela Atelier: libretas artesanales, materiales de pintura, acuarelas, pinceles y papelería creativa. Envíos en Puebla.",
+  alternates: { canonical: "https://www.papela-atelier.com/productos" },
+  openGraph: {
+    title: "Catálogo de papelería creativa — Papela Atelier Puebla",
+    description:
+      "Libretas artesanales, materiales de arte y papelería creativa. Todo lo que necesitas para crear en Puebla.",
+  },
+};
 
 export default async function ProductosPage() {
   const productos = await getProductos();

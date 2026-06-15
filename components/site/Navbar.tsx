@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
   { href: "/productos", label: "Catálogo" },
@@ -268,6 +269,8 @@ const NAV_ITEMS = [
 ];
 
 export default function SiteNavbar() {
+  const pathname = usePathname();
+  const forceScrolled = pathname?.includes("/checkout");
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -277,6 +280,8 @@ export default function SiteNavbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const isScrolled = forceScrolled || scrolled;
+
   const openMenu = () => setMenuOpen(true);
   const closeMenu = () => setMenuOpen(false);
 
@@ -285,7 +290,7 @@ export default function SiteNavbar() {
       <MobileMenu isOpen={menuOpen} onClose={closeMenu} />
 
       <AnimatePresence mode="wait">
-        {!scrolled && (
+        {!isScrolled && (
           <motion.header
             key="large-nav"
             initial={{ opacity: 0, y: -20 }}
@@ -375,7 +380,7 @@ export default function SiteNavbar() {
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        {scrolled && (
+        {isScrolled && (
           <motion.nav
             key="floating-nav"
             initial={{ opacity: 0, y: -20, scale: 0.95 }}

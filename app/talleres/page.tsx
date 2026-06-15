@@ -1,9 +1,23 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import { getTalleres } from "@/lib/talleres";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Talleres de arte en Puebla — Acuarela, acrílico, cerámica y más",
+  description:
+    "Talleres presenciales de arte en Puebla con Papela Atelier. Aprende acuarela, acrílico, cerámica, dibujo y más. Para todos los niveles, con instructores especializados.",
+  alternates: { canonical: "https://www.papela-atelier.com/talleres" },
+  openGraph: {
+    title: "Talleres de arte en Puebla — Papela Atelier",
+    description:
+      "Aprende acuarela, acrílico, cerámica y más en nuestros talleres presenciales en Puebla. ¡Llévate algo hecho por ti!",
+    images: [{ url: "/images/talleres.avif", alt: "Talleres de arte Papela Atelier Puebla" }],
+  },
+};
 
 function formatFecha(fecha: string | null) {
   if (!fecha) return "";
@@ -60,7 +74,7 @@ export default async function TalleresPage() {
           </div>
         ) : (
           talleres.map((taller) => (
-            <article key={taller.id} className="bg-[var(--color-cremita-2)]/60 rounded-2xl overflow-hidden">
+            <article key={taller.id} className="group bg-[var(--color-cremita-2)]/60 rounded-2xl border-2 border-transparent transition-[transform,box-shadow,border-color] duration-300 ease-out cursor-pointer hover:border-[#d6bdb2] hover:shadow-[4px_6px_0px_#d6bdb2] hover:-translate-y-1">
               {/* Tags row */}
               <div className="flex items-center justify-between px-6 pt-5 pb-3">
                 <div className="flex items-center gap-2">
@@ -72,8 +86,8 @@ export default async function TalleresPage() {
                   <NivelBadge nivel={taller.nivel} />
                 </div>
                 {taller.activo && (
-                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-verde)]">
+                    <span className="w-2 h-2 rounded-full bg-[var(--color-verde)] inline-block" />
                     Activo
                   </span>
                 )}
@@ -84,7 +98,7 @@ export default async function TalleresPage() {
                 {/* Image */}
                 <div className="relative w-full md:w-[420px] flex-shrink-0 h-[260px] md:h-auto md:min-h-[340px] m-3 rounded-xl overflow-hidden">
                   {taller.imagen_url ? (
-                    <Image src={taller.imagen_url} alt={taller.titulo} fill className="object-cover" />
+                    <Image src={taller.imagen_url} alt={taller.titulo} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
                   )}
@@ -150,8 +164,8 @@ export default async function TalleresPage() {
                       </p>
                     </div>
                     <Link
-                      href={`/talleres/${taller.id}`}
-                      aria-label={`Ver detalle de ${taller.titulo}`}
+                      href={`/talleres/${taller.id}/checkout`}
+                      aria-label={`Reservar ${taller.titulo}`}
                       className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] hover:opacity-80 transition-opacity"
                     >
                       <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />

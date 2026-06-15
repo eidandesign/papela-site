@@ -1,8 +1,22 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { getClases } from "@/lib/clases";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Clases de arte en Puebla — Pintura, dibujo y técnicas creativas",
+  description:
+    "Clases regulares de arte en Puebla con Papela Atelier. Aprende pintura, acuarela, acrílico y más con maestras especializadas. Para principiantes y niveles avanzados.",
+  alternates: { canonical: "https://www.papela-atelier.com/clases" },
+  openGraph: {
+    title: "Clases de arte en Puebla — Papela Atelier",
+    description:
+      "Clases regulares de pintura y técnicas artísticas para todos los niveles en Puebla.",
+    images: [{ url: "/images/clases.avif", alt: "Clases de arte Papela Atelier Puebla" }],
+  },
+};
 
 export default async function ClasesPage() {
   const maestras = await getClases();
