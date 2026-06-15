@@ -4,10 +4,10 @@ const ITEMS = "TALLERES • DISEÑO • PAPELERÍA • CLASES DE ARTE • CAFÉ 
 
 function RibbonRow({ reverse = false }: { reverse?: boolean }) {
   return (
-    <div className="overflow-hidden py-3" style={{ fontFamily: "'PP Editorial New', Georgia, serif" }}>
+    <div className="overflow-hidden py-3 md:py-3" style={{ fontFamily: "'PP Editorial New', Georgia, serif" }}>
       <div className={`inline-flex whitespace-nowrap ${reverse ? "animate-marquee-reverse" : "animate-marquee"}`}>
         {[0, 1, 2, 3, 4].map((i) => (
-          <span key={i} className="inline-block text-[15px] font-light tracking-[0.06em] text-[#403C3C] mr-6">
+          <span key={i} className="inline-block text-[22px] md:text-[15px] font-light tracking-[0.06em] text-[#403C3C] mr-8 md:mr-6">
             {ITEMS}
           </span>
         ))}
