@@ -156,6 +156,28 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         </Link>
       </div>
 
+      {/* Close button — same top-right position as the hamburger */}
+      <button
+        onClick={onClose}
+        aria-label="Cerrar menú"
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          padding: "24px 16px",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          opacity: visible ? 1 : 0,
+          transition: "opacity 0.25s ease 0.25s",
+          WebkitTapHighlightColor: "transparent",
+          touchAction: "manipulation",
+          zIndex: 1,
+        }}
+      >
+        <AnimatedBurger isOpen color={FG} />
+      </button>
+
       {/* Nav links */}
       <nav style={{ display: "flex", flexDirection: "column", width: "100%" }}>
         {NAV_LINKS.map((link, i) => (
@@ -240,35 +262,6 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         ))}
       </div>
 
-      {/* Bottom close button — animated burger→X */}
-      <div style={{
-        position: "absolute",
-        bottom: 36,
-        left: "50%",
-        transform: "translateX(-50%)",
-        opacity: visible ? 1 : 0,
-        transition: `opacity 0.3s ease ${socialDelay + 0.05}s`,
-      }}>
-        <button
-          onClick={onClose}
-          aria-label="Cerrar menú"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            background: "rgba(243,230,207,0.12)",
-            border: "1px solid rgba(243,230,207,0.25)",
-            borderRadius: 999,
-            padding: "14px 28px",
-            cursor: "pointer",
-            WebkitTapHighlightColor: "transparent",
-            touchAction: "manipulation",
-          }}
-        >
-          <AnimatedBurger isOpen color={FG} />
-        </button>
-      </div>
     </div>,
     portalRef.current
   );
