@@ -98,6 +98,51 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // ── Tienda ────────────────────────────────────────────────────────────────
+  else if (externalRef.startsWith("tienda:")) {
+    // Fetch the pending order
+    const { data: pedido, error: pedidoError } = await supabase
+      .from("tienda_pedidos")
+      .select("id, items, tipo_envio, estado")
+      .eq("external_reference", externalRef)
+      .single();
+
+    if (pedidoError || !pedido) {
+      console.error(`[webhook] pedido no encontrado: ${externalRef}`);
+      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    }
+
+    if (pedido.estado === "pagado") {
+      // Idempotency: already processed
+      return NextResponse.json({ ok: true });
+    }
+
+    // Decrement stock for each item atomically
+    const items = pedido.items as { productoId: string; cantidad: number }[];
+    for (const item of items) {
+      const { data: ok } = await supabase.rpc("decrementar_stock_producto", {
+        p_id: item.productoId,
+        p_cant: item.cantidad,
+      });
+      if (!ok) {
+        console.error(`[webhook] stock insuficiente producto ${item.productoId} payment ${paymentId}`);
+        // Continue — log and update order with partial note rather than blocking
+      }
+    }
+
+    // Mark order as paid
+    await supabase
+      .from("tienda_pedidos")
+      .update({
+        estado: "pagado",
+        payment_id: paymentId,
+        monto_total: payment.transaction_amount,
+        comprador_nombre: payment.payer?.first_name ?? null,
+        comprador_email: payment.payer?.email ?? null,
+      })
+      .eq("external_reference", externalRef);
+  }
+
   // ── Clase (horario) ────────────────────────────────────────────────────────
   else {
     const horarioId = externalRef;

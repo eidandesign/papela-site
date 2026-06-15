@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import { getProductoById } from "@/lib/productos";
 import { SITE_URL } from "@/lib/site";
+import AddToCartButton from "@/components/site/AddToCartButton";
 
 export const revalidate = 60;
 
@@ -147,15 +147,23 @@ export default async function ProductoPage({
             {enStock ? "✓ Disponible" : "Por el momento agotado"}
           </p>
 
-          <a
-            href={`https://wa.me/${WHATSAPP}?text=${waText}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center justify-center gap-2 self-start rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] px-7 py-3.5 text-sm font-semibold overflow-hidden relative"
-          >
-            Consultar por WhatsApp
-            <ArrowRightIcon className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <AddToCartButton
+              productoId={producto.id}
+              nombre={producto.nombre}
+              precio={producto.precio}
+              imagenUrl={producto.imagen_url ?? null}
+              enStock={enStock}
+            />
+            <a
+              href={`https://wa.me/${WHATSAPP}?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 self-start rounded-full border border-[var(--color-verde)] text-[var(--color-verde)] px-6 py-3.5 text-sm font-semibold hover:bg-[var(--color-verde)]/5 transition-colors"
+            >
+              Consultar por WhatsApp
+            </a>
+          </div>
         </div>
       </div>
     </section>

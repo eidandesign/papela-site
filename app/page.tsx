@@ -4,7 +4,7 @@ import Image from "next/image";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import TextCarousel from "@/components/site/TextCarousel";
 import ScrollReveal from "@/components/site/ScrollReveal";
-import { getProductos } from "@/lib/productos";
+import { getProductosPorColeccion } from "@/lib/productos-publicos";
 
 export const revalidate = 60;
 
@@ -46,12 +46,6 @@ const INFO_CARDS = [
 ];
 
 
-const IG_POSTS = [
-  { id: 1, likes: 17, caption: "psic.fatimamtz" },
-  { id: 2, likes: 9,  caption: "Puebla City" },
-  { id: 3, likes: 8,  caption: "papela.atelier" },
-];
-
 // ─── Subcomponents ─────────────────────────────────────────────────────────────
 
 function ProductCard({ id, nombre, precio, imagen_url }: { id: string; nombre: string; precio: number; imagen_url: string | null }) {
@@ -74,8 +68,8 @@ function ProductCard({ id, nombre, precio, imagen_url }: { id: string; nombre: s
 
 export default async function HomePage() {
   const [libretas, favoritos] = await Promise.all([
-    getProductos("Papelería"),
-    getProductos(undefined, 12),
+    getProductosPorColeccion("libretas"),
+    getProductosPorColeccion("favoritos"),
   ]);
 
   return (
@@ -129,13 +123,14 @@ export default async function HomePage() {
       {/* ── Info Cards ────────────────────────────────────────────────────── */}
       <section className="py-16 md:py-20">
         {/* Mobile: horizontal scroll */}
-        <div className="md:hidden flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none" style={{ scrollbarWidth: "none" }}>
+        <div className="md:hidden flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none" style={{ scrollbarWidth: "none", scrollPaddingLeft: "20px" }}>
+          <div className="flex-shrink-0 w-5" aria-hidden="true" />
           {INFO_CARDS.map((card, i) => (
             <Link
               key={card.slug}
               href={card.href}
               className="group snap-start flex-shrink-0 rounded-2xl overflow-hidden flex flex-col"
-              style={{ backgroundColor: card.bg, color: card.text, width: "72vw", minWidth: "260px", marginLeft: i === 0 ? "20px" : undefined, marginRight: i === INFO_CARDS.length - 1 ? "20px" : undefined }}
+              style={{ backgroundColor: card.bg, color: card.text, width: "72vw", minWidth: "260px" }}
             >
               {/* Image top */}
               <div className="relative w-full" style={{ height: "200px" }}>
@@ -153,6 +148,7 @@ export default async function HomePage() {
               </div>
             </Link>
           ))}
+          <div className="flex-shrink-0 w-5" aria-hidden="true" />
         </div>
         {/* Desktop: grid */}
         <div className="hidden md:grid w-[90%] mx-auto grid-cols-3 gap-4">
@@ -265,8 +261,8 @@ export default async function HomePage() {
       </section>
 
       {/* ── Instagram ─────────────────────────────────────────────────────── */}
-      <section className="w-[90%] mx-auto py-16 md:py-20">
-        <ScrollReveal className="text-center mb-10">
+      <section className="py-16 md:py-20">
+        <ScrollReveal className="text-center mb-10 w-[90%] mx-auto px-5 md:px-0">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-3">
             Redes Sociales
           </p>
@@ -289,22 +285,53 @@ export default async function HomePage() {
           </a>
         </ScrollReveal>
 
-        {/* IG post grid — placeholders until real embed or API */}
-        <div className="grid grid-cols-3 gap-3 md:gap-4">
-          {IG_POSTS.map((post) => (
+        {/* Mobile: horizontal scroll */}
+        <div
+          className="md:hidden flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
+          style={{ scrollbarWidth: "none", scrollPaddingLeft: "20px" }}
+        >
+          <div className="flex-shrink-0 w-5" aria-hidden="true" />
+          {["/images/instagram-1.jpg", "/images/Instagram-2.jpg", "/images/Instagram-3.jpg"].map((src, i) => (
             <a
-              key={post.id}
+              key={i}
               href="https://instagram.com/papela.atelier"
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative aspect-square rounded-xl overflow-hidden bg-[var(--color-cremita-2)]"
+              className="group snap-start flex-shrink-0 rounded-xl overflow-hidden bg-[var(--color-cremita-2)]"
+              style={{ width: "72vw" }}
             >
-              <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] via-[#e8d5b0] to-[var(--color-terracota)]/30" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-end p-3">
-                <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  ❤ {post.likes}
-                </span>
-              </div>
+              <Image
+                src={src}
+                alt="Post de Instagram de Papela Atelier"
+                width={0}
+                height={0}
+                sizes="72vw"
+                className="w-full h-auto group-hover:scale-105 transition-transform duration-500"
+              />
+            </a>
+          ))}
+          <div className="flex-shrink-0 w-5" aria-hidden="true" />
+        </div>
+
+        {/* Desktop: grid */}
+        <div className="hidden md:grid grid-cols-3 gap-4">
+          {["/images/instagram-1.jpg", "/images/Instagram-2.jpg", "/images/Instagram-3.jpg"].map((src, i) => (
+            <a
+              key={i}
+              href="https://instagram.com/papela.atelier"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative rounded-xl overflow-hidden bg-[var(--color-cremita-2)]"
+            >
+              <Image
+                src={src}
+                alt="Post de Instagram de Papela Atelier"
+                width={0}
+                height={0}
+                sizes="30vw"
+                className="w-full h-auto group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
             </a>
           ))}
         </div>

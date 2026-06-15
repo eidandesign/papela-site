@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import CartButton from "./CartButton";
 
 const NAV_LINKS = [
   { href: "/productos", label: "Catálogo" },
@@ -326,8 +327,8 @@ export default function SiteNavbar() {
                 </Link>
               </motion.div>
 
-              {/* Right links — desktop only */}
-              <div className="hidden md:flex items-center gap-32 absolute right-10">
+              {/* Right links + cart — desktop only */}
+              <div className="hidden md:flex items-center gap-12 absolute right-10">
                 {[
                   { href: "/clases", label: "Clases" },
                   { href: "/nosotros", label: "Nosotros" },
@@ -346,22 +347,24 @@ export default function SiteNavbar() {
                     </Link>
                   </motion.div>
                 ))}
+                <CartButton color={FG} />
               </div>
 
-              {/* Mobile hamburger — absolutely positioned top right, above overlay when open */}
-              <button
-                onClick={menuOpen ? closeMenu : openMenu}
-                aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-                className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 p-3"
-                style={{
-                  WebkitTapHighlightColor: "transparent",
-                  touchAction: "manipulation",
-                  zIndex: menuOpen ? 100001 : "auto",
-                  position: "absolute",
-                }}
+              {/* Mobile: cart + hamburger */}
+              <div
+                className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3"
+                style={{ zIndex: menuOpen ? 100001 : "auto" }}
               >
-                <AnimatedBurger isOpen={menuOpen} color={FG} />
-              </button>
+                <CartButton color={FG} />
+                <button
+                  onClick={menuOpen ? closeMenu : openMenu}
+                  aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+                  className="p-2"
+                  style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
+                >
+                  <AnimatedBurger isOpen={menuOpen} color={FG} />
+                </button>
+              </div>
             </nav>
           </motion.header>
         )}
@@ -410,6 +413,9 @@ export default function SiteNavbar() {
                 </motion.div>
               ))}
             </div>
+
+            {/* Cart icon — always visible */}
+            <CartButton color="rgba(255,255,255,0.9)" />
 
             {/* Mobile hamburger */}
             <motion.button
