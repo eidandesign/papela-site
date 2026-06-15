@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import TextCarousel from "@/components/site/TextCarousel";
+import ScrollReveal from "@/components/site/ScrollReveal";
 import { getProductos } from "@/lib/productos";
 
 export const revalidate = 60;
@@ -109,7 +110,7 @@ export default async function HomePage() {
           viewBox="-67 133 1526 294"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="absolute bottom-0 left-0 right-0 w-full pointer-events-none h-[110px] md:h-auto"
+          className="absolute bottom-[20px] left-0 right-0 w-full pointer-events-none h-[130px] md:h-auto"
           preserveAspectRatio="xMidYMax slice"
         >
           <path
@@ -126,37 +127,58 @@ export default async function HomePage() {
       <TextCarousel />
 
       {/* ── Info Cards ────────────────────────────────────────────────────── */}
-      <section className="w-[90%] mx-auto py-16 md:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {INFO_CARDS.map((card) => (
+      <section className="py-16 md:py-20">
+        {/* Mobile: horizontal scroll */}
+        <div className="md:hidden flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none" style={{ scrollbarWidth: "none" }}>
+          {INFO_CARDS.map((card, i) => (
             <Link
               key={card.slug}
               href={card.href}
-              className="group relative rounded-2xl overflow-hidden flex flex-row hover:scale-[1.01] transition-transform duration-300"
-              style={{ backgroundColor: card.bg, color: card.text, height: "320px" }}
+              className="group snap-start flex-shrink-0 rounded-2xl overflow-hidden flex flex-col"
+              style={{ backgroundColor: card.bg, color: card.text, width: "72vw", minWidth: "260px", marginLeft: i === 0 ? "20px" : undefined, marginRight: i === INFO_CARDS.length - 1 ? "20px" : undefined }}
             >
-              {/* Text side */}
-              <div className="flex flex-col justify-between p-8 flex-1 min-w-0">
+              {/* Image top */}
+              <div className="relative w-full" style={{ height: "200px" }}>
+                <Image src={card.image} alt={card.title} fill className="object-cover" />
+              </div>
+              {/* Text bottom */}
+              <div className="flex flex-col justify-between p-6 flex-1">
                 <div>
-                  <h3 className="font-serif italic text-[2rem] mb-4 leading-tight">{card.title}</h3>
-                  <p className="text-[16px] md:text-[18px] leading-relaxed opacity-80">{card.body}</p>
+                  <h3 className="font-serif italic text-[1.8rem] mb-2 leading-tight">{card.title}</h3>
+                  <p className="text-[15px] leading-relaxed opacity-80">{card.body}</p>
                 </div>
-                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-verde)] mt-8 group-hover:opacity-80 transition-opacity">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-verde)] mt-6 group-hover:opacity-80 transition-opacity">
                   <ArrowRightIcon className="w-4 h-4 text-[var(--color-cremita)]" />
                 </span>
               </div>
-              {/* Image side */}
-              <div className="w-[52%] flex-shrink-0 p-3 pl-0 h-full">
-                <div className="relative w-full h-full rounded-xl overflow-hidden">
-                  <Image
-                    src={card.image}
-                    alt={card.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </div>
             </Link>
+          ))}
+        </div>
+        {/* Desktop: grid */}
+        <div className="hidden md:grid w-[90%] mx-auto grid-cols-3 gap-4">
+          {INFO_CARDS.map((card, i) => (
+            <ScrollReveal key={card.slug} delay={i * 0.1} amount={0.15}>
+              <Link
+                href={card.href}
+                className="group relative rounded-2xl overflow-hidden flex flex-row hover:scale-[1.01] transition-transform duration-300 h-[320px]"
+                style={{ backgroundColor: card.bg, color: card.text }}
+              >
+                <div className="flex flex-col justify-between p-8 flex-1 min-w-0">
+                  <div>
+                    <h3 className="font-serif italic text-[2rem] mb-4 leading-tight">{card.title}</h3>
+                    <p className="text-[16px] md:text-[18px] leading-relaxed opacity-80">{card.body}</p>
+                  </div>
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-verde)] mt-8 group-hover:opacity-80 transition-opacity">
+                    <ArrowRightIcon className="w-4 h-4 text-[var(--color-cremita)]" />
+                  </span>
+                </div>
+                <div className="w-[52%] flex-shrink-0 p-3 pl-0 h-full">
+                  <div className="relative w-full h-full rounded-xl overflow-hidden">
+                    <Image src={card.image} alt={card.title} fill className="object-cover" />
+                  </div>
+                </div>
+              </Link>
+            </ScrollReveal>
           ))}
         </div>
       </section>
@@ -164,43 +186,47 @@ export default async function HomePage() {
       {/* ── Nosotros ──────────────────────────────────────────────────────── */}
       <section className="w-[90%] mx-auto py-10 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 items-end">
-          <div>
-<h2 className="font-serif font-extralight text-[clamp(2.5rem,5vw,4rem)] text-[#403C3C] leading-tight mb-6">
-              Nosotros
-            </h2>
-            <p className="text-[var(--color-muted)] leading-relaxed text-base mb-8 max-w-md">
-              Creamos un espacio cálido, bonito y creativo en Puebla donde
-              encuentras desde lo básico que necesitas hasta detalles que
-              inspiran. Nos encanta atenderte con cercanía, ayudarte a resolver
-              y hacer que cada visita se sienta especial.
-            </p>
-            <Link
-              href="/nosotros"
-              className="group inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-verde)] border border-[var(--color-verde)] rounded-full px-5 py-2.5 overflow-hidden relative hover:text-[var(--color-cremita)] transition-colors duration-500"
-              style={{ isolation: "isolate" }}
-            >
-              <span className="absolute inset-0 bg-[var(--color-verde)] -z-10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]" />
-              Conoce nuestra historia
-              <ArrowRightIcon className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-            </Link>
-          </div>
+          <ScrollReveal delay={0}>
+            <div>
+              <h2 className="font-serif font-extralight text-[clamp(2.5rem,5vw,4rem)] text-[#403C3C] leading-tight mb-6">
+                Nosotros
+              </h2>
+              <p className="text-[var(--color-muted)] leading-relaxed text-base mb-8 max-w-md">
+                Creamos un espacio cálido, bonito y creativo en Puebla donde
+                encuentras desde lo básico que necesitas hasta detalles que
+                inspiran. Nos encanta atenderte con cercanía, ayudarte a resolver
+                y hacer que cada visita se sienta especial.
+              </p>
+              <Link
+                href="/nosotros"
+                className="group inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-verde)] border border-[var(--color-verde)] rounded-full px-5 py-2.5 overflow-hidden relative hover:text-[var(--color-cremita)] transition-colors duration-500"
+                style={{ isolation: "isolate" }}
+              >
+                <span className="absolute inset-0 bg-[var(--color-verde)] -z-10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]" />
+                Conoce nuestra historia
+                <ArrowRightIcon className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </div>
+          </ScrollReveal>
 
-          <div className="relative rounded-2xl overflow-hidden aspect-[4/3]">
-            <video
-              src="https://res.cloudinary.com/duxnks729/video/upload/v1778470212/magnific_stop-motions-aniamtion-th_2846395737_tmswe7.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </div>
+          <ScrollReveal delay={0.15}>
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/3]">
+              <video
+                src="https://res.cloudinary.com/duxnks729/video/upload/v1778470212/magnific_stop-motions-aniamtion-th_2846395737_tmswe7.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* ── Libretas ──────────────────────────────────────────────────────── */}
       <section className="py-12 md:py-16">
-        <div className="w-[90%] mx-auto mb-6 flex items-end justify-between">
+        <ScrollReveal className="w-[90%] mx-auto mb-6 flex items-end justify-between">
           <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
             Libretas
           </h2>
@@ -210,7 +236,7 @@ export default async function HomePage() {
           >
             Ver todo →
           </Link>
-        </div>
+        </ScrollReveal>
         <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
           {libretas.map((p) => (
             <ProductCard key={p.id} {...p} />
@@ -220,7 +246,7 @@ export default async function HomePage() {
 
       {/* ── Los Favoritos ─────────────────────────────────────────────────── */}
       <section className="py-8 md:py-12 bg-[var(--color-cremita)]/40">
-        <div className="w-[90%] mx-auto mb-6 flex items-end justify-between">
+        <ScrollReveal className="w-[90%] mx-auto mb-6 flex items-end justify-between">
           <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
             Los favoritos
           </h2>
@@ -230,7 +256,7 @@ export default async function HomePage() {
           >
             Ver todo →
           </Link>
-        </div>
+        </ScrollReveal>
         <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
           {favoritos.map((p) => (
             <ProductCard key={p.id} {...p} />
@@ -240,7 +266,7 @@ export default async function HomePage() {
 
       {/* ── Instagram ─────────────────────────────────────────────────────── */}
       <section className="w-[90%] mx-auto py-16 md:py-20">
-        <div className="text-center mb-10">
+        <ScrollReveal className="text-center mb-10">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-3">
             Redes Sociales
           </p>
@@ -261,7 +287,7 @@ export default async function HomePage() {
             </svg>
             @papela.atelier
           </a>
-        </div>
+        </ScrollReveal>
 
         {/* IG post grid — placeholders until real embed or API */}
         <div className="grid grid-cols-3 gap-3 md:gap-4">
