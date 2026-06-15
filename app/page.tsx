@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import TextCarousel from "@/components/site/TextCarousel";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import ProductCard from "@/components/site/ProductCard";
 import { getProductosPorColeccion } from "@/lib/productos-publicos";
 
 export const revalidate = 60;
@@ -48,21 +49,6 @@ const INFO_CARDS = [
 
 // ─── Subcomponents ─────────────────────────────────────────────────────────────
 
-function ProductCard({ id, nombre, precio, imagen_url }: { id: string; nombre: string; precio: number; imagen_url: string | null }) {
-  return (
-    <Link href={`/productos/${id}`} className="group flex-shrink-0 w-[220px] md:w-[240px]">
-      <div className="w-full aspect-[3/4] rounded-2xl bg-[var(--color-cremita-2)] mb-3 overflow-hidden relative">
-        {imagen_url ? (
-          <Image src={imagen_url} alt={nombre} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)] group-hover:scale-105 transition-transform duration-500" />
-        )}
-      </div>
-      <p className="text-sm font-medium text-[var(--color-text)] leading-tight">{nombre}</p>
-      <p className="text-sm text-[var(--color-muted)] mt-0.5">${precio.toLocaleString()} MXN</p>
-    </Link>
-  );
-}
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
@@ -235,7 +221,7 @@ export default async function HomePage() {
         </ScrollReveal>
         <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
           {libretas.map((p) => (
-            <ProductCard key={p.id} {...p} />
+            <ProductCard key={p.id} producto={p} />
           ))}
         </div>
       </section>
@@ -255,7 +241,7 @@ export default async function HomePage() {
         </ScrollReveal>
         <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
           {favoritos.map((p) => (
-            <ProductCard key={p.id} {...p} />
+            <ProductCard key={p.id} producto={p} />
           ))}
         </div>
       </section>

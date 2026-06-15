@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import SiteNavbar from "./Navbar";
 import SiteFooter from "./Footer";
+import ProductDrawer from "./ProductDrawer";
 
 const STANDALONE_ROUTES = ["/links", "/satisfaccion-clases", "/satisfaccion-talleres"];
 
@@ -17,6 +18,7 @@ export default function ConditionalShell({ children }: { children: React.ReactNo
       <SiteNavbar />
       <main className="flex-1">{children}</main>
       <SiteFooter />
+      <ProductDrawer />
     </>
   );
 }

@@ -153,7 +153,7 @@ export default async function ProductoPage({
               nombre={producto.nombre}
               precio={producto.precio}
               imagenUrl={producto.imagen_url ?? null}
-              enStock={enStock}
+              stock={producto.stock}
             />
             <a
               href={`https://wa.me/${WHATSAPP}?text=${waText}`}

@@ -9,14 +9,19 @@ interface Props {
   nombre: string;
   precio: number;
   imagenUrl: string | null;
-  enStock: boolean;
+  stock: number;
+  fullWidth?: boolean;
 }
 
-export default function AddToCartButton({ productoId, nombre, precio, imagenUrl, enStock }: Props) {
+export default function AddToCartButton({ productoId, nombre, precio, imagenUrl, stock, fullWidth }: Props) {
   const [added, setAdded] = useState(false);
-  const { addItem, openCart } = useCartStore();
+  const { items, addItem, openCart } = useCartStore();
+
+  const cantidad = items.find((i) => i.productoId === productoId)?.cantidad ?? 0;
+  const atLimit = cantidad >= stock;
 
   const handleAdd = () => {
+    if (atLimit) return;
     addItem({ productoId, nombre, precio, imagenUrl });
     setAdded(true);
     setTimeout(() => {
@@ -25,7 +30,7 @@ export default function AddToCartButton({ productoId, nombre, precio, imagenUrl,
     }, 700);
   };
 
-  if (!enStock) {
+  if (stock <= 0) {
     return (
       <button
         disabled
@@ -39,7 +44,8 @@ export default function AddToCartButton({ productoId, nombre, precio, imagenUrl,
   return (
     <button
       onClick={handleAdd}
-      className="group inline-flex items-center justify-center gap-2 self-start rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] px-7 py-3.5 text-sm font-semibold overflow-hidden relative transition-all"
+      disabled={atLimit}
+      className={`group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] px-7 py-3.5 text-sm font-semibold overflow-hidden relative transition-all disabled:opacity-60 disabled:cursor-not-allowed ${fullWidth ? "flex-1" : "self-start"}`}
     >
       <span className="absolute inset-0 bg-black/10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full" />
       <span className="relative flex items-center gap-2">
