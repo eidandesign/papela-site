@@ -135,7 +135,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
           {/* Right — Calendar */}
           <div className="flex flex-col gap-6">
             <div className="text-center md:text-left">
-              <h2 className="font-serif font-extralight text-[clamp(1.5rem,2.5vw,2rem)] text-[var(--color-text)] mb-1">
+              <h2 className="font-serif font-extralight text-[clamp(2.2rem,5vw,3.5rem)] text-[var(--color-text)] mb-1">
                 Elige tu horario
               </h2>
               <p className="font-sans text-[var(--color-muted)] text-sm">
