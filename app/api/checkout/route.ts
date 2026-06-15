@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
           pending: `${baseUrl}/clases/pago/pendiente`,
         },
         auto_return: "approved",
+        notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         external_reference: horarioId,
       },
     });
