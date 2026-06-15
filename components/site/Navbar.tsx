@@ -284,7 +284,8 @@ export default function SiteNavbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed top-0 inset-x-0 z-50 bg-transparent"
+            className="fixed top-0 inset-x-0 bg-transparent"
+            style={{ zIndex: menuOpen ? 100001 : 50 }}
           >
             <nav className="w-[96%] mx-auto relative flex items-center justify-center px-6 md:px-10 h-[140px] md:h-[170px]">
               {/* Left links — desktop only */}
