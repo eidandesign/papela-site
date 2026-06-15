@@ -8,9 +8,9 @@ import { getProductos } from "@/lib/productos";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Papela Atelier — Papelería creativa, talleres y clases de arte en Puebla",
+  title: "Papela Atelier — Papelería, talleres y clases de arte en Puebla",
   description:
-    "Descubre Papela Atelier: papelería creativa, libretas artesanales, talleres de acuarela, acrílico, cerámica y clases de arte en Puebla. Un espacio para crear y expresarte.",
+    "Papelería creativa en Puebla: libretas artesanales, talleres de acuarela, acrílico, cerámica y clases de arte. Un espacio para crear y expresarte.",
   alternates: { canonical: "https://www.papela-atelier.com" },
 };
 

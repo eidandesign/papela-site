@@ -7,11 +7,11 @@ const SITE_URL = "https://www.papela-atelier.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Papela Atelier — Papelería creativa, talleres y clases de arte en Puebla",
+    default: "Papela Atelier — Papelería, talleres y clases de arte en Puebla",
     template: "%s · Papela Atelier",
   },
   description:
-    "Papela Atelier es una papelería creativa en Puebla con talleres de acuarela, acrílico, cerámica y más. Materiales de arte, libretas, diseño y clases para todos los niveles.",
+    "Papelería creativa en Puebla con talleres de acuarela, acrílico, cerámica y más. Libretas, materiales de arte y clases para todos los niveles.",
   keywords: [
     "papelería Puebla",
     "talleres de arte Puebla",
@@ -30,9 +30,9 @@ export const metadata: Metadata = {
     locale: "es_MX",
     url: SITE_URL,
     siteName: "Papela Atelier",
-    title: "Papela Atelier — Papelería creativa y talleres de arte en Puebla",
+    title: "Papela Atelier — Papelería y talleres de arte en Puebla",
     description:
-      "Talleres de arte, clases de pintura, materiales y papelería creativa en Puebla. Un espacio para aprender, crear y llevarte algo hecho por ti.",
+      "Talleres de arte, materiales y papelería creativa en Puebla. Aprende, crea y llévate algo hecho por ti.",
     images: [
       {
         url: "/images/og-papela.jpg",
@@ -44,9 +44,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Papela Atelier — Papelería creativa y talleres de arte en Puebla",
+    title: "Papela Atelier — Papelería y talleres de arte en Puebla",
     description:
-      "Talleres de arte, clases de pintura, materiales y papelería creativa en Puebla.",
+      "Talleres de arte, materiales y papelería creativa en Puebla. Aprende y crea.",
     images: ["/images/og-papela.jpg"],
   },
   robots: {
