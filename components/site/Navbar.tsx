@@ -299,9 +299,9 @@ export default function SiteNavbar() {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="fixed top-0 inset-x-0 z-50 bg-transparent"
           >
-            <nav className="w-[96%] mx-auto grid grid-cols-[1fr_auto_1fr] items-center px-6 md:px-10 h-[140px] md:h-[170px]">
+            <nav className="w-[96%] mx-auto relative flex items-center justify-center px-6 md:px-10 h-[140px] md:h-[170px]">
               {/* Left links — desktop only */}
-              <div className="hidden md:flex items-center justify-end gap-32 pr-16">
+              <div className="hidden md:flex items-center gap-32 absolute left-10">
                 {[
                   { href: "/productos", label: "Catálogo" },
                   { href: "/talleres", label: "Talleres" },
@@ -322,12 +322,11 @@ export default function SiteNavbar() {
                 ))}
               </div>
 
-              {/* Center logo */}
+              {/* Center logo — always centered */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
-                className="flex justify-center"
               >
                 <Link href="/" className="flex flex-col items-center pt-4">
                   <Image
@@ -342,7 +341,7 @@ export default function SiteNavbar() {
               </motion.div>
 
               {/* Right links — desktop only */}
-              <div className="hidden md:flex items-center justify-start gap-32 pl-16">
+              <div className="hidden md:flex items-center gap-32 absolute right-10">
                 {[
                   { href: "/clases", label: "Clases" },
                   { href: "/nosotros", label: "Nosotros" },
@@ -363,17 +362,15 @@ export default function SiteNavbar() {
                 ))}
               </div>
 
-              {/* Mobile hamburger — top right */}
-              <div className="md:hidden flex justify-end">
-                <button
-                  onClick={openMenu}
-                  aria-label="Abrir menú"
-                  className="p-3 -mr-2"
-                  style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
-                >
-                  <BurgerIcon color={FG} />
-                </button>
-              </div>
+              {/* Mobile hamburger — absolutely positioned top right */}
+              <button
+                onClick={openMenu}
+                aria-label="Abrir menú"
+                className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 p-3"
+                style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
+              >
+                <BurgerIcon color={FG} />
+              </button>
             </nav>
           </motion.header>
         )}
@@ -383,11 +380,11 @@ export default function SiteNavbar() {
         {isScrolled && (
           <motion.nav
             key="floating-nav"
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 md:gap-6 px-5 md:px-6 py-3 rounded-full"
+            className="fixed bottom-5 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 md:gap-6 px-5 md:px-6 py-3 rounded-full"
             style={{
               background: "rgba(0, 0, 0, 0.4)",
               backdropFilter: "blur(20px) saturate(200%)",
