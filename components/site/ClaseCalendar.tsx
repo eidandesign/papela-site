@@ -25,6 +25,16 @@ function formatMes(date: Date) {
   return date.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
 }
 
+function getWeekOfMonth(date: Date) {
+  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+  const firstMonday = new Date(firstDay);
+  const day = firstDay.getDay();
+  const diff = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+  firstMonday.setDate(firstDay.getDate() + diff);
+  if (date < firstMonday) return 1;
+  return Math.floor((date.getDate() - firstMonday.getDate()) / 7) + (diff === 0 ? 1 : 2);
+}
+
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -87,24 +97,31 @@ export default function ClaseCalendar({
     slotsByDay[i].map((h) => ({ h, day, dayIdx: i }))
   );
 
+  const weekNum = getWeekOfMonth(weekStart);
+
   const WeekNav = () => (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between gap-4">
       <button
         type="button"
         aria-label="Semana anterior"
         onClick={() => setWeekStart((w) => addDays(w, -7))}
-        className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
+        className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
       >
         <ChevronLeftIcon className="w-4 h-4" />
       </button>
-      <span className="font-sans text-sm capitalize text-[var(--color-text)]">
-        {formatMes(weekStart)}
-      </span>
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="font-serif font-extralight text-[clamp(1.4rem,5vw,2rem)] capitalize text-[var(--color-text)] leading-tight">
+          {formatMes(weekStart)}
+        </span>
+        <span className="font-sans text-xs uppercase tracking-widest text-[var(--color-muted)]">
+          Semana {weekNum}
+        </span>
+      </div>
       <button
         type="button"
         aria-label="Siguiente semana"
         onClick={() => setWeekStart((w) => addDays(w, 7))}
-        className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
+        className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
       >
         <ChevronRightIcon className="w-4 h-4" />
       </button>
