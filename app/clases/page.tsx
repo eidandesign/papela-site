@@ -6,9 +6,9 @@ import { getClases } from "@/lib/clases";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Clases de arte en Puebla — Pintura, dibujo y técnicas creativas",
+  title: { absolute: "Clases de arte en Puebla — Papela Atelier" },
   description:
-    "Clases regulares de arte en Puebla con Papela Atelier. Aprende pintura, acuarela, acrílico y más con maestras especializadas. Para principiantes y niveles avanzados.",
+    "Clases regulares de pintura, acuarela y acrílico en Puebla con maestras especializadas. Para principiantes y niveles avanzados. Aprende a tu ritmo.",
   alternates: { canonical: "https://www.papela-atelier.com/clases" },
   openGraph: {
     title: "Clases de arte en Puebla — Papela Atelier",

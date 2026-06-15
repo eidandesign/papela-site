@@ -5,7 +5,7 @@ import ProductosCatalog from "@/components/site/ProductosCatalog";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Catálogo de papelería y materiales de arte en Puebla",
+  title: { absolute: "Catálogo de papelería y arte en Puebla — Papela Atelier" },
   description:
     "Explora el catálogo de Papela Atelier: libretas artesanales, materiales de pintura, acuarelas, pinceles y papelería creativa. Envíos en Puebla.",
   alternates: { canonical: "https://www.papela-atelier.com/productos" },

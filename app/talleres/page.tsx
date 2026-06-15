@@ -7,9 +7,9 @@ import { getTalleres } from "@/lib/talleres";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Talleres de arte en Puebla — Acuarela, acrílico, cerámica y más",
+  title: { absolute: "Talleres de arte en Puebla — Papela Atelier" },
   description:
-    "Talleres presenciales de arte en Puebla con Papela Atelier. Aprende acuarela, acrílico, cerámica, dibujo y más. Para todos los niveles, con instructores especializados.",
+    "Talleres presenciales de acuarela, acrílico, cerámica y dibujo en Puebla. Para todos los niveles, con instructores especializados. ¡Llévate algo hecho por ti!",
   alternates: { canonical: "https://www.papela-atelier.com/talleres" },
   openGraph: {
     title: "Talleres de arte en Puebla — Papela Atelier",

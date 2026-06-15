@@ -12,9 +12,9 @@ import {
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Quiénes somos — La historia de Papela Atelier en Puebla",
+  title: { absolute: "Nosotros — La historia de Papela Atelier en Puebla" },
   description:
-    "Conoce Papela Atelier: un espacio creativo en Puebla dedicado a la papelería, el arte y la expresión. Nuestra historia, misión y el equipo detrás de cada taller y clase.",
+    "Conoce Papela Atelier: un espacio creativo en Puebla dedicado a la papelería, el arte y la expresión. Nuestra historia y el equipo detrás de cada taller.",
   alternates: { canonical: "https://www.papela-atelier.com/nosotros" },
 };
 

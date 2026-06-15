@@ -1,10 +1,43 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClaseBySlug } from "@/lib/clases";
+import { SITE_URL } from "@/lib/site";
 import ClaseCalendar from "@/components/site/ClaseCalendar";
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const maestra = await getClaseBySlug(slug);
+
+  if (!maestra) {
+    return { title: "Clase no encontrada", robots: { index: false, follow: false } };
+  }
+
+  const tecnicas = maestra.tecnicas?.join(", ") || "arte";
+  const desc =
+    maestra.descripcion?.slice(0, 155) ??
+    `Clases de ${tecnicas} con ${maestra.nombre} en Papela Atelier, Puebla.`;
+  const url = `${SITE_URL}/clases/${maestra.slug}`;
+
+  return {
+    title: { absolute: `Clases de ${tecnicas} con ${maestra.nombre} — Puebla` },
+    description: desc,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `Clases de ${tecnicas} con ${maestra.nombre}`,
+      description: desc,
+      url,
+      images: maestra.foto ? [{ url: maestra.foto, alt: maestra.nombre }] : undefined,
+    },
+  };
+}
 
 export default async function ClaseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -12,8 +45,36 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
 
   if (!maestra) notFound();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: `Clases de ${maestra.tecnicas?.join(", ") || "arte"} con ${maestra.nombre}`,
+    description: maestra.descripcion ?? undefined,
+    image: maestra.foto ?? undefined,
+    inLanguage: "es-MX",
+    provider: {
+      "@type": "Organization",
+      name: "Papela Atelier",
+      url: SITE_URL,
+    },
+    offers: {
+      "@type": "Offer",
+      category: "Clases de arte",
+      priceCurrency: "MXN",
+      availability:
+        maestra.horarios.length > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/SoldOut",
+      url: `${SITE_URL}/clases/${maestra.slug}`,
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ── Hero ── */}
       <section className="mx-5 md:mx-20 mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#5d7c80] flex flex-col items-center justify-center text-center px-8 md:px-16 pt-36 pb-24">
         <h1 className="font-serif italic text-[clamp(2.8rem,6.5vw,5.5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-4xl mb-4">

@@ -45,6 +45,7 @@ export async function getClaseBySlug(slug: string): Promise<MaestraConHorarios |
     .from("clases")
     .select("id, nombre, slug, tecnicas, descripcion, experiencia, foto, galeria, whatsapp, activa")
     .eq("slug", slug)
+    .eq("activa", true)
     .single();
 
   if (error || !maestra) return null;
