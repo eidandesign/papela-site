@@ -17,21 +17,31 @@ const NAV_LINKS = [
 const EASE = "cubic-bezier(0.76, 0, 0.24, 1)";
 const FG = "#F3E6CF";
 
-function BurgerIcon({ color = "currentColor" }: { color?: string }) {
+function AnimatedBurger({ isOpen, color = "currentColor" }: { isOpen: boolean; color?: string }) {
+  const ease = `transform 0.38s ${EASE}`;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "28px" }}>
-      <span style={{ display: "block", height: "1.5px", width: "28px", backgroundColor: color }} />
-      <span style={{ display: "block", height: "1.5px", width: "18px", backgroundColor: color }} />
-      <span style={{ display: "block", height: "1.5px", width: "28px", backgroundColor: color }} />
-    </div>
-  );
-}
-
-function XIcon() {
-  return (
-    <div style={{ position: "relative", width: 32, height: 32 }}>
-      <span style={{ position: "absolute", top: "50%", left: 0, width: 32, height: 1.5, backgroundColor: FG, display: "block", transform: "translateY(-50%) rotate(45deg)" }} />
-      <span style={{ position: "absolute", top: "50%", left: 0, width: 32, height: 1.5, backgroundColor: FG, display: "block", transform: "translateY(-50%) rotate(-45deg)" }} />
+    <div style={{ width: 28, height: 19, position: "relative" }}>
+      <span style={{
+        position: "absolute", top: 0, left: 0,
+        display: "block", height: "1.5px", width: 28, backgroundColor: color,
+        transformOrigin: "center",
+        transform: isOpen ? "translateY(8.75px) rotate(45deg)" : "translateY(0) rotate(0deg)",
+        transition: ease,
+      }} />
+      <span style={{
+        position: "absolute", top: "50%", left: 0, marginTop: "-0.75px",
+        display: "block", height: "1.5px", width: 18, backgroundColor: color,
+        opacity: isOpen ? 0 : 1,
+        transform: isOpen ? "scaleX(0)" : "scaleX(1)",
+        transition: "opacity 0.18s ease, transform 0.22s ease",
+      }} />
+      <span style={{
+        position: "absolute", bottom: 0, left: 0,
+        display: "block", height: "1.5px", width: 28, backgroundColor: color,
+        transformOrigin: "center",
+        transform: isOpen ? "translateY(-8.75px) rotate(-45deg)" : "translateY(0) rotate(0deg)",
+        transition: ease,
+      }} />
     </div>
   );
 }
@@ -133,39 +143,13 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         padding: "0 8vw",
         boxSizing: "border-box",
         overflow: "hidden",
-        clipPath: visible ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 100% 0%)",
-        WebkitClipPath: visible ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 100% 0%)",
+        clipPath: visible ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)",
+        WebkitClipPath: visible ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)",
         transition: `clip-path 0.65s ${EASE}, -webkit-clip-path 0.65s ${EASE}`,
         WebkitTapHighlightColor: "transparent",
       }}
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        aria-label="Cerrar menú"
-        style={{
-          position: "absolute",
-          top: 12,
-          right: 8,
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          padding: 12,
-          width: 56,
-          height: 56,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          opacity: visible ? 1 : 0,
-          transition: "opacity 0.3s ease 0.3s",
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
-        }}
-      >
-        <XIcon />
-      </button>
-
-      {/* Logo */}
+      {/* Logo top left */}
       <div style={{ position: "absolute", top: 16, left: 20, opacity: visible ? 1 : 0, transition: "opacity 0.3s ease 0.3s" }}>
         <Link href="/" onClick={onClose}>
           <Image src="/site/logo.png" alt="Papela" width={60} height={60} className="object-contain brightness-200 opacity-80" />
@@ -193,7 +177,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
               paddingBottom: 10,
               borderBottom: "1px solid rgba(243,230,207,0.18)",
               opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0)" : "translateY(40px)",
+              transform: visible ? "translateY(0)" : "translateY(30px)",
               transition: [
                 `opacity 0.5s ease ${0.15 + i * 0.08}s`,
                 `transform 0.6s ${EASE} ${0.15 + i * 0.08}s`,
@@ -213,9 +197,9 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         style={{
           display: "flex",
           gap: 12,
-          marginTop: 32,
+          marginTop: 28,
           opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(24px)",
+          transform: visible ? "translateY(0)" : "translateY(20px)",
           transition: `opacity 0.5s ease ${socialDelay}s, transform 0.6s ${EASE} ${socialDelay}s`,
         }}
       >
@@ -254,6 +238,36 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
             <Icon />
           </a>
         ))}
+      </div>
+
+      {/* Bottom close button — animated burger→X */}
+      <div style={{
+        position: "absolute",
+        bottom: 36,
+        left: "50%",
+        transform: "translateX(-50%)",
+        opacity: visible ? 1 : 0,
+        transition: `opacity 0.3s ease ${socialDelay + 0.05}s`,
+      }}>
+        <button
+          onClick={onClose}
+          aria-label="Cerrar menú"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            background: "rgba(243,230,207,0.12)",
+            border: "1px solid rgba(243,230,207,0.25)",
+            borderRadius: 999,
+            padding: "14px 28px",
+            cursor: "pointer",
+            WebkitTapHighlightColor: "transparent",
+            touchAction: "manipulation",
+          }}
+        >
+          <AnimatedBurger isOpen color={FG} />
+        </button>
       </div>
     </div>,
     portalRef.current
@@ -369,7 +383,7 @@ export default function SiteNavbar() {
                 className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 p-3"
                 style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
               >
-                <BurgerIcon color={FG} />
+                <AnimatedBurger isOpen={menuOpen} color={FG} />
               </button>
             </nav>
           </motion.header>
@@ -421,14 +435,13 @@ export default function SiteNavbar() {
 
             {/* Mobile hamburger */}
             <motion.button
-              onClick={openMenu}
-              aria-label="Abrir menú"
-              className="md:hidden text-white/80 hover:text-white transition-colors p-1"
-              whileHover={{ scale: 1.1 }}
+              onClick={menuOpen ? closeMenu : openMenu}
+              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              className="md:hidden p-1"
               whileTap={{ scale: 0.95 }}
               style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
             >
-              <BurgerIcon color="rgba(255,255,255,0.85)" />
+              <AnimatedBurger isOpen={menuOpen} color="rgba(255,255,255,0.9)" />
             </motion.button>
           </motion.nav>
         )}
