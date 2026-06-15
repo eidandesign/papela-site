@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { createClient } from "@/lib/supabase/server";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -8,9 +9,25 @@ const client = new MercadoPagoConfig({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { horarioId, claseNombre, fechaHora, precio, duracion } = body;
+    const { horarioId, claseNombre, fechaHora, duracion } = body;
 
-    const baseUrl = req.headers.get("origin") || "http://localhost:3000";
+    if (!horarioId || typeof horarioId !== "string") {
+      return NextResponse.json({ error: "horarioId inválido" }, { status: 400 });
+    }
+
+    // Fetch authoritative price from DB — never trust client-supplied price
+    const supabase = await createClient();
+    const { data: horario, error: dbError } = await supabase
+      .from("clases_horarios")
+      .select("precio")
+      .eq("id", horarioId)
+      .single();
+
+    if (dbError || !horario) {
+      return NextResponse.json({ error: "Horario no encontrado" }, { status: 404 });
+    }
+
+    const baseUrl = req.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
     const preference = new Preference(client);
     const result = await preference.create({
@@ -21,14 +38,14 @@ export async function POST(req: NextRequest) {
             title: `Clase con ${claseNombre}`,
             description: `${fechaHora} · ${duracion} min`,
             quantity: 1,
-            unit_price: precio,
+            unit_price: horario.precio,
             currency_id: "MXN",
           },
         ],
         back_urls: {
-          success: `https://papela-site.vercel.app/clases/pago/gracias`,
-          failure: `https://papela-site.vercel.app/clases/pago/error`,
-          pending: `https://papela-site.vercel.app/clases/pago/pendiente`,
+          success: `${baseUrl}/clases/pago/gracias`,
+          failure: `${baseUrl}/clases/pago/error`,
+          pending: `${baseUrl}/clases/pago/pendiente`,
         },
         auto_return: "approved",
         external_reference: horarioId,

@@ -66,7 +66,7 @@ function ProductCard({ id, nombre, precio, imagen_url }: { id: string; nombre: s
 export default async function HomePage() {
   const [libretas, favoritos] = await Promise.all([
     getProductos("Papelería"),
-    getProductos(),
+    getProductos(undefined, 12),
   ]);
 
   return (

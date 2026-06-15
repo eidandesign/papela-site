@@ -51,7 +51,7 @@ export async function getClaseBySlug(slug: string): Promise<MaestraConHorarios |
 
   const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
 
-  const { data: horarios } = await supabase
+  const { data: horarios, error: horariosError } = await supabase
     .from("clases_horarios")
     .select("id, fecha_hora, cupo_disponible, precio, duracion_minutos")
     .eq("clase_id", maestra.id)
@@ -59,6 +59,8 @@ export async function getClaseBySlug(slug: string): Promise<MaestraConHorarios |
     .gt("fecha_hora", twoHoursFromNow)
     .gt("cupo_disponible", 0)
     .order("fecha_hora", { ascending: true });
+
+  if (horariosError) console.error("Error fetching horarios:", horariosError.message);
 
   return { ...maestra, horarios: horarios ?? [] };
 }

@@ -93,7 +93,12 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       document.body.appendChild(el);
     }
     portalRef.current = el;
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    };
   }, []);
 
   useEffect(() => {

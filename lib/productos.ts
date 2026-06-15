@@ -12,7 +12,7 @@ export type Producto = {
   medida: string | null;
 };
 
-export async function getProductos(categoria?: string): Promise<Producto[]> {
+export async function getProductos(categoria?: string, limit?: number): Promise<Producto[]> {
   const supabase = await createClient();
 
   let query = supabase
@@ -23,6 +23,10 @@ export async function getProductos(categoria?: string): Promise<Producto[]> {
 
   if (categoria) {
     query = query.eq("categoria", categoria);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
   }
 
   const { data, error } = await query;

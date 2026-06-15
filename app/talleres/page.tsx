@@ -93,9 +93,9 @@ export default async function TalleresPage() {
                 {/* Info */}
                 <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
                   <div>
-                    {taller.fecha_inicio && (
+                    {taller.fecha && (
                       <p className="text-xs font-medium text-[var(--color-muted)] mb-3 flex items-center gap-2">
-                        <span>{formatFecha(taller.fecha_inicio)}</span>
+                        <span>{formatFecha(taller.fecha)}</span>
                         {taller.hora_inicio && (
                           <>
                             <span className="w-px h-3 bg-[var(--color-border)]" />
@@ -109,15 +109,15 @@ export default async function TalleresPage() {
                       {taller.titulo}
                     </h2>
 
-                    {taller.instructor && (
+                    {taller.instructor_nombre && (
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-8 h-8 rounded-full bg-[var(--color-cremita)] overflow-hidden relative flex-shrink-0">
-                          {taller.instructor_avatar && (
-                            <Image src={taller.instructor_avatar} alt={taller.instructor} fill className="object-cover" />
+                          {taller.instructor_foto_url && (
+                            <Image src={taller.instructor_foto_url} alt={taller.instructor_nombre} fill className="object-cover" />
                           )}
                         </div>
                         <span className="text-sm font-medium text-[var(--color-muted)] uppercase tracking-wide">
-                          {taller.instructor}
+                          {taller.instructor_nombre}
                         </span>
                       </div>
                     )}
@@ -138,9 +138,10 @@ export default async function TalleresPage() {
                     </div>
                     <Link
                       href={`/talleres/${taller.id}`}
+                      aria-label={`Ver detalle de ${taller.titulo}`}
                       className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] hover:opacity-80 transition-opacity"
                     >
-                      <ArrowRightIcon className="w-5 h-5" />
+                      <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
                     </Link>
                   </div>
                 </div>

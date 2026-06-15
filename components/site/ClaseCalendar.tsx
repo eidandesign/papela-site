@@ -68,6 +68,7 @@ export default function ClaseCalendar({
           duracion: h.duracion_minutos,
         }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
@@ -86,6 +87,8 @@ export default function ClaseCalendar({
       {/* Week nav */}
       <div className="flex items-center justify-between">
         <button
+          type="button"
+          aria-label="Semana anterior"
           onClick={() => setWeekStart((w) => addDays(w, -7))}
           className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
         >
@@ -95,6 +98,8 @@ export default function ClaseCalendar({
           {formatMes(weekStart)}
         </span>
         <button
+          type="button"
+          aria-label="Siguiente semana"
           onClick={() => setWeekStart((w) => addDays(w, 7))}
           className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
         >
