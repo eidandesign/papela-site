@@ -156,27 +156,6 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         </Link>
       </div>
 
-      {/* Close button — same top-right position as the hamburger */}
-      <button
-        onClick={onClose}
-        aria-label="Cerrar menú"
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          padding: "24px 16px",
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          opacity: visible ? 1 : 0,
-          transition: "opacity 0.25s ease 0.25s",
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
-          zIndex: 1,
-        }}
-      >
-        <AnimatedBurger isOpen color={FG} />
-      </button>
 
       {/* Nav links */}
       <nav style={{ display: "flex", flexDirection: "column", width: "100%" }}>
@@ -369,12 +348,17 @@ export default function SiteNavbar() {
                 ))}
               </div>
 
-              {/* Mobile hamburger — absolutely positioned top right */}
+              {/* Mobile hamburger — absolutely positioned top right, above overlay when open */}
               <button
-                onClick={openMenu}
-                aria-label="Abrir menú"
+                onClick={menuOpen ? closeMenu : openMenu}
+                aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
                 className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 p-3"
-                style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
+                style={{
+                  WebkitTapHighlightColor: "transparent",
+                  touchAction: "manipulation",
+                  zIndex: menuOpen ? 100001 : "auto",
+                  position: "absolute",
+                }}
               >
                 <AnimatedBurger isOpen={menuOpen} color={FG} />
               </button>
@@ -391,12 +375,13 @@ export default function SiteNavbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed bottom-5 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 md:gap-6 px-5 md:px-6 py-3 rounded-full"
+            className="fixed bottom-5 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-6 px-5 md:px-6 py-3 rounded-full"
             style={{
               background: "rgba(0, 0, 0, 0.4)",
               backdropFilter: "blur(20px) saturate(200%)",
               border: "1px solid rgba(255, 255, 255, 0.2)",
               boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+              zIndex: menuOpen ? 100000 : 50,
             }}
           >
             {/* Logo */}
@@ -432,7 +417,12 @@ export default function SiteNavbar() {
               aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
               className="md:hidden p-1"
               whileTap={{ scale: 0.95 }}
-              style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
+              style={{
+                WebkitTapHighlightColor: "transparent",
+                touchAction: "manipulation",
+                position: "relative",
+                zIndex: menuOpen ? 100001 : "auto",
+              }}
             >
               <AnimatedBurger isOpen={menuOpen} color="rgba(255,255,255,0.9)" />
             </motion.button>
