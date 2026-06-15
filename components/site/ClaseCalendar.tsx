@@ -82,39 +82,99 @@ export default function ClaseCalendar({
     }
   }
 
+  // Flat sorted list of slots for mobile view
+  const allSlots = weekDays.flatMap((day, i) =>
+    slotsByDay[i].map((h) => ({ h, day, dayIdx: i }))
+  );
+
+  const WeekNav = () => (
+    <div className="flex items-center justify-between">
+      <button
+        type="button"
+        aria-label="Semana anterior"
+        onClick={() => setWeekStart((w) => addDays(w, -7))}
+        className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
+      >
+        <ChevronLeftIcon className="w-4 h-4" />
+      </button>
+      <span className="font-sans text-sm capitalize text-[var(--color-text)]">
+        {formatMes(weekStart)}
+      </span>
+      <button
+        type="button"
+        aria-label="Siguiente semana"
+        onClick={() => setWeekStart((w) => addDays(w, 7))}
+        className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
+      >
+        <ChevronRightIcon className="w-4 h-4" />
+      </button>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Week nav */}
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          aria-label="Semana anterior"
-          onClick={() => setWeekStart((w) => addDays(w, -7))}
-          className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
-        >
-          <ChevronLeftIcon className="w-4 h-4" />
-        </button>
-        <span className="font-sans text-sm capitalize text-[var(--color-text)]">
-          {formatMes(weekStart)}
-        </span>
-        <button
-          type="button"
-          aria-label="Siguiente semana"
-          onClick={() => setWeekStart((w) => addDays(w, 7))}
-          className="w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
-        >
-          <ChevronRightIcon className="w-4 h-4" />
-        </button>
+      <WeekNav />
+
+      {/* ── MOBILE: list rows ── */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {allSlots.length === 0 ? (
+          <p className="text-center font-sans text-[var(--color-muted)] py-6">
+            No hay clases disponibles esta semana. Navega a la siguiente.
+          </p>
+        ) : allSlots.map(({ h, day, dayIdx }) => {
+          const isToday = isSameDay(day, new Date());
+          const hora = new Date(h.fecha_hora).toLocaleTimeString("es-MX", {
+            hour: "2-digit", minute: "2-digit",
+          });
+          const fechaLabel = day.toLocaleDateString("es-MX", {
+            weekday: "short", day: "numeric", month: "short",
+          });
+          return (
+            <div
+              key={h.id}
+              className="flex items-center gap-4 bg-[#e7d6cf] rounded-2xl px-4 py-4"
+            >
+              {/* Date pill */}
+              <div className={`flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl ${isToday ? "bg-[var(--color-verde)]" : "bg-white/60"}`}>
+                <span className={`font-sans text-[10px] uppercase tracking-widest leading-none ${isToday ? "text-[var(--color-cremita)]" : "text-[var(--color-muted)]"}`}>
+                  {DAYS[dayIdx]}
+                </span>
+                <span className={`font-serif text-2xl leading-tight ${isToday ? "text-[var(--color-cremita)]" : "text-[var(--color-text)]"}`}>
+                  {day.getDate()}
+                </span>
+              </div>
+
+              {/* Details */}
+              <div className="flex-1 min-w-0">
+                <p className="font-sans font-semibold text-[var(--color-verde)] text-base leading-tight">{hora}</p>
+                <p className="font-sans text-xs text-[var(--color-muted)] mt-0.5">
+                  {h.duracion_minutos} min · {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
+                </p>
+                <p className="font-sans font-semibold text-[var(--color-text)] text-sm mt-1">
+                  ${h.precio.toLocaleString()} MXN
+                </p>
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={() => handleReservar(h)}
+                disabled={loading === h.id}
+                className="flex-shrink-0 bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-sm font-semibold px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loading === h.id ? "..." : "Reservar"}
+              </button>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Day columns */}
-      <div className="grid grid-cols-5 gap-3">
+      {/* ── DESKTOP: 5-column calendar grid ── */}
+      <div className="hidden md:grid grid-cols-5 gap-3">
         {weekDays.map((day, i) => {
           const slots = slotsByDay[i];
           const isToday = isSameDay(day, new Date());
           return (
             <div key={i} className="flex flex-col gap-3">
-              {/* Day header */}
               <div className={`flex flex-col items-center py-3 rounded-xl ${isToday ? "bg-[var(--color-verde)]" : "bg-[#f2f0e9]"}`}>
                 <span className={`font-sans text-xs uppercase tracking-widest ${isToday ? "text-[var(--color-cremita)]" : "text-[var(--color-muted)]"}`}>
                   {DAYS[i]}
@@ -123,23 +183,15 @@ export default function ClaseCalendar({
                   {day.getDate()}
                 </span>
               </div>
-
-              {/* Slots */}
               {slots.map((h) => {
                 const hora = new Date(h.fecha_hora).toLocaleTimeString("es-MX", {
                   hour: "2-digit", minute: "2-digit",
                 });
                 return (
-                  <div key={h.id} className="flex flex-col items-center gap-2 bg-[#e7d6cf] border-2 border-transparent rounded-xl p-3 text-center w-full">
-                    <span className="font-sans font-medium text-sm text-[var(--color-verde)]">
-                      {hora}
-                    </span>
-                    <span className="font-sans text-xs text-[var(--color-muted)]">
-                      {h.duracion_minutos}m
-                    </span>
-                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">
-                      ${h.precio.toLocaleString()}
-                    </span>
+                  <div key={h.id} className="flex flex-col items-center gap-2 bg-[#e7d6cf] rounded-xl p-3 text-center w-full">
+                    <span className="font-sans font-medium text-sm text-[var(--color-verde)]">{hora}</span>
+                    <span className="font-sans text-xs text-[var(--color-muted)]">{h.duracion_minutos}m</span>
+                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">${h.precio.toLocaleString()}</span>
                     <span className="font-sans text-xs text-[var(--color-muted)]">
                       {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
                     </span>
@@ -159,7 +211,7 @@ export default function ClaseCalendar({
       </div>
 
       {!hasAnySlot && (
-        <p className="text-center font-sans text-[var(--color-muted)] py-6">
+        <p className="hidden md:block text-center font-sans text-[var(--color-muted)] py-6">
           No hay clases disponibles esta semana. Navega a la siguiente.
         </p>
       )}
