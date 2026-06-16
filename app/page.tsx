@@ -261,7 +261,7 @@ export default async function HomePage() {
         </div>
 
         {/* Desktop: grid */}
-        <div className="hidden md:grid grid-cols-3 gap-4">
+        <div className="hidden md:grid grid-cols-3 gap-4 w-[90%] mx-auto">
           {["/images/instagram-1.jpg", "/images/Instagram-2.jpg", "/images/Instagram-3.jpg"].map((src, i) => (
             <a
               key={i}

@@ -25,21 +25,6 @@ function formatFecha(fecha: string | null) {
   return d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }).toUpperCase();
 }
 
-function NivelBadge({ nivel }: { nivel: string | null }) {
-  if (!nivel) return null;
-  const colors: Record<string, string> = {
-    principiante: "bg-[#C9D3C0] text-[#2b3a2e]",
-    intermedio: "bg-[#CED8D9] text-[#1e2d36]",
-    avanzado: "bg-[#F0D9CC] text-[#3a2e2b]",
-  };
-  const key = nivel.toLowerCase();
-  return (
-    <span className={`text-[10px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full ${colors[key] ?? "bg-[var(--color-cremita-2)] text-[var(--color-text)]"}`}>
-      {nivel}
-    </span>
-  );
-}
-
 export default async function TalleresPage() {
   const talleres = await getTalleres();
 
@@ -47,134 +32,122 @@ export default async function TalleresPage() {
     <>
       {/* Hero */}
       <section
-        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden h-[80vh] flex flex-col justify-center"
+        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col justify-center"
         style={{ backgroundColor: "#C4846A", width: '98vw', marginLeft: '1vw', marginRight: '1vw' }}
       >
-        <div className="px-10 md:px-20 py-20 md:py-28 flex flex-col items-center text-center">
+        <div className="px-10 md:px-20 pt-[140px] pb-16 md:py-28 flex flex-col items-center text-center">
           <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
-            <span className="font-sans text-[10px] font-medium tracking-[0.22em] uppercase text-[var(--color-cremita)]/70">
+            <span className="label text-[var(--color-cremita)]/70">
               Próximos Talleres
             </span>
           </span>
           <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-2xl mb-6">
             Aprende, crea y llévate un momento inolvidable
           </h1>
-          <p className="font-sans text-[var(--color-cremita)]/70 text-base max-w-lg leading-relaxed">
+          <p className="font-sans text-[var(--color-cremita)]/90 text-[18px] leading-[24px] max-w-lg">
             Con nuestros talleres aprendes, son recreativos pero los maestros están preparados para enseñar con la experiencia necesaria en su rama.
           </p>
         </div>
       </section>
 
       {/* Taller cards */}
-      <section className="w-[90%] mx-auto py-16 space-y-6">
+      <section className="w-[90%] mx-auto py-16">
         {talleres.length === 0 ? (
           <div className="py-24 text-center">
             <p className="font-serif font-extralight text-[2rem] text-[#403C3C] mb-3">Próximamente</p>
             <p className="text-[var(--color-muted)]">Estamos preparando nuevos talleres. ¡Vuelve pronto!</p>
           </div>
         ) : (
-          talleres.map((taller) => (
-            <article key={taller.id} className="group bg-[var(--color-cremita-2)]/60 rounded-2xl border-2 border-transparent transition-[transform,box-shadow,border-color] duration-300 ease-out cursor-pointer hover:border-[#d6bdb2] hover:shadow-[4px_6px_0px_#d6bdb2] hover:-translate-y-1">
-              {/* Tags row */}
-              <div className="flex items-center justify-between px-6 pt-5 pb-3">
-                <div className="flex items-center gap-2">
-                  {taller.categoria && (
-                    <span className="text-[10px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full bg-[var(--color-cremita)] text-[var(--color-verde)]">
-                      {taller.categoria}
-                    </span>
-                  )}
-                  <NivelBadge nivel={taller.nivel} />
-                </div>
-                {taller.activo && (
-                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-verde)]">
-                    <span className="w-2 h-2 rounded-full bg-[var(--color-verde)] inline-block" />
-                    Activo
-                  </span>
-                )}
-              </div>
-
-              {/* Main content */}
-              <div className="flex flex-col md:flex-row">
-                {/* Image */}
-                <div className="relative w-full md:w-[420px] flex-shrink-0 h-[260px] md:h-auto md:min-h-[340px] m-3 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {talleres.map((taller) => (
+              <article
+                key={taller.id}
+                className="flex flex-col bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-[26px] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[4px_6px_0px_#d6bdb2]"
+              >
+                {/* Image + floating instructor badge */}
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden">
                   {taller.imagen_url ? (
-                    <Image src={taller.imagen_url} alt={taller.titulo} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src={taller.imagen_url} alt={taller.titulo} fill className="object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
                   )}
+                  {taller.instructor_nombre && (
+                    <div className="absolute left-4 bottom-4 bg-[#f9eae3] rounded-2xl px-6 py-4">
+                      <p className="font-serif italic text-[#664917] text-[24px] leading-[32px]">
+                        {taller.instructor_nombre}
+                      </p>
+                      {taller.instructor_instagram && (
+                        <a
+                          href={`https://instagram.com/${taller.instructor_instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Instagram de ${taller.instructor_nombre}`}
+                          className="font-sans text-[#403c3c] text-[14px] leading-[14px] hover:opacity-70 transition-opacity"
+                        >
+                          @{taller.instructor_instagram}
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 p-6 md:p-8 flex flex-col justify-between">
-                  <div>
-                    {taller.fecha && (
-                      <p className="text-xs font-medium text-[var(--color-muted)] mb-3 flex items-center gap-2">
-                        <span>{formatFecha(taller.fecha)}</span>
-                        {taller.hora_inicio && (
-                          <>
-                            <span className="w-px h-3 bg-[var(--color-border)]" />
-                            <span>{taller.hora_inicio}{taller.hora_fin ? ` — ${taller.hora_fin}` : ""}</span>
-                          </>
+                {/* Body */}
+                <div className="flex flex-col flex-1 pt-6">
+                  <div className="flex flex-col flex-1 items-center gap-[11px] pb-6">
+                    {taller.categoria && (
+                      <span className="bg-[#f3e6cf] rounded-full px-3 py-1 font-sans font-bold text-[#12535c] text-[10px] tracking-[1px] uppercase leading-[15px]">
+                        {taller.categoria}
+                      </span>
+                    )}
+
+                    <div className="flex flex-col items-center gap-4 w-full border-b border-[#dbc2b3] pb-4">
+                      <h2 className="font-serif italic text-[#664917] text-[24px] leading-[32px] text-center">
+                        {taller.titulo}
+                      </h2>
+                      <div className="flex flex-col items-center gap-3 w-full">
+                        {taller.fecha && (
+                          <p className="font-sans text-[#664a18] text-[20px] leading-[16px] text-center">
+                            {formatFecha(taller.fecha)}
+                          </p>
                         )}
-                      </p>
-                    )}
-
-                    <h2 className="font-serif font-extralight text-[clamp(1.8rem,3vw,2.8rem)] text-[#403C3C] leading-tight mb-4">
-                      {taller.titulo}
-                    </h2>
-
-                    {taller.instructor_nombre && (
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 rounded-full bg-[var(--color-cremita)] overflow-hidden relative flex-shrink-0">
-                          {taller.instructor_foto_url && (
-                            <Image src={taller.instructor_foto_url} alt={taller.instructor_nombre} fill className="object-cover" />
-                          )}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-[var(--color-muted)] uppercase tracking-wide">
-                            {taller.instructor_nombre}
-                          </span>
-                          {taller.instructor_instagram && (
-                            <a
-                              href={`https://instagram.com/${taller.instructor_instagram}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              aria-label={`Instagram de ${taller.instructor_nombre}`}
-                              className="text-xs text-[var(--color-terracota)] hover:opacity-70 transition-opacity"
-                            >
-                              @{taller.instructor_instagram}
-                            </a>
-                          )}
-                        </div>
+                        {taller.hora_inicio && (
+                          <p className="font-sans text-[#6e645f] text-[14px] leading-[16px]">
+                            {taller.hora_inicio}{taller.hora_fin ? ` — ${taller.hora_fin}` : ""}
+                          </p>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {taller.descripcion && (
-                      <p className="text-sm text-[var(--color-muted)] leading-relaxed mb-6 max-w-md line-clamp-4">
+                      <p className="font-sans text-[#6e645f] text-[16px] leading-[22.75px] w-full">
                         {taller.descripcion}
                       </p>
                     )}
                   </div>
 
+                  {/* Inversión + CTA */}
                   <div className="flex items-end justify-between">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-muted)] mb-1">Inversión</p>
-                      <p className="font-serif font-extralight text-[2rem] text-[#403C3C] leading-none">
+                    <div className="flex flex-col gap-1">
+                      <p className="font-sans font-bold text-[#6e645f] text-[10px] tracking-[1px] uppercase leading-[15px]">
+                        Inversión
+                      </p>
+                      <p className="font-serif font-extralight text-[#403c3c] text-[32px] leading-[32px]">
                         ${taller.precio.toLocaleString()}
                       </p>
                     </div>
                     <Link
                       href={`/talleres/${taller.id}/checkout`}
-                      aria-label={`Reservar ${taller.titulo}`}
-                      className="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] hover:opacity-80 transition-opacity"
+                      aria-label={`Apartar lugar en ${taller.titulo}`}
+                      className="flex items-center justify-center gap-2 bg-[#12535c] text-[#f3e6cf] rounded-lg px-4 py-3 font-sans text-[16px] leading-[24px] hover:opacity-90 transition-opacity"
                     >
+                      Apartar lugar
                       <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
                     </Link>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))
+              </article>
+            ))}
+          </div>
         )}
       </section>
     </>

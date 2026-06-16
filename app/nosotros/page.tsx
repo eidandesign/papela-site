@@ -61,7 +61,7 @@ export default function NosotrosPage() {
     <>
       {/* ── Hero ── */}
       <section
-        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden h-[80vh] flex flex-col items-center justify-center text-center px-8 md:px-20"
+        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col items-center justify-start md:justify-center text-center px-8 md:px-20 pt-[140px] pb-16 md:py-0"
         style={{ backgroundColor: "var(--color-verde)", width: "98vw", marginLeft: "1vw", marginRight: "1vw" }}
       >
         {/* Decorative dots */}
@@ -71,7 +71,7 @@ export default function NosotrosPage() {
         <div className="absolute bottom-1/3 left-16 w-2 h-2 rounded-full bg-[var(--color-cremita)]/20" />
 
         <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
-          <span className="font-sans text-[10px] font-medium tracking-[0.22em] uppercase text-[var(--color-cremita)]/70">
+          <span className="label text-[var(--color-cremita)]/70">
             Sobre Nosotros
           </span>
         </span>
@@ -80,7 +80,7 @@ export default function NosotrosPage() {
           Papela nació para hacer más bonito lo cotidiano
         </h1>
 
-        <p className="font-sans text-[var(--color-cremita)]/70 text-base md:text-lg max-w-2xl leading-relaxed">
+        <p className="font-sans text-[var(--color-cremita)]/90 text-[18px] leading-[24px] max-w-2xl">
           Somos una papelería creativa donde el diseño, los materiales, los regalos, las impresiones y los pequeños detalles se encuentran en un mismo lugar.
         </p>
       </section>
