@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import { getTalleres } from "@/lib/talleres";
+import TallerDescripcion from "@/components/site/TallerDescripcion";
+import TallerGaleriaSection from "@/components/site/TallerGaleriaSection";
 
 export const revalidate = 60;
 
@@ -64,32 +65,14 @@ export default async function TalleresPage() {
                 key={taller.id}
                 className="flex flex-col bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-[26px] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[4px_6px_0px_#d6bdb2]"
               >
-                {/* Image + floating instructor badge */}
-                <div className="relative w-full aspect-square rounded-xl overflow-hidden">
-                  {taller.imagen_url ? (
-                    <Image src={taller.imagen_url} alt={taller.titulo} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
-                  )}
-                  {taller.instructor_nombre && (
-                    <div className="absolute left-4 bottom-4 bg-[#f9eae3] rounded-2xl px-6 py-4">
-                      <p className="font-serif italic text-[#664917] text-[24px] leading-[32px]">
-                        {taller.instructor_nombre}
-                      </p>
-                      {taller.instructor_instagram && (
-                        <a
-                          href={`https://instagram.com/${taller.instructor_instagram}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Instagram de ${taller.instructor_nombre}`}
-                          className="font-sans text-[#403c3c] text-[14px] leading-[14px] hover:opacity-70 transition-opacity"
-                        >
-                          @{taller.instructor_instagram}
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {/* Image + thumbnails + lightbox */}
+                <TallerGaleriaSection
+                  mainImage={taller.imagen_url}
+                  galeria={taller.galeria}
+                  titulo={taller.titulo}
+                  instructorNombre={taller.instructor_nombre}
+                  instructorInstagram={taller.instructor_instagram}
+                />
 
                 {/* Body */}
                 <div className="flex flex-col flex-1 pt-6">
@@ -119,9 +102,7 @@ export default async function TalleresPage() {
                     </div>
 
                     {taller.descripcion && (
-                      <p className="font-sans text-[#6e645f] text-[16px] leading-[22.75px] w-full">
-                        {taller.descripcion}
-                      </p>
+                      <TallerDescripcion texto={taller.descripcion} />
                     )}
                   </div>
 
