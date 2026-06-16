@@ -100,8 +100,11 @@ export default function CheckoutPage() {
         }),
       });
 
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? "Error al crear el pago");
+      }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error al crear el pago");
       window.location.href = data.checkoutUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");

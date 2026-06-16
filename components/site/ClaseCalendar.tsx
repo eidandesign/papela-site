@@ -50,6 +50,7 @@ export default function ClaseCalendar({
 }) {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [loading, setLoading] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const weekDays = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i));
 
@@ -61,6 +62,7 @@ export default function ClaseCalendar({
 
   async function handleReservar(h: Horario) {
     setLoading(h.id);
+    setErrorMsg(null);
     try {
       const date = new Date(h.fecha_hora);
       const fechaHora = date.toLocaleDateString("es-MX", {
@@ -78,15 +80,18 @@ export default function ClaseCalendar({
           duracion: h.duracion_minutos,
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? "Error al crear el pago");
+      }
       const data = await res.json();
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
-        alert("No se pudo iniciar el pago. Intenta de nuevo.");
+        setErrorMsg("No se pudo iniciar el pago. Intenta de nuevo.");
       }
-    } catch {
-      alert("Error de conexión. Intenta de nuevo.");
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Error de conexión. Intenta de nuevo.");
     } finally {
       setLoading(null);
     }
@@ -130,6 +135,11 @@ export default function ClaseCalendar({
 
   return (
     <div className="flex flex-col gap-6">
+      {errorMsg && (
+        <p className="text-sm font-sans text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          {errorMsg}
+        </p>
+      )}
       <WeekNav />
 
       {/* ── MOBILE: list rows ── */}
