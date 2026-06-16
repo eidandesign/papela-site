@@ -75,67 +75,64 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* ── Hero ── */}
-      <section className="mx-5 md:mx-20 mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden relative flex flex-col items-center justify-end text-center px-8 md:px-16 pt-36 pb-16" style={{ minHeight: 380 }}>
-        {/* Background image or fallback color */}
-        {maestra.foto ? (
-          <Image
-            src={maestra.foto}
-            alt={maestra.nombre}
-            fill
-            className="object-cover object-center"
-            priority
-          />
-        ) : (
-          <div className="absolute inset-0 bg-[#5d7c80]" />
-        )}
-        {/* Gradient overlay so text is readable */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        {/* Text */}
-        <div className="relative z-10">
-          <h1 className="font-serif italic text-[clamp(2.8rem,6.5vw,5.5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-4xl mb-2">
-            {maestra.nombre}
-          </h1>
-          {maestra.tecnicas?.length > 0 && (
-            <p className="font-sans text-[var(--color-cremita)]/80 text-lg">
-              {maestra.tecnicas.join(" · ")}
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* ── Content ── */}
-      <section className="w-[90%] mx-auto py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          {/* Left — Photo + info */}
+      {/* ── Detalle: dos columnas (foto + info / calendario) ── */}
+      <section className="w-[90%] mx-auto pt-40 md:pt-[200px] pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
+          {/* Izquierda — foto card + descripción/experiencia */}
           <div className="flex flex-col gap-8">
+            {/* Foto card con overlay del nombre */}
+            <div className="relative w-full aspect-[624/567] rounded-2xl overflow-hidden">
+              {maestra.foto ? (
+                <Image
+                  src={maestra.foto}
+                  alt={maestra.nombre}
+                  fill
+                  sizes="(max-width: 768px) 90vw, 45vw"
+                  className="object-cover object-center"
+                  priority
+                />
+              ) : (
+                <div className="absolute inset-0 bg-[#5d7c80]" />
+              )}
+              <div className="absolute bottom-4 left-4 max-w-[88%] bg-[#f9eae3] rounded-2xl px-6 md:px-10 py-3 md:py-4">
+                <h1 className="font-serif italic text-[#664917] text-[clamp(1.8rem,4.5vw,3rem)] leading-[1.12]">
+                  {maestra.nombre}
+                </h1>
+                {maestra.tecnicas?.length > 0 && (
+                  <p className="font-sans text-[#403c3c] text-[clamp(0.9rem,1.6vw,1.125rem)] leading-7 mt-0.5">
+                    {maestra.tecnicas.join(" · ")}
+                  </p>
+                )}
+              </div>
+            </div>
+
             {maestra.descripcion && (
-              <div>
-                <span className="bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px]">
+              <div className="flex flex-col gap-3">
+                <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-px rounded-[10px]">
                   Descripción
                 </span>
-                <p className="mt-3 font-sans text-[var(--color-text)] text-[18px] leading-relaxed">
+                <p className="font-sans text-[#403c3c] text-[18px] leading-7">
                   {maestra.descripcion}
                 </p>
               </div>
             )}
 
             {maestra.experiencia && (
-              <div>
-                <span className="bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px]">
+              <div className="flex flex-col gap-3">
+                <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-px rounded-[10px]">
                   Experiencia
                 </span>
-                <p className="mt-3 font-sans text-[var(--color-text)] text-[18px] leading-relaxed">
+                <p className="font-sans text-[#403c3c] text-[18px] leading-7">
                   {maestra.experiencia}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Right — Calendar */}
+          {/* Derecha — calendario */}
           <div className="flex flex-col gap-6">
-            <div className="text-center md:text-left">
-              <h2 className="font-serif font-extralight text-[clamp(2.2rem,5vw,3.5rem)] text-[var(--color-text)] mb-1">
+            <div className="text-center">
+              <h2 className="font-serif font-extralight text-[clamp(2.2rem,5vw,3.5rem)] text-[#403c3c] leading-tight mb-1">
                 Elige tu horario
               </h2>
               <p className="font-sans text-[var(--color-muted)] text-sm">

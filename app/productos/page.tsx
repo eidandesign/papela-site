@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
-import { getProductos } from "@/lib/productos";
-import ProductosCatalog from "@/components/site/ProductosCatalog";
+import { getProductosPublicos, type ProductoPublico } from "@/lib/productos-publicos";
+import ProductCard from "@/components/site/ProductCard";
 
 export const revalidate = 60;
+
+// Orden preferido de colecciones (igual que el home); el resto va después.
+const ORDEN_COLECCIONES = ["libretas", "favoritos"];
+
+function capitalizar(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 export const metadata: Metadata = {
   title: { absolute: "Catálogo de papelería y arte en Puebla — Papela Atelier" },
@@ -17,8 +24,36 @@ export const metadata: Metadata = {
 };
 
 export default async function ProductosPage() {
-  const productos = await getProductos();
-  const categorias = [...new Set(productos.map((p) => p.categoria).filter(Boolean))] as string[];
+  // Solo los productos del catálogo público del admin (no todo Supabase).
+  const productos = await getProductosPublicos();
+
+  // Agrupar por colección (tags); los sin colección → "Más productos".
+  const porColeccion = new Map<string, ProductoPublico[]>();
+  const sinColeccion: ProductoPublico[] = [];
+  for (const p of productos) {
+    const tags = p.tags ?? [];
+    if (tags.length === 0) {
+      sinColeccion.push(p);
+      continue;
+    }
+    for (const tag of tags) {
+      const arr = porColeccion.get(tag) ?? [];
+      arr.push(p);
+      porColeccion.set(tag, arr);
+    }
+  }
+
+  const ordenadas = [
+    ...ORDEN_COLECCIONES.filter((t) => porColeccion.has(t)),
+    ...[...porColeccion.keys()].filter((t) => !ORDEN_COLECCIONES.includes(t)),
+  ];
+  const secciones: { titulo: string; productos: ProductoPublico[] }[] = ordenadas.map((tag) => ({
+    titulo: capitalizar(tag),
+    productos: porColeccion.get(tag)!,
+  }));
+  if (sinColeccion.length > 0) {
+    secciones.push({ titulo: "Más productos", productos: sinColeccion });
+  }
 
   return (
     <>
@@ -40,13 +75,29 @@ export default async function ProductosPage() {
         </p>
       </section>
 
-      <section className="pt-16 pb-20 w-[90%] mx-auto">
-        {productos.length === 0 ? (
+      {/* ── Secciones por colección (como en el home) ── */}
+      {secciones.length === 0 ? (
+        <section className="pt-16 pb-20 w-[90%] mx-auto">
           <p className="text-[var(--color-muted)]">No hay productos disponibles.</p>
-        ) : (
-          <ProductosCatalog productos={productos} categorias={categorias} />
-        )}
-      </section>
+        </section>
+      ) : (
+        <div className="pt-12 md:pt-16 pb-20">
+          {secciones.map((sec) => (
+            <section key={sec.titulo} className="py-8 md:py-10">
+              <div className="w-[90%] mx-auto mb-6">
+                <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
+                  {sec.titulo}
+                </h2>
+              </div>
+              <div className="w-[90%] mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {sec.productos.map((p) => (
+                  <ProductCard key={p.id} producto={p} fullWidth />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
     </>
   );
 }

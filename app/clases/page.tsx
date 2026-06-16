@@ -61,48 +61,54 @@ export default async function ClasesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {maestras.map((maestra) => (
-              <article key={maestra.id} className="bg-[#e7d6cf] rounded-2xl p-[32px] flex flex-col gap-4 transition-[transform,box-shadow,border-color] duration-400 ease-out cursor-pointer border-2 border-transparent hover:border-[#d6bdb2] hover:shadow-[4px_6px_0px_#d6bdb2] hover:-translate-y-1">
-                {/* Photo + name badge */}
-                <div className="relative h-[272px] rounded-xl overflow-hidden flex items-end p-5">
+              <article
+                key={maestra.id}
+                className="bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-[26px] flex flex-col gap-4 transition-[transform,box-shadow] duration-300 ease-out hover:shadow-[4px_6px_0px_#d6bdb2] hover:-translate-y-1"
+              >
+                {/* Foto + overlay del nombre */}
+                <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-[#d6bdb2]">
                   {maestra.foto ? (
                     <Image
                       src={maestra.foto}
                       alt={maestra.nombre}
                       fill
+                      sizes="(max-width: 768px) 90vw, 400px"
                       className="object-cover"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-cremita)] to-[#c9d3c0]" />
                   )}
-                  {/* Name chip */}
-                  <div className="relative z-10 px-2 py-1">
-                    <span className="font-serif text-white text-[2.5rem] leading-[2.5rem] tracking-[0.5px] whitespace-nowrap">
-                      {maestra.nombre.toUpperCase()}
-                    </span>
+                  <div className="absolute bottom-4 left-3 max-w-[90%] bg-[#f9eae3] rounded-2xl px-6 md:px-8 py-3">
+                    <p className="font-serif italic text-[#664917] text-2xl leading-8">
+                      {maestra.nombre}
+                    </p>
+                    {maestra.tecnicas?.length > 0 && (
+                      <p className="font-sans text-[#403c3c] text-sm leading-tight">
+                        {maestra.tecnicas.join(" · ")}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Body */}
+                {/* Cuerpo */}
                 <div className="flex flex-col gap-4 flex-1">
-                  {/* Técnicas */}
-                  {maestra.tecnicas?.join(", ") && (
+                  {maestra.tecnicas?.length > 0 && (
                     <div className="flex flex-col gap-3">
-                      <span className="bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px] self-start">
+                      <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px]">
                         Técnicas
                       </span>
-                      <p className="font-sans text-[var(--color-text)] text-[17px] leading-relaxed">
-                        {maestra.tecnicas?.join(", ")}
+                      <p className="font-sans text-[#403c3c] text-[17px] leading-relaxed">
+                        {maestra.tecnicas.join(", ")}
                       </p>
                     </div>
                   )}
 
-                  {/* Descripción */}
                   {maestra.descripcion && (
                     <div className="flex flex-col gap-3">
-                      <span className="bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px] self-start">
+                      <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px]">
                         Descripción
                       </span>
-                      <p className="font-sans text-[var(--color-text)] text-[17px] leading-relaxed">
+                      <p className="font-sans text-[#403c3c] text-[17px] leading-relaxed">
                         {maestra.descripcion}
                       </p>
                     </div>
@@ -114,7 +120,7 @@ export default async function ClasesPage() {
                   href={`/clases/${maestra.slug}`}
                   className="mt-auto w-full bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-base text-center py-3 px-4 rounded-lg hover:opacity-90 transition-opacity"
                 >
-                  Ver detalles de clases
+                  Ver detalles y de clases
                 </Link>
               </article>
             ))}

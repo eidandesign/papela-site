@@ -264,6 +264,13 @@ const NAV_ITEMS = [
 export default function SiteNavbar() {
   const pathname = usePathname();
   const forceScrolled = pathname?.includes("/checkout");
+  // Páginas con fondo claro (sin hero oscuro) → navbar en verde para contraste.
+  const onLight = !!pathname && pathname.startsWith("/clases/");
+  const logoSrc = onLight ? "/images/Logo-papela-verde.svg" : "/site/logo.png";
+  const linkClass = onLight
+    ? "text-[var(--color-verde)]/85 hover:text-[var(--color-verde)]"
+    : "text-[var(--color-cremita)]/80 hover:text-[var(--color-cremita)]";
+  const iconColor = onLight ? "#12535C" : FG;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -294,68 +301,76 @@ export default function SiteNavbar() {
             style={{ zIndex: menuOpen ? 100001 : 50 }}
           >
             <nav className="w-[96%] mx-auto relative flex items-center justify-center px-6 md:px-10 h-[140px] md:h-[170px]">
-              {/* Left links — desktop only */}
-              <div className="hidden md:flex items-center gap-32 absolute left-10">
-                {[
-                  { href: "/productos", label: "Catálogo" },
-                  { href: "/talleres", label: "Talleres" },
-                ].map((l, i) => (
-                  <motion.div
-                    key={l.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1, duration: 0.3 }}
-                  >
-                    <Link
-                      href={l.href}
-                      className="font-sans text-[20px] font-medium tracking-wide text-[var(--color-cremita)]/80 hover:text-[var(--color-cremita)] transition-colors"
+              {/* Desktop: centered cluster — links flank the logo near the middle */}
+              <div className="flex items-center justify-center gap-8 lg:gap-12">
+                {/* Left links */}
+                <div className="hidden md:flex items-center gap-8 lg:gap-10">
+                  {[
+                    { href: "/productos", label: "Catálogo" },
+                    { href: "/talleres", label: "Talleres" },
+                  ].map((l, i) => (
+                    <motion.div
+                      key={l.href}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1, duration: 0.3 }}
                     >
-                      {l.label}
-                    </Link>
-                  </motion.div>
-                ))}
+                      <Link
+                        href={l.href}
+                        className={`font-sans text-[20px] font-medium tracking-wide ${linkClass} transition-colors`}
+                      >
+                        {l.label}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Center logo — hidden when menu is open */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: menuOpen ? 0 : 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ pointerEvents: menuOpen ? "none" : "auto" }}
+                >
+                  <Link href="/" className="flex flex-col items-center pt-4">
+                    <Image
+                      src={logoSrc}
+                      alt="Papela Atelier"
+                      width={281}
+                      height={286}
+                      priority
+                      unoptimized={onLight}
+                      className="w-[100px] h-[100px] md:w-[130px] md:h-[130px] object-contain"
+                    />
+                  </Link>
+                </motion.div>
+
+                {/* Right links */}
+                <div className="hidden md:flex items-center gap-8 lg:gap-10">
+                  {[
+                    { href: "/clases", label: "Clases" },
+                    { href: "/nosotros", label: "Nosotros" },
+                  ].map((l, i) => (
+                    <motion.div
+                      key={l.href}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1, duration: 0.3 }}
+                    >
+                      <Link
+                        href={l.href}
+                        className={`font-sans text-[20px] font-medium tracking-wide ${linkClass} transition-colors`}
+                      >
+                        {l.label}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
 
-              {/* Center logo — always centered, hidden when menu is open */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: menuOpen ? 0 : 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                style={{ pointerEvents: menuOpen ? "none" : "auto" }}
-              >
-                <Link href="/" className="flex flex-col items-center pt-4">
-                  <Image
-                    src="/site/logo.png"
-                    alt="Papela Atelier"
-                    width={281}
-                    height={286}
-                    priority
-                    className="w-[100px] h-[100px] md:w-[130px] md:h-[130px] object-contain"
-                  />
-                </Link>
-              </motion.div>
-
-              {/* Right links + cart — desktop only */}
-              <div className="hidden md:flex items-center gap-12 absolute right-10">
-                {[
-                  { href: "/clases", label: "Clases" },
-                  { href: "/nosotros", label: "Nosotros" },
-                ].map((l, i) => (
-                  <motion.div
-                    key={l.href}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1, duration: 0.3 }}
-                  >
-                    <Link
-                      href={l.href}
-                      className="font-sans text-[20px] font-medium tracking-wide text-[var(--color-cremita)]/80 hover:text-[var(--color-cremita)] transition-colors"
-                    >
-                      {l.label}
-                    </Link>
-                  </motion.div>
-                ))}
-                <CartButton color={FG} />
+              {/* Cart — desktop, stays in the corner */}
+              <div className="hidden md:block absolute right-10 top-1/2 -translate-y-1/2">
+                <CartButton color={iconColor} />
               </div>
 
               {/* Mobile: cart + hamburger */}
@@ -363,14 +378,14 @@ export default function SiteNavbar() {
                 className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3"
                 style={{ zIndex: menuOpen ? 100001 : "auto" }}
               >
-                <CartButton color={FG} />
+                <CartButton color={iconColor} />
                 <button
                   onClick={menuOpen ? closeMenu : openMenu}
                   aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
                   className="p-2"
                   style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
                 >
-                  <AnimatedBurger isOpen={menuOpen} color={FG} />
+                  <AnimatedBurger isOpen={menuOpen} color={iconColor} />
                 </button>
               </div>
             </nav>
