@@ -1,4 +1,3 @@
-import { createClient } from "./supabase/server";
 import { logger } from "./logger";
 
 export type Taller = {
@@ -22,16 +21,19 @@ export type Taller = {
 };
 
 export async function getTalleres(): Promise<Taller[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("talleres")
-    .select("*")
-    .eq("activo", true)
-    .order("fecha", { ascending: true });
-
-  if (error) {
-    logger.error("Error fetching talleres", {}, error);
+  try {
+    const res = await fetch("https://admin.papela-atelier.com/api/public/talleres", {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { talleres } = await res.json();
+    return (talleres ?? []).sort((a: Taller, b: Taller) => {
+      if (!a.fecha) return 1;
+      if (!b.fecha) return -1;
+      return a.fecha.localeCompare(b.fecha);
+    });
+  } catch (err) {
+    logger.error("Error fetching talleres from admin API", {}, err as Error);
     return [];
   }
-  return data ?? [];
 }
