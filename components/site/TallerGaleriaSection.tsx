@@ -190,32 +190,26 @@ export default function TallerGaleriaSection({
           className="flex gap-2 mt-3 overflow-x-auto pb-1"
           style={{ scrollbarWidth: "none" }}
         >
-          {allItems.map((url, i) => {
+          {galeria.map((url, i) => {
+            // galeria items start at index 1 in allItems (0 = mainImage)
+            const idx = i + 1;
             const vid = isVideo(url);
-            const active = openAt === i;
+            const active = openAt === idx;
             return (
               <button
                 key={i}
-                onClick={() => setOpenAt(i)}
+                onClick={() => setOpenAt(idx)}
                 className={`relative flex-shrink-0 w-[56px] h-[56px] rounded-lg overflow-hidden border-2 transition-all duration-150 ${
                   active
                     ? "border-[#12535c] scale-[1.04]"
                     : "border-[#d6bdb2] hover:border-[#12535c]/60"
                 }`}
-                aria-label={vid ? `Ver video ${i + 1}` : `Ver imagen ${i + 1}`}
+                aria-label={vid ? `Ver video ${i + 1}` : `Ver imagen extra ${i + 1}`}
               >
                 {vid ? (
-                  <>
-                    <video
-                      src={`${url}#t=0.1`}
-                      muted
-                      preload="metadata"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <PlayIcon className="w-5 h-5 text-white drop-shadow" />
-                    </div>
-                  </>
+                  <div className="w-full h-full bg-[#403c3c]/80 flex items-center justify-center">
+                    <PlayIcon className="w-6 h-6 text-white drop-shadow" />
+                  </div>
                 ) : (
                   <Image src={url} alt="" fill className="object-cover" />
                 )}
