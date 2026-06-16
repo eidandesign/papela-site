@@ -1,8 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ConditionalShell from "@/components/site/ConditionalShell";
 
 const SITE_URL = "https://www.papela-atelier.com";
+
+export const viewport: Viewport = {
+  themeColor: "#12535C",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

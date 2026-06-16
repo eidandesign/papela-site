@@ -24,3 +24,7 @@ yarn-error.log*
 .DS_Store
 *.pem
 tsconfig.tsbuildinfo
+
+# claude code local skills
+.claude/skills/
+skills-lock.json
