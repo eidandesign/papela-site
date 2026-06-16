@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import CartButton from "./CartButton";
+import AnimatedLogo from "./AnimatedLogo";
 
 const NAV_LINKS = [
   { href: "/productos", label: "Catálogo" },
@@ -266,7 +267,6 @@ export default function SiteNavbar() {
   const forceScrolled = pathname?.includes("/checkout");
   // Páginas con fondo claro (sin hero oscuro) → navbar en verde para contraste.
   const onLight = !!pathname && pathname.startsWith("/clases/");
-  const logoSrc = onLight ? "/images/Logo-papela-verde.svg" : "/site/logo.png";
   const linkClass = onLight
     ? "text-[var(--color-verde)]/85 hover:text-[var(--color-verde)]"
     : "text-[var(--color-cremita)]/80 hover:text-[var(--color-cremita)]";
@@ -332,15 +332,10 @@ export default function SiteNavbar() {
                   transition={{ duration: 0.2 }}
                   style={{ pointerEvents: menuOpen ? "none" : "auto" }}
                 >
-                  <Link href="/" className="flex flex-col items-center pt-4">
-                    <Image
-                      src={logoSrc}
-                      alt="Papela Atelier"
-                      width={281}
-                      height={286}
-                      priority
-                      unoptimized={onLight}
-                      className="w-[100px] h-[100px] md:w-[130px] md:h-[130px] object-contain"
+                  <Link href="/" aria-label="Papela Atelier" className="flex flex-col items-center translate-y-5 md:translate-y-7">
+                    <AnimatedLogo
+                      color={onLight ? "var(--color-verde)" : "var(--color-cremita)"}
+                      className="w-[100px] h-[100px] md:w-[130px] md:h-[130px]"
                     />
                   </Link>
                 </motion.div>
@@ -401,7 +396,7 @@ export default function SiteNavbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed bottom-5 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-6 px-5 md:px-6 py-3 rounded-full"
+            className="fixed bottom-5 md:bottom-auto md:top-5 left-1/2 -translate-x-1/2 w-max max-w-[calc(100vw-2rem)] flex items-center gap-4 md:gap-6 px-5 md:px-6 py-3 rounded-full"
             style={{
               background: "rgba(0, 0, 0, 0.4)",
               backdropFilter: "blur(20px) saturate(200%)",
@@ -411,13 +406,13 @@ export default function SiteNavbar() {
             }}
           >
             {/* Logo */}
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
-              <Link href="/" className="flex items-center -mx-2">
-                <Image src="/site/logo.png" alt="Papela" width={281} height={286} priority className="w-8 h-8 object-contain brightness-200" />
+            <motion.div className="shrink-0" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 10 }}>
+              <Link href="/" aria-label="Papela" className="flex items-center -mx-1">
+                <AnimatedLogo color="var(--color-cremita)" className="w-11 h-11" />
               </Link>
             </motion.div>
 
-            <div className="w-px h-6 bg-white/20" />
+            <div className="shrink-0 w-px h-6 bg-white/20" />
 
             {/* Desktop links */}
             <div className="hidden md:flex items-center gap-6">
