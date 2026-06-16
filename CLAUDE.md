@@ -52,11 +52,20 @@
 ## Components
 | Component | Path | Notes |
 |---|---|---|
-| `SiteNavbar` | `components/site/Navbar.tsx` | Dual state: large (not scrolled) / floating glass (scrolled) |
+| `SiteNavbar` | `components/site/Navbar.tsx` | Dual state: large (not scrolled) / floating glass (scrolled). Logo se oculta cuando menú mobile está abierto. Header sube a `z-[100001]` cuando menuOpen para mostrar la X |
 | `TextCarousel` | `components/site/TextCarousel.tsx` | Two diagonal ribbons, bg-color, text `#403C3C` |
 | `SiteFooter` | `components/site/Footer.tsx` | Big "papela atelier" display text, verde social icons |
 | `BackToTop` | `components/site/BackToTop.tsx` | Client component for scroll-to-top |
 | `ScrollReveal` | `components/site/ScrollReveal.tsx` | Framer Motion scroll reveal wrapper |
+| `CartButton` | `components/site/CartButton.tsx` | ShoppingBagIcon + badge terracota con count, renderiza CartDrawer |
+| `CartDrawer` | `components/site/CartDrawer.tsx` | Portal, slide desde derecha, selector recoger/envío, totales, CTA → `/tienda/checkout` |
+| `AddToCartButton` | `components/site/AddToCartButton.tsx` | Chequea `cantidad >= stock`. Prop `fullWidth` para usar en drawers |
+| `QuickAddButton` | `components/site/QuickAddButton.tsx` | Círculo `+` que expande a pill `− N +` con spring animation. Capped al stock. Usa `e.stopPropagation()` para no disparar el drawer padre |
+| `ProductCard` | `components/site/ProductCard.tsx` | Client component, onClick → `productDrawerStore.open()`. Contiene QuickAddButton |
+| `ProductDrawer` | `components/site/ProductDrawer.tsx` | Portal. Mobile: `top-0 h-full left-[15%] rounded-l-3xl`. Desktop: `sm:left-auto sm:max-w-lg sm:rounded-none`. Footer fijo con WhatsApp + AddToCartButton |
+| `ProductosCatalog` | `components/site/ProductosCatalog.tsx` | Grid con filtros de categoría. Cards abren ProductDrawer (no navegan a `/productos/[slug]`) |
+| `ClaseCalendar` | `components/site/ClaseCalendar.tsx` | Mobile: lista de filas (fecha pill + detalles + Reservar). Desktop: grid 5 col. Nav por semana con mes serif grande + "Semana N" |
+| `ClearCartOnMount` | `components/site/ClearCartOnMount.tsx` | Limpia el carrito al montar (usado en `/tienda/pago/gracias`) |
 
 ## Mobile horizontal scroll pattern
 Used in info cards and Instagram carousels. Key rules:
@@ -100,11 +109,32 @@ To add a new carousel: call `getProductosPorColeccion("nueva-coleccion")` and ta
 - All images link to `https://instagram.com/papela.atelier`
 - Uses `width={0} height={0}` + `w-full h-auto` on `<Image>` so natural aspect ratio shows without cropping
 
+## Tienda (e-commerce)
+Flujo completo: catálogo → drawer → carrito → checkout → MercadoPago → webhook → gracias/error
+
+- **Zustand stores**: `lib/stores/cartStore.ts` (persist localStorage `papela-cart`) y `lib/stores/productDrawerStore.ts`
+- **Checkout API**: `app/api/tienda/checkout/route.ts` — valida stock en Supabase, inserta en `tienda_pedidos`, crea Preference MP
+- **Webhook**: `app/api/webhooks/mercadopago/route.ts` — valida firma HMAC, distingue por `external_reference` prefix (`tienda:`, `taller:`, clase sin prefix), decrementa stock atómicamente vía RPC
+- **`tienda_pedidos` columns**: `id, external_reference, items (jsonb), tipo_envio, estado, payment_id, monto_total, comprador_nombre, comprador_email, comprador_telefono, direccion_envio (jsonb), created_at`
+- **Envío**: $80 MXN fijo (`COSTO_ENVIO` en cartStore). Opciones: `recoger` | `envio`
+- Los productos NO navegan a `/productos/[slug]` — abren `ProductDrawer` via Zustand store
+
+## Logger
+`lib/logger.ts` — logger estructurado JSON para producción
+- Uso: `logger.error("mensaje", { campo: valor }, error)`
+- Emite: `{"level":"error","message":"...","timestamp":"...","env":"production","context":{...},"error":{"name":"...","stack":"..."}}`
+- Vercel indexa estos logs automáticamente. Para conectar Sentry: agregar `Sentry.captureException(error)` dentro de `emit()` — un solo cambio cubre todos los puntos de error
+- **Nunca usar `console.error` directo** — siempre `logger.error()`
+
 ## Pages built
 - `/` — Homepage (hero, text carousel, info cards, nosotros, libretas carousel, favoritos carousel, instagram, footer)
-- `/productos` — Catálogo grid from Supabase
-- `/productos/[slug]` — Product detail (stub)
-- `/talleres` — (in progress)
+- `/productos` — Catálogo grid desde Supabase, filtros por categoría, abre ProductDrawer
+- `/productos/[slug]` — Product detail (existe pero cards ya no navegan aquí — usan drawer)
+- `/tienda/checkout` — Form comprador + dirección + resumen pedido
+- `/tienda/pago/gracias|error|pendiente` — Páginas resultado MercadoPago
+- `/talleres` — Activo
+- `/clases` — Activo con ClaseCalendar responsive
+- `/clases/[slug]` — Hero con foto maestra como fondo, calendario de horarios
 
 ## Homepage carousels (app/page.tsx)
 ```ts
