@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import { createClient } from "@/lib/supabase/server";
+import { getTalleres } from "@/lib/talleres";
 import TallerCheckoutForm from "@/components/site/TallerCheckoutForm";
 
 function formatFecha(fecha: string) {
@@ -21,13 +21,8 @@ export default async function TallerCheckoutPage({
 }) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data: taller } = await supabase
-    .from("talleres")
-    .select("id, titulo, precio, cupo_total, imagen_url, fecha, hora_inicio, hora_fin, categoria, instructor_nombre")
-    .eq("id", id)
-    .eq("activo", true)
-    .single();
+  const talleres = await getTalleres();
+  const taller = talleres.find((t) => t.id === id);
 
   if (!taller) notFound();
 
