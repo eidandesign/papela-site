@@ -17,7 +17,8 @@ export type Taller = {
   instructor_instagram: string | null;
   activo: boolean;
   cupo_total: number | null;
-  galeria: string[];
+  imagenes: string[];
+  videos: string[];
 };
 
 export async function getTalleres(): Promise<Taller[]> {
