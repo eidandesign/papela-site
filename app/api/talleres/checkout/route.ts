@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site";
+import { logger } from "@/lib/logger";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ checkoutUrl: result.init_point });
   } catch (error) {
-    console.error("MP talleres checkout error:", error);
+    logger.error("talleres checkout failed", {}, error);
     return NextResponse.json({ error: "Error al crear el pago" }, { status: 500 });
   }
 }

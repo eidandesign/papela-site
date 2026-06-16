@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/server";
+import { logger } from "./logger";
 
 export type Taller = {
   id: string;
@@ -27,7 +28,7 @@ export async function getTalleres(): Promise<Taller[]> {
     .order("fecha", { ascending: true });
 
   if (error) {
-    console.error("Error fetching talleres:", error.message);
+    logger.error("Error fetching talleres", {}, error);
     return [];
   }
   return data ?? [];

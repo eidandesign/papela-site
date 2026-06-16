@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/server";
+import { logger } from "./logger";
 
 export type Producto = {
   id: string;
@@ -32,7 +33,7 @@ export async function getProductos(categoria?: string, limit?: number): Promise<
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching productos:", error.message);
+    logger.error("Error fetching productos", { categoria, limit }, error);
     return [];
   }
 

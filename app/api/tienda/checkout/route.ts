@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site";
 import { randomUUID } from "crypto";
 import { COSTO_ENVIO } from "@/lib/stores/cartStore";
+import { logger } from "@/lib/logger";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -136,7 +137,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ checkoutUrl: result.init_point });
   } catch (error) {
-    console.error("[tienda checkout] error:", error);
+    logger.error("tienda checkout failed", {}, error);
     return NextResponse.json({ error: "Error al crear el pago" }, { status: 500 });
   }
 }

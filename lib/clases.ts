@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/server";
+import { logger } from "./logger";
 
 export type Horario = {
   id: string;
@@ -32,7 +33,7 @@ export async function getClases(): Promise<Maestra[]> {
     .order("nombre", { ascending: true });
 
   if (error) {
-    console.error("Error fetching clases:", error.message);
+    logger.error("Error fetching clases", {}, error);
     return [];
   }
   return data ?? [];
@@ -61,7 +62,7 @@ export async function getClaseBySlug(slug: string): Promise<MaestraConHorarios |
     .gt("cupo_disponible", 0)
     .order("fecha_hora", { ascending: true });
 
-  if (horariosError) console.error("Error fetching horarios:", horariosError.message);
+  if (horariosError) logger.error("Error fetching horarios", { slug }, horariosError);
 
   return { ...maestra, horarios: horarios ?? [] };
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 const mpClient = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     if (!ok) {
       // Cupo insuficiente — registrar para revisión manual
-      console.error(`[webhook] cupo insuficiente taller ${tallerId} payment ${paymentId}`);
+      logger.error("webhook: cupo insuficiente taller", { tallerId, paymentId });
       return NextResponse.json({ error: "Sin cupo" }, { status: 409 });
     }
 
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (pedidoError || !pedido) {
-      console.error(`[webhook] pedido no encontrado: ${externalRef}`);
+      logger.error("webhook: pedido no encontrado", { externalRef, paymentId });
       return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
     }
 
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
         p_cant: item.cantidad,
       });
       if (!ok) {
-        console.error(`[webhook] stock insuficiente producto ${item.productoId} payment ${paymentId}`);
+        logger.error("webhook: stock insuficiente producto", { productoId: item.productoId, cantidad: item.cantidad, paymentId });
         // Continue — log and update order with partial note rather than blocking
       }
     }
@@ -154,7 +155,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (updateError) {
-      console.error(`[webhook] cupo insuficiente horario ${horarioId} payment ${paymentId}`);
+      logger.error("webhook: cupo insuficiente horario", { horarioId, paymentId });
       return NextResponse.json({ error: "Sin cupo" }, { status: 409 });
     }
 
