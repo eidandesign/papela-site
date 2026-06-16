@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -18,6 +18,8 @@ export default function CartDrawer() {
     subtotal, total, totalItems,
   } = useCartStore();
 
+  // Intentional: gates the SSR portal so it renders client-side only.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
 
   // Lock body scroll when open

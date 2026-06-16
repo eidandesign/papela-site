@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import TextCarousel from "@/components/site/TextCarousel";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import HeroExperience from "@/components/site/HeroExperience";
 import ProductCard from "@/components/site/ProductCard";
 import { getProductosPorColeccion } from "@/lib/productos-publicos";
 
@@ -60,48 +61,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ── Hero card — matches Figma 1392×855 rx=48 card with mx-24px ──── */}
-      <section className="relative mt-6 mx-[1vw] rounded-[32px] md:rounded-[48px] bg-[var(--color-verde)] overflow-hidden h-[80vh] flex flex-col" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
-
-        {/* Hero content */}
-        <div className="relative flex-1 flex flex-col items-center justify-center text-center px-6 pt-[140px] md:pt-[180px] pb-20 md:pb-40">
-          {/* Pill badge — outline style */}
-          <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8 md:mb-10">
-            <span className="font-sans text-[10px] font-medium tracking-[0.22em] uppercase text-[var(--color-cremita)]/70">
-              Una pape bien bonita
-            </span>
-          </span>
-
-          {/* Headline — PP Editorial New italic, both lines cremita */}
-          <h1 className="font-serif italic text-[clamp(3rem,7.5vw,6.5rem)] leading-[1.02] text-[var(--color-cremita)] mb-6 md:mb-8">
-            Lo que imaginas<br />
-            comienza aquí
-          </h1>
-
-          {/* Description — Satoshi regular (not italic) for visibility */}
-          <p className="font-sans font-normal text-[var(--color-cremita)]/70 text-base md:text-[22px] max-w-2xl leading-relaxed">
-            Desde una cartulina de último minuto hasta stickers, regalos,
-            talleres y clases creativas.
-          </p>
-        </div>
-
-        {/* Decorative ribbon path — full width at bottom */}
-        <svg
-          viewBox="-67 133 1526 294"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="absolute bottom-[20px] left-0 right-0 w-full pointer-events-none h-[130px] md:h-auto"
-          preserveAspectRatio="xMidYMax slice"
-        >
-          <path
-            d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911"
-            stroke="#F3E6CF"
-            strokeOpacity="0.8"
-            strokeWidth="6"
-            strokeLinecap="round"
-          />
-        </svg>
-      </section>
+      {/* ── Hero — animated headline + pen ink-line cursor ──────────────────── */}
+      <HeroExperience />
 
       {/* ── Marquee ───────────────────────────────────────────────────────── */}
       <TextCarousel />
@@ -111,7 +72,7 @@ export default async function HomePage() {
         {/* Mobile: horizontal scroll */}
         <div className="md:hidden flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none" style={{ scrollbarWidth: "none", scrollPaddingLeft: "20px" }}>
           <div className="flex-shrink-0 w-5" aria-hidden="true" />
-          {INFO_CARDS.map((card, i) => (
+          {INFO_CARDS.map((card) => (
             <Link
               key={card.slug}
               href={card.href}

@@ -86,7 +86,7 @@ export default function ClaseCalendar({
       }
       const data = await res.json();
       if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+        window.location.assign(data.checkoutUrl);
       } else {
         setErrorMsg("No se pudo iniciar el pago. Intenta de nuevo.");
       }
@@ -104,7 +104,7 @@ export default function ClaseCalendar({
 
   const weekNum = getWeekOfMonth(weekStart);
 
-  const WeekNav = () => (
+  const weekNav = (
     <div className="flex items-center justify-between gap-4">
       <button
         type="button"
@@ -140,7 +140,7 @@ export default function ClaseCalendar({
           {errorMsg}
         </p>
       )}
-      <WeekNav />
+      {weekNav}
 
       {/* ── MOBILE: list rows ── */}
       <div className="flex flex-col gap-3 md:hidden">
@@ -152,9 +152,6 @@ export default function ClaseCalendar({
           const isToday = isSameDay(day, new Date());
           const hora = new Date(h.fecha_hora).toLocaleTimeString("es-MX", {
             hour: "2-digit", minute: "2-digit",
-          });
-          const fechaLabel = day.toLocaleDateString("es-MX", {
-            weekday: "short", day: "numeric", month: "short",
           });
           return (
             <div

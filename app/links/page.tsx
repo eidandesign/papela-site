@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 const WHATSAPP = "522211865590";
@@ -94,7 +95,7 @@ export default function LinksPage() {
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
       {/* Logo → home */}
       <div className="flex justify-center pt-14 pb-8">
-        <a href="/" aria-label="Ir al inicio">
+        <Link href="/" aria-label="Ir al inicio">
           <Image
             src="/images/Logo-papela-atelier.png"
             alt="Papela Atelier"
@@ -102,7 +103,7 @@ export default function LinksPage() {
             height={160}
             className="object-contain"
           />
-        </a>
+        </Link>
       </div>
 
       {/* Links */}

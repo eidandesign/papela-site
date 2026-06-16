@@ -8,7 +8,7 @@ const mpClient = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
 });
 
-function verifySignature(req: NextRequest, rawBody: string): boolean {
+function verifySignature(req: NextRequest): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
   if (!secret) return false;
 
@@ -33,7 +33,7 @@ function verifySignature(req: NextRequest, rawBody: string): boolean {
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
 
-  if (!verifySignature(req, rawBody)) {
+  if (!verifySignature(req)) {
     return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
   }
 

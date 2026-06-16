@@ -15,6 +15,8 @@ export default function ProductDrawer() {
   const { product, close } = useProductDrawerStore();
   const isOpen = product !== null;
 
+  // Intentional: gates the SSR portal so it renders client-side only.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {

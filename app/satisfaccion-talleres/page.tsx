@@ -39,35 +39,50 @@ const TALLERES = [
 
 // ─── Confetti ────────────────────────────────────────────────────────────────
 
+type Particle = {
+  x: number; y: number; vx: number; vy: number; sz: number; c: string;
+  r: number; rs: number; s: number; l: number; m: number;
+};
+
 function useConfetti() {
   const cvs = useRef<HTMLCanvasElement | null>(null);
-  const pts = useRef<any[]>([]);
+  const pts = useRef<Particle[]>([]);
   const raf = useRef(0);
   const on = useRef(false);
+  const drawRef = useRef<() => void>(() => {});
 
-  const draw = useCallback(() => {
-    const c = cvs.current;
-    if (!c) return;
-    const ctx = c.getContext("2d")!;
-    ctx.clearRect(0, 0, c.width, c.height);
-    pts.current = pts.current.filter((p) => p.l < p.m);
-    for (const p of pts.current) {
-      p.l++; p.x += p.vx; p.y += p.vy; p.vy += 0.11; p.vx *= 0.99; p.r += p.rs;
-      const t = p.l / p.m;
-      const a = t < 0.1 ? t / 0.1 : t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
-      ctx.save();
-      ctx.globalAlpha = a * 0.88;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.r);
-      ctx.fillStyle = p.c;
-      ctx.strokeStyle = p.c;
-      if (p.s === 1) { ctx.beginPath(); ctx.arc(0, 0, p.sz / 2, 0, Math.PI * 2); ctx.fill(); }
-      else if (p.s === 2) { ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -p.sz); ctx.lineTo(0, p.sz); ctx.stroke(); }
-      else ctx.fillRect(-p.sz / 2, -p.sz / 3, p.sz, p.sz * 0.55);
-      ctx.restore();
-    }
-    if (pts.current.length > 0) raf.current = requestAnimationFrame(draw);
-    else { on.current = false; if (c.parentNode) c.parentNode.removeChild(c); cvs.current = null; }
+  // The draw loop self-references for requestAnimationFrame, so it lives in an
+  // effect (not a self-referential useCallback) and is reached via drawRef.
+  useEffect(() => {
+    const draw = () => {
+      const c = cvs.current;
+      if (!c) return;
+      const ctx = c.getContext("2d")!;
+      ctx.clearRect(0, 0, c.width, c.height);
+      pts.current = pts.current.filter((p) => p.l < p.m);
+      for (const p of pts.current) {
+        p.l++; p.x += p.vx; p.y += p.vy; p.vy += 0.11; p.vx *= 0.99; p.r += p.rs;
+        const t = p.l / p.m;
+        const a = t < 0.1 ? t / 0.1 : t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
+        ctx.save();
+        ctx.globalAlpha = a * 0.88;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.r);
+        ctx.fillStyle = p.c;
+        ctx.strokeStyle = p.c;
+        if (p.s === 1) { ctx.beginPath(); ctx.arc(0, 0, p.sz / 2, 0, Math.PI * 2); ctx.fill(); }
+        else if (p.s === 2) { ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -p.sz); ctx.lineTo(0, p.sz); ctx.stroke(); }
+        else ctx.fillRect(-p.sz / 2, -p.sz / 3, p.sz, p.sz * 0.55);
+        ctx.restore();
+      }
+      if (pts.current.length > 0) raf.current = requestAnimationFrame(draw);
+      else { on.current = false; if (c.parentNode) c.parentNode.removeChild(c); cvs.current = null; }
+    };
+    drawRef.current = draw;
+    return () => {
+      cancelAnimationFrame(raf.current);
+      if (cvs.current?.parentNode) cvs.current.parentNode.removeChild(cvs.current);
+    };
   }, []);
 
   const celebrate = useCallback((ox: number, oy: number, count = 40) => {
@@ -91,12 +106,7 @@ function useConfetti() {
         s: [0, 0, 1, 2][Math.floor(Math.random() * 4)], l: 0, m: 80 + Math.random() * 50,
       });
     }
-    if (!on.current) { on.current = true; raf.current = requestAnimationFrame(draw); }
-  }, [draw]);
-
-  useEffect(() => () => {
-    cancelAnimationFrame(raf.current);
-    if (cvs.current?.parentNode) cvs.current.parentNode.removeChild(cvs.current);
+    if (!on.current) { on.current = true; raf.current = requestAnimationFrame(drawRef.current); }
   }, []);
 
   return celebrate;

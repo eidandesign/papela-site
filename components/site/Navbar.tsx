@@ -115,6 +115,8 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 
   useEffect(() => {
     if (isOpen) {
+      // Intentional: opening mounts the portal before the enter animation.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true);
       document.body.style.overflow = "hidden";
       // Wait 2 frames so the DOM paints the initial clip-path before transitioning
@@ -129,6 +131,9 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
     }
   }, [isOpen]);
 
+  // portalRef holds the host node created in an effect; reading it to gate the
+  // render is intentional for this createPortal pattern.
+  // eslint-disable-next-line react-hooks/refs
   if (!mounted || !portalRef.current) return null;
 
   return createPortal(
@@ -243,6 +248,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       </div>
 
     </div>,
+    // eslint-disable-next-line react-hooks/refs
     portalRef.current
   );
 }
