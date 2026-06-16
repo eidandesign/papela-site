@@ -7,12 +7,7 @@ import {
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PlayIcon,
 } from "@heroicons/react/24/solid";
-
-function isVideo(url: string) {
-  return /\.(mp4|webm|mov|ogg)(\?|$)/i.test(url) || url.includes("/video/");
-}
 
 // ── Lightbox ──────────────────────────────────────────────────────────────────
 function Lightbox({
@@ -27,7 +22,6 @@ function Lightbox({
   onChange: (i: number) => void;
 }) {
   const url = items[current];
-  const vid = isVideo(url);
   const prev = useCallback(() => onChange((current - 1 + items.length) % items.length), [current, items.length, onChange]);
   const next = useCallback(() => onChange((current + 1) % items.length), [current, items.length, onChange]);
 
@@ -66,22 +60,12 @@ function Lightbox({
         className="relative flex items-center justify-center px-14 py-10 max-w-full max-h-full"
         onClick={(e) => e.stopPropagation()}
       >
-        {vid ? (
-          <video
-            key={url}
-            src={url}
-            autoPlay
-            controls
-            className="max-h-[80vh] max-w-[85vw] rounded-2xl shadow-2xl"
-          />
-        ) : (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={url}
-            alt=""
-            className="max-h-[80vh] max-w-[85vw] rounded-2xl shadow-2xl object-contain"
-          />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt=""
+          className="max-h-[80vh] max-w-[85vw] rounded-2xl shadow-2xl object-contain"
+        />
       </div>
 
       {/* Prev / Next */}
@@ -193,7 +177,6 @@ export default function TallerGaleriaSection({
           {galeria.map((url, i) => {
             // galeria items start at index 1 in allItems (0 = mainImage)
             const idx = i + 1;
-            const vid = isVideo(url);
             const active = openAt === idx;
             return (
               <button
@@ -204,15 +187,9 @@ export default function TallerGaleriaSection({
                     ? "border-[#12535c] scale-[1.04]"
                     : "border-[#d6bdb2] hover:border-[#12535c]/60"
                 }`}
-                aria-label={vid ? `Ver video ${i + 1}` : `Ver imagen extra ${i + 1}`}
+                aria-label={`Ver imagen extra ${i + 1}`}
               >
-                {vid ? (
-                  <div className="w-full h-full bg-[#403c3c]/80 flex items-center justify-center">
-                    <PlayIcon className="w-6 h-6 text-white drop-shadow" />
-                  </div>
-                ) : (
-                  <Image src={url} alt="" fill className="object-cover" />
-                )}
+                <Image src={url} alt="" fill className="object-cover" />
               </button>
             );
           })}

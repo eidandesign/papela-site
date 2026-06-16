@@ -68,7 +68,7 @@ export default async function TalleresPage() {
                 {/* Image + thumbnails + lightbox */}
                 <TallerGaleriaSection
                   mainImage={taller.imagen_url}
-                  galeria={[...taller.imagenes, ...taller.videos]}
+                  galeria={taller.imagenes}
                   titulo={taller.titulo}
                   instructorNombre={taller.instructor_nombre}
                   instructorInstagram={taller.instructor_instagram}
