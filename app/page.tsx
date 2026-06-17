@@ -41,7 +41,7 @@ const INFO_CARDS = [
     slug: "personaliza",
     title: "Personaliza",
     body: "Stickers, toppers y detalles hechos a la medida.",
-    href: "/productos",
+    href: "/personaliza",
     bg: "#CED8D9",
     text: "#1e2d36",
     image: "/images/personaliza.avif",

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/productos", label: "Catálogo" },
   { href: "/talleres", label: "Talleres" },
   { href: "/clases", label: "Clases" },
+  { href: "/personaliza", label: "Personaliza" },
   { href: "/nosotros", label: "Nosotros" },
 ];
 
@@ -259,6 +260,7 @@ const NAV_ITEMS = [
   { href: "/productos", label: "Catálogo" },
   { href: "/talleres", label: "Talleres" },
   { href: "/clases", label: "Clases" },
+  { href: "/personaliza", label: "Personaliza" },
   { href: "/nosotros", label: "Nosotros" },
 ];
 
@@ -309,6 +311,7 @@ export default function SiteNavbar() {
                   {[
                     { href: "/productos", label: "Catálogo" },
                     { href: "/talleres", label: "Talleres" },
+                    { href: "/personaliza", label: "Personaliza" },
                   ].map((l, i) => (
                     <motion.div
                       key={l.href}
