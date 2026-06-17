@@ -139,3 +139,33 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
+
+/* OcasionesPills — marquee horizontal (solo mobile). Contenido duplicado x2,
+   se desplaza 50% para un loop sin costuras. Float = bob vertical por pill. */
+@keyframes ocasiones-marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes ocasiones-marquee-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+@keyframes ocasiones-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.ocasiones-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.ocasiones-float {
+  animation: ocasiones-float 2.2s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ocasiones-marquee-track,
+  .ocasiones-float {
+    animation: none !important;
+  }
+}

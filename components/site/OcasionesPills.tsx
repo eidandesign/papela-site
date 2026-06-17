@@ -39,6 +39,8 @@ const OCASIONES = [
   { label: "Manualidades para niños y adultos", Icon: ScissorsIcon },
 ];
 
+type Ocasion = (typeof OCASIONES)[number];
+
 // Tintes suaves de la marca que rotan por pill.
 const PILL_COLORS = [
   { bg: "#F0D9CC", text: "#8C482A" }, // terracota
@@ -48,6 +50,29 @@ const PILL_COLORS = [
   { bg: "#E6DCEA", text: "#5e4b6b" }, // lila
   { bg: "#F5DAD2", text: "#a8543a" }, // durazno
 ];
+
+// Mobile: repartimos las ocasiones en 5 filas que se mueven horizontalmente,
+// así la sección no crece tanto hacia abajo. Mantenemos el índice global de
+// cada ocasión para conservar la rotación de colores.
+const MOBILE_ROWS = 5;
+const MOBILE_INDEXED = OCASIONES.map((ocasion, index) => ({ ocasion, index }));
+const MOBILE_DISTRIBUTION: { ocasion: Ocasion; index: number }[][] = Array.from(
+  { length: MOBILE_ROWS },
+  () => []
+);
+MOBILE_INDEXED.forEach((item, i) => {
+  MOBILE_DISTRIBUTION[i % MOBILE_ROWS].push(item);
+});
+
+function PillContent({ ocasion }: { ocasion: Ocasion }) {
+  const Icon = ocasion.Icon;
+  return (
+    <>
+      <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+      {ocasion.label}
+    </>
+  );
+}
 
 export default function OcasionesPills() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -153,21 +178,78 @@ export default function OcasionesPills() {
   }, []);
 
   return (
-    <div ref={containerRef} className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
-      {OCASIONES.map((ocasion, i) => {
-        const color = PILL_COLORS[i % PILL_COLORS.length];
-        const Icon = ocasion.Icon;
-        return (
-          <span
-            key={ocasion.label}
-            className="ocasion-pill inline-flex cursor-default items-center gap-2 rounded-full px-5 py-2.5 font-sans text-[15px] will-change-transform"
-            style={{ backgroundColor: color.bg, color: color.text }}
-          >
-            <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
-            {ocasion.label}
-          </span>
-        );
-      })}
-    </div>
+    <>
+      {/* Mobile: 5 filas en marquee horizontal con flotación. Compacto en vertical. */}
+      <div
+        className="flex flex-col gap-3 md:hidden"
+        style={{
+          maskImage:
+            "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
+        }}
+        aria-label="Ocasiones para personalizar"
+      >
+        {MOBILE_DISTRIBUTION.map((row, rowIndex) => {
+          const toLeft = rowIndex % 2 === 0;
+          const duration = 22 + rowIndex * 4; // filas con ritmos distintos
+          return (
+            <div key={rowIndex} className="overflow-hidden">
+              <div
+                className="ocasiones-marquee-track gap-3"
+                style={{
+                  animationName: toLeft
+                    ? "ocasiones-marquee-left"
+                    : "ocasiones-marquee-right",
+                  animationDuration: `${duration}s`,
+                  animationTimingFunction: "linear",
+                  animationIterationCount: "infinite",
+                }}
+              >
+                {/* Contenido duplicado x2 para el loop sin costuras. */}
+                {[0, 1].map((dup) =>
+                  row.map(({ ocasion, index }, i) => {
+                    const color = PILL_COLORS[index % PILL_COLORS.length];
+                    return (
+                      <span
+                        key={`${dup}-${ocasion.label}-${i}`}
+                        aria-hidden={dup === 1}
+                        className="ocasiones-float inline-flex shrink-0 cursor-default items-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 font-sans text-[15px]"
+                        style={{
+                          backgroundColor: color.bg,
+                          color: color.text,
+                          animationDelay: `${(i * 0.35 + rowIndex * 0.2).toFixed(2)}s`,
+                        }}
+                      >
+                        <PillContent ocasion={ocasion} />
+                      </span>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: flex-wrap con entrada GSAP + flotación + hover. */}
+      <div
+        ref={containerRef}
+        className="hidden flex-wrap justify-center gap-3 max-w-3xl mx-auto md:flex"
+      >
+        {OCASIONES.map((ocasion, i) => {
+          const color = PILL_COLORS[i % PILL_COLORS.length];
+          return (
+            <span
+              key={ocasion.label}
+              className="ocasion-pill inline-flex cursor-default items-center gap-2 rounded-full px-5 py-2.5 font-sans text-[15px] will-change-transform"
+              style={{ backgroundColor: color.bg, color: color.text }}
+            >
+              <PillContent ocasion={ocasion} />
+            </span>
+          );
+        })}
+      </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import Image from "next/image";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import PersonalizacionForm from "@/components/site/PersonalizacionForm";
 import OcasionesPills from "@/components/site/OcasionesPills";
+import CategoriasStack from "@/components/site/CategoriasStack";
 
 export const revalidate = 60;
 
@@ -65,10 +66,10 @@ export default function PersonalizaPage() {
     <>
       {/* Hero */}
       <section
-        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col justify-start md:justify-center"
+        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col justify-center"
         style={{ backgroundColor: "#5E7E86", width: "98vw", marginLeft: "1vw", marginRight: "1vw" }}
       >
-        <div className="px-10 md:px-20 pt-[140px] pb-16 md:py-28 flex flex-col items-center text-center">
+        <div className="px-6 md:px-20 py-[140px] md:py-28 flex flex-col items-center text-center">
           <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
             <span className="label text-[var(--color-cremita)]/70">Hecho a la medida</span>
           </span>
@@ -109,7 +110,11 @@ export default function PersonalizaPage() {
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* Mobile: tarjetas apiladas que se enciman al hacer scroll */}
+        <CategoriasStack categorias={CATEGORIAS} />
+
+        {/* Desktop: grid */}
+        <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-3 gap-6">
           {CATEGORIAS.map((cat, i) => (
             <ScrollReveal key={cat.titulo} delay={i * 0.06}>
               <article className="group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-[#C2D2D4] bg-[#DCE6E7] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[4px_6px_0px_#C2D2D4]">
