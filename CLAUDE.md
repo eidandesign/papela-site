@@ -14,6 +14,7 @@
 | `--color-verde` | `#12535C` | Primary — all CTAs, headings on light bg |
 | `--color-cremita` | `rgb(243,230,207)` | Cream — text on dark bg |
 | `--color-cremita-2` | `#F0E6D0` | Subtle cream accents |
+| `--color-cremita-3` | `#F7F3EC` | Lightest cream — cajas de resumen/total en forms (checkout taller) |
 | `--color-terracota` | `#8C482A` | Accent labels |
 | `--color-text` | `#403C3C` | Body text on white/light bg |
 | `--color-muted` | `rgb(110,100,95)` | Secondary text |

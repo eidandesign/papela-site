@@ -68,8 +68,8 @@ export default function TallerCheckoutForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* Resumen */}
-      <div className="bg-[var(--color-cremita)] rounded-xl p-5 border-l-4 border-[var(--color-verde)]">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-verde)] mb-1">
+      <div className="bg-[var(--color-cremita-3)] rounded-xl p-5">
+        <p className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)] mb-1">
           Apartando
         </p>
         <p className="font-serif font-extralight text-[1.4rem] text-[var(--color-text)] leading-tight">
@@ -82,7 +82,7 @@ export default function TallerCheckoutForm({
 
       {/* Nombre */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-verde)]">
+        <label className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
           Nombre completo <span className="text-[var(--color-terracota)]">*</span>
         </label>
         <input
@@ -99,7 +99,7 @@ export default function TallerCheckoutForm({
 
       {/* Email */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-verde)]">
+        <label className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
           Correo electrónico <span className="text-[var(--color-terracota)]">*</span>
         </label>
         <input
@@ -116,7 +116,7 @@ export default function TallerCheckoutForm({
 
       {/* Teléfono */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-verde)]">
+        <label className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
           Teléfono <span className="text-[var(--color-muted)] normal-case tracking-normal font-normal text-xs">(opcional)</span>
         </label>
         <input
@@ -132,7 +132,7 @@ export default function TallerCheckoutForm({
 
       {/* Cantidad */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-verde)]">
+        <label className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
           Número de personas <span className="text-[var(--color-terracota)]">*</span>
         </label>
         <div className="flex items-center gap-3 border border-[var(--color-border)] rounded-xl px-4 py-3 bg-white w-fit">
@@ -164,7 +164,7 @@ export default function TallerCheckoutForm({
       </div>
 
       {/* Total */}
-      <div className="flex items-center justify-between bg-[var(--color-cremita)] rounded-xl px-5 py-4">
+      <div className="flex items-center justify-between bg-[var(--color-cremita-3)] rounded-xl px-5 py-4">
         <span className="font-sans text-sm text-[var(--color-muted)]">
           {cantidad} × ${precio.toLocaleString("es-MX")}
         </span>

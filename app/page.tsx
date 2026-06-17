@@ -6,6 +6,7 @@ import TextCarousel from "@/components/site/TextCarousel";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import HeroExperience from "@/components/site/HeroExperience";
 import ProductCard from "@/components/site/ProductCard";
+import TalleresGallery from "@/components/site/TalleresGallery";
 import { getProductosPorColeccion } from "@/lib/productos-publicos";
 
 export const revalidate = 60;
@@ -186,6 +187,9 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── Más de 100 personas (galería animada) ─────────────────────────── */}
+      <TalleresGallery cta={{ label: "Ver talleres", href: "/talleres" }} />
 
       {/* ── Los Favoritos ─────────────────────────────────────────────────── */}
       <section className="py-8 md:py-12 bg-[var(--color-cremita)]/40">

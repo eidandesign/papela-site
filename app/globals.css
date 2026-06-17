@@ -65,6 +65,7 @@
   --color-verde-light: rgba(18, 83, 92, 0.08);
   --color-cremita: rgb(243, 230, 207);
   --color-cremita-2: #F0E6D0;
+  --color-cremita-3: #F7F3EC;
   --color-terracota: #8C482A;
   --color-text: rgb(64, 60, 60);
   --color-muted: rgb(110, 100, 95);
@@ -78,6 +79,7 @@
   --color-verde-light: var(--color-verde-light);
   --color-cremita: var(--color-cremita);
   --color-cremita-2: var(--color-cremita-2);
+  --color-cremita-3: var(--color-cremita-3);
   --color-terracota: var(--color-terracota);
   --color-text: var(--color-text);
   --color-muted: var(--color-muted);
