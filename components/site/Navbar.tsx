@@ -306,10 +306,12 @@ export default function SiteNavbar() {
             style={{ zIndex: menuOpen ? 100001 : 50 }}
           >
             <nav className="w-[96%] mx-auto relative flex items-center justify-center px-6 md:px-10 h-[140px] md:h-[170px]">
-              {/* Desktop: centered cluster — links flank the logo near the middle */}
-              <div className="flex items-center justify-center gap-8 lg:gap-12">
-                {/* Left links */}
-                <div className="hidden md:flex items-center gap-8 lg:gap-10">
+              {/* Desktop: links flank the logo. Each side gets flex-1 so the logo
+                  stays centered on the page regardless of the links' width. */}
+              <div className="flex items-center w-full gap-6 lg:gap-10 xl:gap-12">
+                {/* Left links — flex-1 wrapper keeps the logo page-centered */}
+                <div className="flex flex-1 justify-end">
+                  <div className="hidden lg:flex items-center gap-6 lg:gap-8 xl:gap-10">
                   {[
                     { href: "/productos", label: "Catálogo" },
                     { href: "/personaliza", label: "Personalización" },
@@ -323,16 +325,18 @@ export default function SiteNavbar() {
                     >
                       <Link
                         href={l.href}
-                        className={`font-sans text-[20px] font-medium tracking-wide ${linkClass} transition-colors`}
+                        className={`font-sans text-[17px] xl:text-[20px] font-medium tracking-wide whitespace-nowrap ${linkClass} transition-colors`}
                       >
                         {l.label}
                       </Link>
                     </motion.div>
                   ))}
+                  </div>
                 </div>
 
                 {/* Center logo — hidden when menu is open */}
                 <motion.div
+                  className="shrink-0"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: menuOpen ? 0 : 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
@@ -346,8 +350,9 @@ export default function SiteNavbar() {
                   </Link>
                 </motion.div>
 
-                {/* Right links */}
-                <div className="hidden md:flex items-center gap-8 lg:gap-10">
+                {/* Right links — flex-1 wrapper keeps the logo page-centered */}
+                <div className="flex flex-1 justify-start">
+                  <div className="hidden lg:flex items-center gap-6 lg:gap-8 xl:gap-10">
                   {[
                     { href: "/talleres", label: "Talleres" },
                     { href: "/clases", label: "Clases" },
@@ -361,23 +366,24 @@ export default function SiteNavbar() {
                     >
                       <Link
                         href={l.href}
-                        className={`font-sans text-[20px] font-medium tracking-wide ${linkClass} transition-colors`}
+                        className={`font-sans text-[17px] xl:text-[20px] font-medium tracking-wide whitespace-nowrap ${linkClass} transition-colors`}
                       >
                         {l.label}
                       </Link>
                     </motion.div>
                   ))}
+                  </div>
                 </div>
               </div>
 
               {/* Cart — desktop, stays in the corner */}
-              <div className="hidden md:block absolute right-10 top-1/2 -translate-y-1/2">
+              <div className="hidden lg:block absolute right-10 top-1/2 -translate-y-1/2">
                 <CartButton color={iconColor} />
               </div>
 
-              {/* Mobile: cart + hamburger */}
+              {/* Mobile/tablet: cart + hamburger */}
               <div
-                className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3"
+                className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3"
                 style={{ zIndex: menuOpen ? 100001 : "auto" }}
               >
                 <CartButton color={iconColor} />
@@ -422,7 +428,7 @@ export default function SiteNavbar() {
             <div className="shrink-0 w-px h-6 bg-white/20" />
 
             {/* Desktop links */}
-            <div className="hidden md:flex items-center gap-6">
+            <div className="hidden lg:flex items-center gap-6">
               {NAV_ITEMS.map((item, i) => (
                 <motion.div
                   key={item.href}
@@ -446,7 +452,7 @@ export default function SiteNavbar() {
             <motion.button
               onClick={menuOpen ? closeMenu : openMenu}
               aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-              className="md:hidden p-1"
+              className="lg:hidden p-1"
               whileTap={{ scale: 0.95 }}
               style={{
                 WebkitTapHighlightColor: "transparent",

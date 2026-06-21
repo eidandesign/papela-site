@@ -20,6 +20,17 @@ export type Taller = {
   videos: string[];
 };
 
+// Orden de antigüedad de las maestras (primera en entrar, primera en aparecer).
+// Liz fue la primera, luego Celia. Las demás van después, ordenadas por fecha.
+const ORDEN_MAESTRAS = ["liz", "celia"];
+
+function rangoMaestra(nombre: string | null): number {
+  if (!nombre) return ORDEN_MAESTRAS.length;
+  const n = nombre.trim().toLowerCase();
+  const idx = ORDEN_MAESTRAS.findIndex((m) => n.startsWith(m));
+  return idx === -1 ? ORDEN_MAESTRAS.length : idx;
+}
+
 export async function getTalleres(): Promise<Taller[]> {
   try {
     const res = await fetch("https://admin.papela-atelier.com/api/public/talleres", {
@@ -28,6 +39,9 @@ export async function getTalleres(): Promise<Taller[]> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { talleres } = await res.json();
     return (talleres ?? []).sort((a: Taller, b: Taller) => {
+      const rangoA = rangoMaestra(a.instructor_nombre);
+      const rangoB = rangoMaestra(b.instructor_nombre);
+      if (rangoA !== rangoB) return rangoA - rangoB;
       if (!a.fecha) return 1;
       if (!b.fecha) return -1;
       return a.fecha.localeCompare(b.fecha);

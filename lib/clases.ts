@@ -53,6 +53,19 @@ export async function getClasesConHorarios(): Promise<MaestraConHorarios[]> {
     return [];
   }
 
+  // Orden por antigüedad de las maestras (primero Liz, luego Celia).
+  // No hay columna de antigüedad en Supabase: se define aquí por slug.
+  // Las maestras sin orden explícito quedan después, en orden alfabético.
+  const ordenAntiguedad = ["liz-art", "celia"];
+  maestras.sort((a, b) => {
+    const ia = ordenAntiguedad.indexOf(a.slug);
+    const ib = ordenAntiguedad.indexOf(b.slug);
+    if (ia === -1 && ib === -1) return 0;
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+
   const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
 
   const { data: horarios, error: horariosError } = await supabase
