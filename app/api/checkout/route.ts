@@ -11,7 +11,7 @@ const client = new MercadoPagoConfig({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { horarioId, claseNombre, fechaHora, duracion } = body;
+    const { horarioId, claseNombre, actividad, fechaHora, duracion } = body;
 
     if (!horarioId || typeof horarioId !== "string") {
       return NextResponse.json({ error: "horarioId inválido" }, { status: 400 });
@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
         items: [
           {
             id: horarioId,
-            title: `Clase con ${claseNombre}`,
+            title: actividad
+              ? `${actividad} con ${claseNombre}`
+              : `Clase con ${claseNombre}`,
             description: `${fechaHora} · ${duracion} min`,
             quantity: 1,
             unit_price: horario.precio,

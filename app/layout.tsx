@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ConditionalShell from "@/components/site/ConditionalShell";
+import ReservaModal from "@/components/site/ReservaModal";
 
 const SITE_URL = "https://www.papela-atelier.com";
 
@@ -140,6 +141,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col">
         <ConditionalShell>{children}</ConditionalShell>
+        {/* Modal de reserva global — una sola instancia para todas las páginas
+            (cualquier ReservaButton lo abre vía store). Garantiza animación
+            y comportamiento consistentes en todo el sitio. */}
+        <ReservaModal />
       </body>
     </html>
   );

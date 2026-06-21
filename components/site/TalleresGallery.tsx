@@ -14,6 +14,7 @@ const POOL = [
   { src: "/images/taller-papela-2.JPG", alt: "Participantes sonriendo en un taller de Papela Atelier" },
   { src: "/images/fatima-papela.JPG", alt: "Tallerista guiando una actividad en Papela Atelier" },
   { src: "/images/fatima.jpeg", alt: "Momento creativo en un taller de Papela Atelier" },
+  { src: "/images/niños-papela.jpg", alt: "Niños creando en un taller de Papela Atelier" },
 ];
 
 // Posiciones del scatter en desktop (como Figma). offset = foto inicial del POOL.

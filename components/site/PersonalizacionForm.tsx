@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
+import { inputBase } from "@/lib/ui";
+import Select from "@/components/site/Select";
 
 const TIPOS = [
   "Stickers personalizados",
@@ -30,8 +32,6 @@ const OCASIONES = [
   "Otra",
 ];
 
-const inputBase =
-  "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 font-sans text-[15px] text-[var(--color-text)] placeholder:text-[var(--color-muted)]/70 outline-none transition-colors focus:border-[var(--color-verde)]";
 
 export default function PersonalizacionForm() {
   const [enviando, setEnviando] = useState(false);
@@ -142,23 +142,23 @@ export default function PersonalizacionForm() {
             <label htmlFor="tipo" className="label text-[var(--color-terracota)]">
               ¿Qué quieres personalizar?
             </label>
-            <select id="tipo" name="tipo" defaultValue="" className={inputBase}>
+            <Select id="tipo" name="tipo" defaultValue="">
               <option value="" disabled>Elige una opción</option>
               {TIPOS.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="ocasion" className="label text-[var(--color-terracota)]">
               ¿Para qué ocasión?
             </label>
-            <select id="ocasion" name="ocasion" defaultValue="" className={inputBase}>
+            <Select id="ocasion" name="ocasion" defaultValue="">
               <option value="" disabled>Elige una opción</option>
               {OCASIONES.map((o) => (
                 <option key={o} value={o}>{o}</option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
 

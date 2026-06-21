@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { getClases } from "@/lib/clases";
+import { getClasesConHorarios } from "@/lib/clases";
+import { getActividades, getPublico } from "@/lib/clases-actividades";
+import ReservaButton from "@/components/site/ReservaButton";
 
 export const revalidate = 60;
 
@@ -19,12 +21,12 @@ export const metadata: Metadata = {
 };
 
 export default async function ClasesPage() {
-  const maestras = await getClases();
+  const maestras = await getClasesConHorarios();
 
   return (
     <>
       {/* ── Hero ── */}
-      <section className="mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#4F8674] flex flex-col items-center justify-start md:justify-center text-center px-8 md:px-16 min-h-[80vh] pt-[140px] pb-16 md:py-0" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
+      <section className="mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#4F8674] flex flex-col items-center justify-center text-center px-8 md:px-16 min-h-[80vh] pt-[140px] pb-[140px] md:py-0" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
         <span className="inline-flex items-center border border-[var(--color-cremita)]/60 rounded-full px-6 py-2 mb-8">
           <span className="label text-[var(--color-cremita)]">
             Clases Creativas
@@ -41,16 +43,11 @@ export default async function ClasesPage() {
       </section>
 
       {/* ── Maestras grid ── */}
-      <section className="w-[90%] mx-auto pt-20 pb-20">
+      <section className="w-[90%] mx-auto pt-12 md:pt-16 pb-12 md:pb-16">
         {/* Section heading */}
-        <div className="flex flex-col items-center text-center mb-12 gap-4">
-          <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,3rem)] text-black leading-tight">
-            Crear se disfruta más cuando alguien te guía con calma
-          </h2>
-          <p className="font-sans text-[var(--color-text)] text-[17px] leading-relaxed max-w-xl">
-            En Papela creemos que una buena clase no se trata solo de aprender una técnica, sino de sentirse acompañado mientras pruebas, te equivocas, descubres materiales y le das forma a tus ideas.
-          </p>
-        </div>
+        <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,3rem)] text-black leading-tight text-center mb-8 md:mb-10">
+          Tus próximas guías
+        </h2>
 
         {/* Cards */}
         {maestras.length === 0 ? (
@@ -59,71 +56,69 @@ export default async function ClasesPage() {
             <p className="text-[var(--color-muted)]">Estamos preparando nuevas clases. ¡Vuelve pronto!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {maestras.map((maestra) => (
-              <article
-                key={maestra.id}
-                className="bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-[26px] flex flex-col gap-4 transition-[transform,box-shadow] duration-300 ease-out hover:shadow-[4px_6px_0px_#d6bdb2] hover:-translate-y-1"
-              >
-                {/* Foto + overlay del nombre */}
-                <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-[#d6bdb2]">
-                  {maestra.foto ? (
-                    <Image
-                      src={maestra.foto}
-                      alt={maestra.nombre}
-                      fill
-                      sizes="(max-width: 768px) 90vw, 400px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-cremita)] to-[#c9d3c0]" />
-                  )}
-                  <div className="absolute bottom-4 left-3 max-w-[90%] bg-[#f9eae3] rounded-2xl px-6 md:px-8 py-3">
-                    <p className="font-serif italic text-[#664917] text-2xl leading-8">
+          <div className="flex flex-wrap justify-center gap-5 md:gap-6">
+            {maestras.map((maestra) => {
+              const publico = getPublico(maestra.slug);
+              const actividades = getActividades(maestra.slug).map((a) => a.titulo);
+              return (
+                <article
+                  key={maestra.id}
+                  className="w-full sm:w-[340px] lg:w-[360px] bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-4 md:p-5 flex flex-col gap-4 transition-[transform,box-shadow] duration-300 ease-out hover:shadow-[4px_6px_0px_#d6bdb2] hover:-translate-y-1"
+                >
+                  {/* Foto + badge de edad */}
+                  <div className="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-[#d6bdb2]">
+                    {maestra.foto ? (
+                      <Image
+                        src={maestra.foto}
+                        alt={maestra.nombre}
+                        fill
+                        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 400px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-cremita)] to-[#c9d3c0]" />
+                    )}
+                    {publico && (
+                      <span className="absolute bottom-3 left-3 bg-[#f9eae3] text-[var(--color-terracota)] text-[10px] font-semibold uppercase tracking-[0.16em] px-3 py-1.5 rounded-full">
+                        {publico}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Nombre + técnicas */}
+                  <div className="flex flex-col gap-1 px-1 flex-1">
+                    <h3 className="font-serif italic text-[#664917] text-[clamp(1.5rem,2vw,1.75rem)] leading-tight">
                       {maestra.nombre}
-                    </p>
+                    </h3>
                     {maestra.tecnicas?.length > 0 && (
-                      <p className="font-sans text-[#403c3c] text-sm leading-tight">
+                      <p className="font-sans text-[var(--color-muted)] text-sm leading-snug">
                         {maestra.tecnicas.join(" · ")}
                       </p>
                     )}
                   </div>
-                </div>
 
-                {/* Cuerpo */}
-                <div className="flex flex-col gap-4 flex-1">
-                  {maestra.tecnicas?.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px]">
-                        Técnicas
-                      </span>
-                      <p className="font-sans text-[#403c3c] text-[17px] leading-relaxed">
-                        {maestra.tecnicas.join(", ")}
-                      </p>
-                    </div>
-                  )}
-
-                  {maestra.descripcion && (
-                    <div className="flex flex-col gap-3">
-                      <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-1 rounded-[10px]">
-                        Descripción
-                      </span>
-                      <p className="font-sans text-[#403c3c] text-[17px] leading-relaxed">
-                        {maestra.descripcion}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* CTA */}
-                <Link
-                  href={`/clases/${maestra.slug}`}
-                  className="mt-auto w-full bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-base text-center py-3 px-4 rounded-lg hover:opacity-90 transition-opacity"
-                >
-                  Ver detalles y de clases
-                </Link>
-              </article>
-            ))}
+                  {/* CTAs */}
+                  <div className="flex items-center gap-2.5">
+                    <Link
+                      href={`/clases/${maestra.slug}`}
+                      className="flex-shrink-0 inline-flex items-center justify-center rounded-full border border-[var(--color-verde)] px-5 py-2.5 font-sans text-sm font-semibold text-[var(--color-verde)] hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition-colors"
+                    >
+                      Ver detalles
+                    </Link>
+                    <ReservaButton
+                      horarios={maestra.horarios}
+                      claseNombre={maestra.nombre}
+                      whatsapp={maestra.whatsapp}
+                      actividades={actividades}
+                      label="Reservar Clase"
+                      size="sm"
+                      showArrow={false}
+                      className="flex-1"
+                    />
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>

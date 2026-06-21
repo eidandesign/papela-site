@@ -3,8 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClaseBySlug } from "@/lib/clases";
+import { getActividades } from "@/lib/clases-actividades";
 import { SITE_URL } from "@/lib/site";
-import ClaseCalendar from "@/components/site/ClaseCalendar";
+import ReservaButton from "@/components/site/ReservaButton";
+import ActividadCard from "@/components/site/ActividadCard";
 
 export const revalidate = 60;
 
@@ -45,6 +47,8 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
 
   if (!maestra) notFound();
 
+  const actividades = getActividades(maestra.slug);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -75,88 +79,97 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* ── Detalle: dos columnas (foto + info / calendario) ── */}
-      <section className="w-[90%] mx-auto pt-40 md:pt-[200px] pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
-          {/* Izquierda — foto card + descripción/experiencia */}
-          <div className="flex flex-col gap-8">
-            {/* Foto card con overlay del nombre */}
-            <div className="relative w-full aspect-[624/567] rounded-2xl overflow-hidden">
-              {maestra.foto ? (
-                <Image
-                  src={maestra.foto}
-                  alt={maestra.nombre}
-                  fill
-                  sizes="(max-width: 768px) 90vw, 45vw"
-                  className="object-cover object-center"
-                  priority
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[#5d7c80]" />
-              )}
-              <div className="absolute bottom-4 left-4 max-w-[88%] bg-[#f9eae3] rounded-2xl px-6 md:px-10 py-3 md:py-4">
-                <h1 className="font-serif italic text-[#664917] text-[clamp(1.8rem,4.5vw,3rem)] leading-[1.12]">
-                  {maestra.nombre}
-                </h1>
-                {maestra.tecnicas?.length > 0 && (
-                  <p className="font-sans text-[#403c3c] text-[clamp(0.9rem,1.6vw,1.125rem)] leading-7 mt-0.5">
-                    {maestra.tecnicas.join(" · ")}
-                  </p>
-                )}
-              </div>
-            </div>
+
+      <div className="w-[90%] mx-auto pt-40 md:pt-[200px] pb-16">
+        {/* ── Hero: foto + perfil de la maestra ── */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+          {/* Foto */}
+          <div className="relative w-full aspect-[4/3] md:aspect-[624/520] rounded-2xl overflow-hidden">
+            {maestra.foto ? (
+              <Image
+                src={maestra.foto}
+                alt={maestra.nombre}
+                fill
+                sizes="(max-width: 768px) 90vw, 45vw"
+                className="object-cover object-center"
+                priority
+              />
+            ) : (
+              <div className="absolute inset-0 bg-[#5d7c80]" />
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="flex flex-col">
+            <h1 className="font-serif italic text-[#664917] text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.05]">
+              {maestra.nombre}
+            </h1>
+
+            {maestra.tecnicas?.length > 0 && (
+              <p className="font-sans text-[var(--color-muted)] text-[clamp(0.95rem,1.5vw,1.05rem)] leading-7 mt-3">
+                {maestra.tecnicas.join(" · ")}
+              </p>
+            )}
 
             {maestra.descripcion && (
-              <div className="flex flex-col gap-3">
-                <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-px rounded-[10px]">
-                  Descripción
-                </span>
-                <p className="font-sans text-[#403c3c] text-[18px] leading-7">
-                  {maestra.descripcion}
-                </p>
-              </div>
+              <p className="font-sans text-[var(--color-text)] text-[17px] leading-7 mt-5">
+                {maestra.descripcion}
+              </p>
             )}
 
             {maestra.experiencia && (
-              <div className="flex flex-col gap-3">
-                <span className="self-start bg-[#fdeee8] text-black text-[12px] tracking-[2px] uppercase font-sans px-2 py-px rounded-[10px]">
-                  Experiencia
-                </span>
-                <p className="font-sans text-[#403c3c] text-[18px] leading-7">
-                  {maestra.experiencia}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Derecha — calendario */}
-          <div className="flex flex-col gap-6">
-            <div className="text-center">
-              <h2 className="font-serif font-extralight text-[clamp(2.2rem,5vw,3.5rem)] text-[#403c3c] leading-tight mb-1">
-                Elige tu horario
-              </h2>
-              <p className="font-sans text-[var(--color-muted)] text-sm">
-                Selecciona el día y hora que más te acomode.
+              <p className="font-sans text-[var(--color-muted)] text-[15px] leading-7 mt-3">
+                {maestra.experiencia}
               </p>
+            )}
+
+            <div className="mt-7">
+              <ReservaButton
+                horarios={maestra.horarios}
+                claseNombre={maestra.nombre}
+                whatsapp={maestra.whatsapp}
+                actividades={actividades.map((a) => a.titulo)}
+                label="Reservar Clase"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ── Clases que imparte ── */}
+        {actividades.length > 0 && (
+          <section className="mt-16 md:mt-24">
+            <h2 className="text-center font-serif font-extralight text-[clamp(2rem,4.5vw,3.25rem)] text-[#403c3c] leading-tight mb-8 md:mb-12">
+              Clases de {maestra.nombre}
+            </h2>
+
+            <div className="flex flex-col gap-6">
+              {actividades.map((a) => (
+                <ActividadCard key={a.titulo} actividad={a} />
+              ))}
             </div>
 
-            {maestra.horarios.length > 0 ? (
-              <ClaseCalendar horarios={maestra.horarios} claseNombre={maestra.nombre} />
-            ) : (
-              <div className="bg-[#f2f0e9] rounded-xl px-5 py-8 text-center">
-                <p className="font-serif font-extralight text-xl text-[#403C3C] mb-2">Próximamente</p>
-                <p className="font-sans text-[var(--color-muted)]">
-                  No hay horarios disponibles por el momento.
-                </p>
-              </div>
-            )}
+            {/* CTA inferior para reservar */}
+            <div className="flex justify-center mt-12">
+              <ReservaButton
+                horarios={maestra.horarios}
+                claseNombre={maestra.nombre}
+                whatsapp={maestra.whatsapp}
+                actividades={actividades.map((a) => a.titulo)}
+                label="Reservar Clase"
+              />
+            </div>
+          </section>
+        )}
 
-            <Link href="/clases" className="text-center font-sans text-sm text-[var(--color-muted)] hover:text-[var(--color-verde)] transition-colors">
-              ← Ver todas las clases
-            </Link>
-          </div>
+        <div className="mt-12 text-center">
+          <Link
+            href="/clases"
+            className="font-sans text-sm text-[var(--color-muted)] hover:text-[var(--color-verde)] transition-colors"
+          >
+            ← Ver todas las clases
+          </Link>
         </div>
-      </section>
+      </div>
     </>
   );
 }

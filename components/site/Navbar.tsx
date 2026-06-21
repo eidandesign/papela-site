@@ -11,9 +11,10 @@ import AnimatedLogo from "./AnimatedLogo";
 
 const NAV_LINKS = [
   { href: "/productos", label: "Catálogo" },
+  { href: "/personaliza", label: "Personalización" },
+  { href: "/servicios", label: "Servicios" },
   { href: "/talleres", label: "Talleres" },
   { href: "/clases", label: "Clases" },
-  { href: "/personaliza", label: "Personaliza" },
   { href: "/nosotros", label: "Nosotros" },
 ];
 
@@ -258,9 +259,10 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 // Keep desktop NAV_ITEMS for floating bar
 const NAV_ITEMS = [
   { href: "/productos", label: "Catálogo" },
+  { href: "/personaliza", label: "Personalización" },
+  { href: "/servicios", label: "Servicios" },
   { href: "/talleres", label: "Talleres" },
   { href: "/clases", label: "Clases" },
-  { href: "/personaliza", label: "Personaliza" },
   { href: "/nosotros", label: "Nosotros" },
 ];
 
@@ -310,8 +312,8 @@ export default function SiteNavbar() {
                 <div className="hidden md:flex items-center gap-8 lg:gap-10">
                   {[
                     { href: "/productos", label: "Catálogo" },
-                    { href: "/talleres", label: "Talleres" },
-                    { href: "/personaliza", label: "Personaliza" },
+                    { href: "/personaliza", label: "Personalización" },
+                    { href: "/servicios", label: "Servicios" },
                   ].map((l, i) => (
                     <motion.div
                       key={l.href}
@@ -347,6 +349,7 @@ export default function SiteNavbar() {
                 {/* Right links */}
                 <div className="hidden md:flex items-center gap-8 lg:gap-10">
                   {[
+                    { href: "/talleres", label: "Talleres" },
                     { href: "/clases", label: "Clases" },
                     { href: "/nosotros", label: "Nosotros" },
                   ].map((l, i) => (

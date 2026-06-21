@@ -44,11 +44,24 @@ function isSameDay(a: Date, b: Date) {
 export default function ClaseCalendar({
   horarios,
   claseNombre,
+  actividad,
 }: {
   horarios: Horario[];
   claseNombre: string;
+  actividad?: string;
 }) {
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  // Arranca en la semana del primer horario disponible (no en la semana actual
+  // si ésta ya no tiene fechas) para no mostrar una semana vacía al abrir.
+  const [weekStart, setWeekStart] = useState(() => {
+    if (horarios.length > 0) {
+      const earliest = horarios.reduce(
+        (min, h) => (new Date(h.fecha_hora) < new Date(min.fecha_hora) ? h : min),
+        horarios[0]
+      );
+      return startOfWeek(new Date(earliest.fecha_hora));
+    }
+    return startOfWeek(new Date());
+  });
   const [loading, setLoading] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -75,6 +88,7 @@ export default function ClaseCalendar({
         body: JSON.stringify({
           horarioId: h.id,
           claseNombre,
+          actividad,
           fechaHora,
           precio: h.precio,
           duracion: h.duracion_minutos,

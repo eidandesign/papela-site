@@ -39,6 +39,39 @@ export async function getClases(): Promise<Maestra[]> {
   return data ?? [];
 }
 
+export async function getClasesConHorarios(): Promise<MaestraConHorarios[]> {
+  const supabase = await createClient();
+
+  const { data: maestras, error } = await supabase
+    .from("clases")
+    .select("id, nombre, slug, tecnicas, descripcion, experiencia, foto, galeria, whatsapp, activa")
+    .eq("activa", true)
+    .order("nombre", { ascending: true });
+
+  if (error || !maestras?.length) {
+    if (error) logger.error("Error fetching clases con horarios", {}, error);
+    return [];
+  }
+
+  const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+
+  const { data: horarios, error: horariosError } = await supabase
+    .from("clases_horarios")
+    .select("id, clase_id, fecha_hora, cupo_disponible, precio, duracion_minutos")
+    .in("clase_id", maestras.map((m) => m.id))
+    .eq("estado", "disponible")
+    .gt("fecha_hora", twoHoursFromNow)
+    .gt("cupo_disponible", 0)
+    .order("fecha_hora", { ascending: true });
+
+  if (horariosError) logger.error("Error fetching horarios (listado)", {}, horariosError);
+
+  return maestras.map((m) => ({
+    ...m,
+    horarios: (horarios ?? []).filter((h) => h.clase_id === m.id),
+  }));
+}
+
 export async function getClaseBySlug(slug: string): Promise<MaestraConHorarios | null> {
   const supabase = await createClient();
 
