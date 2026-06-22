@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
-import gsap from "gsap";
 
 const POOL = [
   { src: "/images/taller1.jpg", alt: "Asistentes creando en un taller de Papela Atelier" },
@@ -17,7 +16,6 @@ const POOL = [
   { src: "/images/niños-papela.jpg", alt: "Niños creando en un taller de Papela Atelier" },
 ];
 
-// Posiciones del scatter en desktop (como Figma). offset = foto inicial del POOL.
 const DESKTOP_FRAMES = [
   { pos: "left-[2%] top-[24%] w-[120px] h-[150px] -rotate-6", offset: 0 },
   { pos: "left-[42%] top-[0%] w-[114px] h-[150px] rotate-3", offset: 2 },
@@ -26,30 +24,24 @@ const DESKTOP_FRAMES = [
   { pos: "right-[18%] bottom-[0%] w-[112px] h-[148px] -rotate-3", offset: 3 },
 ];
 
-// En mobile: 3 marcos en fila debajo del texto.
 const MOBILE_FRAMES = [
   { offset: 0, rot: "-rotate-3" },
   { offset: 3, rot: "rotate-2" },
   { offset: 5, rot: "-rotate-2" },
 ];
 
-function FrameImages({ index }: { index: number }) {
+function FrameImage({ index }: { index: number }) {
+  const photo = POOL[index];
   return (
-    <>
-      {POOL.map((photo, p) => (
-        <Image
-          key={photo.src}
-          src={photo.src}
-          alt={photo.alt}
-          fill
-          sizes="170px"
-          aria-hidden={p !== index}
-          className={`object-cover transition-opacity duration-1000 ${
-            p === index ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
-    </>
+    <Image
+      key={photo.src}
+      src={photo.src}
+      alt={photo.alt}
+      fill
+      sizes="170px"
+      className="object-cover"
+      style={{ animation: "galleryFadeIn 0.7s ease" }}
+    />
   );
 }
 
@@ -66,67 +58,84 @@ function Cta({ label, href }: { label: string; href: string }) {
   );
 }
 
-/**
- * Marcos flotantes alrededor del texto. Cada marco flota e inclina suavemente
- * (GSAP, infinito yoyo) y va cambiando la foto que muestra (crossfade) ciclando
- * el POOL. Desktop: scatter absoluto. Mobile: fila debajo del texto.
- */
-export default function TalleresGallery({
-  cta,
-}: {
-  cta?: { label: string; href: string };
-}) {
+export default function TalleresGallery({ cta }: { cta?: { label: string; href: string } }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const visibleRef = useRef(false);
   const [dIdx, setDIdx] = useState<number[]>(DESKTOP_FRAMES.map((f) => f.offset));
   const [mIdx, setMIdx] = useState<number[]>(MOBILE_FRAMES.map((f) => f.offset));
 
-  // Float + tilt en todos los marcos visibles ([data-float])
+  // Float + tilt — GSAP loaded dynamically to keep it out of the main bundle
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const frames = gsap.utils.toArray<HTMLElement>("[data-float]");
-      frames.forEach((el, i) => {
-        const dir = i % 2 === 0 ? 1 : -1;
-        gsap.to(el, {
-          y: 14 * dir,
-          rotation: `+=${4 * dir}`,
-          duration: 3.2 + i * 0.5,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
+    let ctx: { revert: () => void } | null = null;
+    (async () => {
+      const { default: gsap } = await import("gsap");
+      ctx = gsap.context(() => {
+        const frames = gsap.utils.toArray<HTMLElement>("[data-float]");
+        frames.forEach((el, i) => {
+          const dir = i % 2 === 0 ? 1 : -1;
+          gsap.to(el, {
+            y: 14 * dir,
+            rotation: `+=${4 * dir}`,
+            duration: 3.2 + i * 0.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+          });
         });
-      });
-    }, containerRef);
-    return () => ctx.revert();
+      }, containerRef);
+    })();
+    return () => ctx?.revert();
   }, []);
 
-  // Ciclar la foto de cada marco, escalonado para que cambien una a la vez
+  // Photo cycling — paused when section is off-screen
   useEffect(() => {
-    const advance = (setter: React.Dispatch<React.SetStateAction<number[]>>, step: number) => (i: number) =>
+    const section = containerRef.current;
+    if (!section) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => { visibleRef.current = entry.isIntersecting; },
+      { threshold: 0.1 }
+    );
+    io.observe(section);
+
+    const advance = (
+      setter: React.Dispatch<React.SetStateAction<number[]>>,
+      step: number
+    ) => (i: number) =>
       setter((prev) => {
+        if (!visibleRef.current) return prev;
         const next = [...prev];
         next[i] = (next[i] + step) % POOL.length;
         return next;
       });
-    const adv = advance(setDIdx, DESKTOP_FRAMES.length);
+
+    const advD = advance(setDIdx, DESKTOP_FRAMES.length);
     const advM = advance(setMIdx, MOBILE_FRAMES.length);
+
     const timers = [
-      ...DESKTOP_FRAMES.map((_, i) => setInterval(() => adv(i), 3600 + i * 700)),
+      ...DESKTOP_FRAMES.map((_, i) => setInterval(() => advD(i), 3600 + i * 700)),
       ...MOBILE_FRAMES.map((_, i) => setInterval(() => advM(i), 3800 + i * 700)),
     ];
-    return () => timers.forEach(clearInterval);
+
+    return () => {
+      io.disconnect();
+      timers.forEach(clearInterval);
+    };
   }, []);
 
   return (
     <section className="w-[90%] mx-auto py-16 md:py-24" ref={containerRef}>
+      <style>{`@keyframes galleryFadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
+
       {/* Desktop: scatter + texto centrado */}
       <div className="relative mx-auto max-w-[1158px] min-h-[520px] hidden md:flex items-center justify-center">
         {DESKTOP_FRAMES.map((frame, i) => (
           <div
-            key={i}
+            key={frame.offset}
             data-float
             className={`absolute rounded-2xl overflow-hidden shadow-[0_12px_30px_-12px_rgba(64,60,60,0.35)] ${frame.pos}`}
           >
-            <FrameImages index={dIdx[i]} />
+            <FrameImage index={dIdx[i]} />
           </div>
         ))}
 
@@ -157,11 +166,11 @@ export default function TalleresGallery({
         <div className="flex items-center justify-center gap-3 mt-10">
           {MOBILE_FRAMES.map((frame, i) => (
             <div
-              key={i}
+              key={frame.offset}
               data-float
               className={`relative rounded-2xl overflow-hidden shadow-[0_12px_30px_-12px_rgba(64,60,60,0.35)] w-[100px] h-[130px] ${frame.rot}`}
             >
-              <FrameImages index={mIdx[i]} />
+              <FrameImage index={mIdx[i]} />
             </div>
           ))}
         </div>

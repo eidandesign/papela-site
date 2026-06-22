@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import HeroSection from "@/components/site/HeroSection";
 import {
   PrinterIcon,
   DocumentDuplicateIcon,
@@ -292,12 +293,9 @@ export default function ServiciosPage() {
   return (
     <>
       {/* ───────────────── 1 · Hero ───────────────── */}
-      <section
-        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col justify-center"
-        style={{ backgroundColor: "var(--color-verde)", width: "98vw", marginLeft: "1vw", marginRight: "1vw" }}
-      >
-        <div className="px-6 md:px-20 py-[140px] md:py-28 flex flex-col items-center text-center">
-          <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
+      <HeroSection>
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-6 md:px-20 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
+          <span data-hero-badge className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
             <span className="label text-[var(--color-cremita)]/70">Servicios Papela</span>
           </span>
           <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-3xl mb-6">
@@ -326,7 +324,7 @@ export default function ServiciosPage() {
             </a>
           </div>
         </div>
-      </section>
+      </HeroSection>
 
       {/* ───────────────── 2 · Introducción ───────────────── */}
       <section className="w-[90%] mx-auto py-16 md:py-24 text-center">

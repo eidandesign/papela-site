@@ -256,15 +256,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   );
 }
 
-// Keep desktop NAV_ITEMS for floating bar
-const NAV_ITEMS = [
-  { href: "/productos", label: "Catálogo" },
-  { href: "/personaliza", label: "Personalización" },
-  { href: "/servicios", label: "Servicios" },
-  { href: "/talleres", label: "Talleres" },
-  { href: "/clases", label: "Clases" },
-  { href: "/nosotros", label: "Nosotros" },
-];
+const NAV_ITEMS = NAV_LINKS;
 
 export default function SiteNavbar() {
   const pathname = usePathname();
@@ -285,8 +277,6 @@ export default function SiteNavbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isScrolled = scrolled;
-
   const openMenu = () => setMenuOpen(true);
   const closeMenu = () => setMenuOpen(false);
 
@@ -295,7 +285,7 @@ export default function SiteNavbar() {
       <MobileMenu isOpen={menuOpen} onClose={closeMenu} />
 
       <AnimatePresence mode="wait">
-        {!isScrolled && (
+        {!scrolled && (
           <motion.header
             key="large-nav"
             initial={{ opacity: 0, y: -20 }}
@@ -402,7 +392,7 @@ export default function SiteNavbar() {
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        {isScrolled && (
+        {scrolled && (
           <motion.nav
             key="floating-nav"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}

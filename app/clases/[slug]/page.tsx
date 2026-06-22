@@ -77,7 +77,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
       <div className="w-[90%] mx-auto pt-40 md:pt-[200px] pb-16">
@@ -142,7 +142,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
               Clases de {maestra.nombre}
             </h2>
 
-            <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {actividades.map((a) => (
                 <ActividadCard key={a.titulo} actividad={a} />
               ))}

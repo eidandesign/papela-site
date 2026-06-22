@@ -9,7 +9,7 @@ export type ProductoPublico = Producto & { tags?: string[] };
 export async function getProductosPorColeccion(coleccion: string): Promise<Producto[]> {
   try {
     const res = await fetch(`${ADMIN_API}?coleccion=${coleccion}`, {
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -22,7 +22,7 @@ export async function getProductosPorColeccion(coleccion: string): Promise<Produ
 // Todos los productos del catálogo público (sin filtrar por colección).
 export async function getProductosPublicos(): Promise<ProductoPublico[]> {
   try {
-    const res = await fetch(ADMIN_API, { cache: "no-store" });
+    const res = await fetch(ADMIN_API, { next: { revalidate: 60 } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.productos ?? [];

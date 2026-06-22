@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
+  // 5 solicitudes por IP cada 10 minutos
+  if (!rateLimit(`personalizacion:${getClientIp(req)}`, 5, 10 * 60_000)) {
+    return NextResponse.json({ error: "Demasiadas solicitudes. Intenta en unos minutos." }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";

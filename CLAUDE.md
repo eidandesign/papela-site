@@ -46,10 +46,27 @@
 - Section vertical spacing: `py-12 md:py-16`
 
 ### Hero section pattern (todas las páginas)
+**REGLA CRÍTICA — aplicar siempre, sin excepciones:**
+
 Los heroes son una `section` con `width: 98vw` (margin lateral `1vw`), `rounded-[32px] md:rounded-[48px] overflow-hidden` y fondo de color.
-- **Altura:** `min-h-[80vh]` (NO `h-[80vh]`) — el header **crece con el contenido** en mobile para que el texto no se corte.
-- **Clearance del navbar:** el navbar large mide ~140px; en mobile el contenido del hero lleva `pt-[140px]` + `justify-start` para que **nada se encime con el logo/menú**. En desktop vuelve a centrarse: `md:justify-center md:py-0` (o `md:pt-0`).
-- El hero animado del home (`HeroExperience.tsx`) ya seguía este patrón (`pt-[140px] md:pt-[180px]`, contenido en `flex-1`) y es la referencia.
+
+```html
+<!-- Patrón correcto — copiar exactamente -->
+<section
+  className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col"
+  style={{ width: "98vw", marginLeft: "1vw", marginRight: "1vw", backgroundColor: "..." }}
+>
+  <div className="flex-1 flex flex-col items-center justify-center text-center px-6 md:px-20 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
+    {/* contenido */}
+  </div>
+</section>
+```
+
+- **`flex flex-col`** en la section, **`flex-1 flex flex-col items-center justify-center`** en el div interno — así el contenido se centra en el espacio disponible.
+- **`pt-[140px] md:pt-[180px]`** — clearance del navbar (~140px mobile, ~180px desktop). El pt desplaza el punto de centrado hacia abajo para que el navbar no tape el contenido.
+- **`min-h-[80vh]`** (NO `h-[80vh]`) — el hero crece con el contenido en mobile.
+- **NUNCA** poner `justify-center` en la section ni `md:justify-center` — el navbar ocupa espacio en ambos breakpoints.
+- Referencia exacta: `HeroExperience.tsx` línea 329 usa este mismo patrón.
 
 ## CTAs / Buttons
 - **Primary CTA:** `bg-[var(--color-verde)]` with `text-[var(--color-cremita)]`

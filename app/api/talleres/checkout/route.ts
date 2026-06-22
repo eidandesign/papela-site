@@ -3,6 +3,7 @@ import { MercadoPagoConfig, Preference } from "mercadopago";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site";
 import { logger } from "@/lib/logger";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -11,6 +12,11 @@ const client = new MercadoPagoConfig({
 });
 
 export async function POST(req: NextRequest) {
+  // 8 intentos de checkout por IP cada 5 minutos
+  if (!rateLimit(`talleres-checkout:${getClientIp(req)}`, 8, 5 * 60_000)) {
+    return NextResponse.json({ error: "Demasiadas solicitudes. Intenta en unos minutos." }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const { tallerId, cantidad, nombreUsuario, emailUsuario, telefonoUsuario } = body;

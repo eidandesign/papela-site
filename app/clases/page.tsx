@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getClasesConHorarios } from "@/lib/clases";
 import { getActividades, getPublico } from "@/lib/clases-actividades";
+import HeroSection from "@/components/site/HeroSection";
 import ReservaButton from "@/components/site/ReservaButton";
 
 export const revalidate = 60;
@@ -26,21 +27,23 @@ export default async function ClasesPage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden bg-[#4F8674] flex flex-col items-center justify-center text-center px-8 md:px-16 min-h-[80vh] pt-[140px] pb-[140px] md:py-0" style={{width: '98vw', marginLeft: '1vw', marginRight: '1vw'}}>
-        <span className="inline-flex items-center border border-[var(--color-cremita)]/60 rounded-full px-6 py-2 mb-8">
-          <span className="label text-[var(--color-cremita)]">
-            Clases Creativas
+      <HeroSection bgColor="#4F8674">
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-8 md:px-16 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
+          <span data-hero-badge className="inline-flex items-center border border-[var(--color-cremita)]/60 rounded-full px-6 py-2 mb-8">
+            <span className="label text-[var(--color-cremita)]">
+              Clases Creativas
+            </span>
           </span>
-        </span>
 
-        <h1 className="font-serif italic text-[clamp(2.8rem,6.5vw,5.5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-4xl mb-8">
-          Clases creativas para volver a conectar con tus manos
-        </h1>
+          <h1 className="font-serif italic text-[clamp(2.8rem,6.5vw,5.5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-4xl mb-8">
+            Clases creativas para volver a conectar con tus manos
+          </h1>
 
-        <p className="font-sans text-[var(--color-cremita)]/90 text-[18px] leading-[24px] max-w-2xl">
-          Pinta, dibuja, modela y crea en un espacio pensado para aprender con calma, explorar materiales y disfrutar el proceso. En Papela tenemos clases para niños, jóvenes y adultos, con maestras que acompañan cada proyecto paso a paso.
-        </p>
-      </section>
+          <p className="font-sans text-[var(--color-cremita)]/90 text-[18px] leading-[24px] max-w-2xl">
+            Pinta, dibuja, modela y crea en un espacio pensado para aprender con calma, explorar materiales y disfrutar el proceso. En Papela tenemos clases para niños, jóvenes y adultos, con maestras que acompañan cada proyecto paso a paso.
+          </p>
+        </div>
+      </HeroSection>
 
       {/* ── Maestras grid ── */}
       <section className="w-[90%] mx-auto pt-12 md:pt-16 pb-12 md:pb-16">

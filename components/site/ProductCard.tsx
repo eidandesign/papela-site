@@ -17,7 +17,10 @@ export default function ProductCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => open(producto)}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(producto); } }}
       className={`group cursor-pointer ${
         fullWidth ? "w-full" : "flex-shrink-0 w-[220px] md:w-[240px]"
       }`}

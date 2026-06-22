@@ -36,12 +36,14 @@ function Field({
   onChange: (k: keyof FormData, v: string) => void;
   type?: string; placeholder?: string; required?: boolean;
 }) {
+  const fieldId = `checkout-field-${name}`;
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">
+      <label htmlFor={fieldId} className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">
         {label}{required && <span className="text-[var(--color-terracota)]"> *</span>}
       </label>
       <input
+        id={fieldId}
         type={type}
         value={value}
         onChange={(e) => onChange(name, e.target.value)}
@@ -161,10 +163,11 @@ export default function CheckoutPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Ciudad / Municipio" name="ciudad" value={form.ciudad} onChange={setField} placeholder="Puebla" />
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">
+                  <label htmlFor="checkout-field-estado" className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">
                     Estado <span className="text-[var(--color-terracota)]">*</span>
                   </label>
                   <select
+                    id="checkout-field-estado"
                     value={form.estado}
                     onChange={(e) => setField("estado", e.target.value)}
                     required

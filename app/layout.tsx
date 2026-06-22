@@ -5,6 +5,8 @@ import ConditionalShell from "@/components/site/ConditionalShell";
 import ReservaModal from "@/components/site/ReservaModal";
 
 const SITE_URL = "https://www.papela-atelier.com";
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-W238H5M2";
+const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? "1422756482948067";
 
 export const viewport: Viewport = {
   themeColor: "#12535C",
@@ -140,17 +142,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-W238H5M2');`}
+})(window,document,'script','dataLayer','${GTM_ID}');`}
         </Script>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
       </head>
       <body className="min-h-full flex flex-col">
         <noscript>
           <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-W238H5M2"
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
             height="0"
             width="0"
             style={{ display: "none", visibility: "hidden" }}
@@ -166,7 +168,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '1422756482948067');
+            fbq('init', '${FB_PIXEL_ID}');
             fbq('track', 'PageView');
           `}
         </Script>

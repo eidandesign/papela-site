@@ -82,10 +82,11 @@ export default function TallerCheckoutForm({
 
       {/* Nombre */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
+        <label htmlFor="tcf-nombre" className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
           Nombre completo <span className="text-[var(--color-terracota)]">*</span>
         </label>
         <input
+          id="tcf-nombre"
           type="text"
           placeholder="Ana Martínez"
           value={nombre}
@@ -99,10 +100,11 @@ export default function TallerCheckoutForm({
 
       {/* Email */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
+        <label htmlFor="tcf-email" className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
           Correo electrónico <span className="text-[var(--color-terracota)]">*</span>
         </label>
         <input
+          id="tcf-email"
           type="email"
           placeholder="ana@email.com"
           value={email}
@@ -116,10 +118,11 @@ export default function TallerCheckoutForm({
 
       {/* Teléfono */}
       <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
+        <label htmlFor="tcf-telefono" className="text-[10px] font-bold uppercase tracking-[1px] text-[var(--color-verde)]">
           Teléfono <span className="text-[var(--color-muted)] normal-case tracking-normal font-normal text-xs">(opcional)</span>
         </label>
         <input
+          id="tcf-telefono"
           type="tel"
           placeholder="222 123 4567"
           value={telefono}

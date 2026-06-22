@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import {
   SparklesIcon,
   HeartIcon,
@@ -8,6 +7,7 @@ import {
   PaintBrushIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
+import HeroSection from "@/components/site/HeroSection";
 
 export const revalidate = 60;
 
@@ -60,30 +60,23 @@ export default function NosotrosPage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section
-        className="relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col items-center justify-start md:justify-center text-center px-8 md:px-20 pt-[140px] pb-16 md:py-0"
-        style={{ backgroundColor: "var(--color-verde)", width: "98vw", marginLeft: "1vw", marginRight: "1vw" }}
-      >
-        {/* Decorative dots */}
-        <div className="absolute top-10 left-10 w-32 h-32 rounded-full border border-[var(--color-cremita)]/10" />
-        <div className="absolute bottom-12 right-16 w-48 h-48 rounded-full border border-[var(--color-cremita)]/8" />
-        <div className="absolute top-1/3 right-12 w-3 h-3 rounded-full bg-[var(--color-cremita)]/20" />
-        <div className="absolute bottom-1/3 left-16 w-2 h-2 rounded-full bg-[var(--color-cremita)]/20" />
-
-        <span className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
-          <span className="label text-[var(--color-cremita)]/70">
-            Sobre Nosotros
+      <HeroSection>
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-8 md:px-20 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
+          <span data-hero-badge className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
+            <span className="label text-[var(--color-cremita)]/70">
+              Sobre Nosotros
+            </span>
           </span>
-        </span>
 
-        <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-3xl mb-6">
-          Papela nació para hacer más bonito lo cotidiano
-        </h1>
+          <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-3xl mb-6">
+            Papela nació para hacer más bonito lo cotidiano
+          </h1>
 
-        <p className="font-sans text-[var(--color-cremita)]/90 text-[18px] leading-[24px] max-w-2xl">
-          Somos una papelería creativa donde el diseño, los materiales, los regalos, las impresiones y los pequeños detalles se encuentran en un mismo lugar.
-        </p>
-      </section>
+          <p className="font-sans text-[var(--color-cremita)]/90 text-[18px] leading-[24px] max-w-2xl">
+            Somos una papelería creativa donde el diseño, los materiales, los regalos, las impresiones y los pequeños detalles se encuentran en un mismo lugar.
+          </p>
+        </div>
+      </HeroSection>
 
       {/* ── Historia ── */}
       <section className="w-[90%] mx-auto py-20 md:py-28">
@@ -212,14 +205,14 @@ export default function NosotrosPage() {
           <p className="font-sans text-[var(--color-cremita)]/70 text-[17px] leading-relaxed max-w-xl">
             Ya sea que vengas por una impresión, una libreta, material para un proyecto, un regalo especial o una idea que quieres hacer realidad, queremos que Papela sea ese lugar al que siempre puedas volver.
           </p>
-          <Link
+          <a
             href="https://wa.me/522211865590"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 inline-flex items-center gap-2 bg-[var(--color-cremita)] text-[var(--color-verde)] font-sans font-medium text-base px-8 py-4 rounded-full hover:opacity-90 transition-opacity"
           >
             Visítanos en Papela
-          </Link>
+          </a>
         </div>
       </section>
     </>

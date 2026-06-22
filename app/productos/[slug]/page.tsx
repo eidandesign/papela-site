@@ -79,7 +79,7 @@ export default async function ProductoPage({
     <section className="w-[90%] mx-auto pt-28 md:pt-32 pb-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
       <Link
