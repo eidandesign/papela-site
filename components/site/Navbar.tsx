@@ -158,10 +158,10 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         WebkitTapHighlightColor: "transparent",
       }}
     >
-      {/* Logo top left */}
-      <div style={{ position: "absolute", top: 16, left: 20, opacity: visible ? 1 : 0, transition: "opacity 0.3s ease 0.3s" }}>
+      {/* Logo top center */}
+      <div style={{ position: "absolute", top: 20, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: visible ? 1 : 0, transition: "opacity 0.3s ease 0.3s" }}>
         <Link href="/" onClick={onClose}>
-          <Image src="/site/logo.png" alt="Papela" width={60} height={60} className="object-contain brightness-200 opacity-80" />
+          <Image src="/site/logo.png" alt="Papela" width={90} height={90} className="object-contain brightness-200 opacity-80" />
         </Link>
       </div>
 
@@ -378,6 +378,7 @@ export default function SiteNavbar() {
               >
                 <CartButton color={iconColor} />
                 <button
+                  type="button"
                   onClick={menuOpen ? closeMenu : openMenu}
                   aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
                   className="p-2"

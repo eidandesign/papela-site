@@ -142,7 +142,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
               Clases de {maestra.nombre}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {actividades.map((a) => (
                 <ActividadCard key={a.titulo} actividad={a} />
               ))}

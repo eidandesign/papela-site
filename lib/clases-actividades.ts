@@ -167,7 +167,7 @@ const ACTIVIDADES: Record<string, Actividad[]> = {
       edades: "Adolescentes y adultos",
       imagen: "/images/oleo-liz-acosta-papela.jpeg",
       descripcion:
-        "Trabajamos color, composición y pincelada sobre lienzo para crear una obra terminada que te puedas llevar a casa el mismo día.",
+        "Trabajamos color, composición y pincelada sobre lienzo para crear una obra hermosa, con el estilo y personalidad que quieres plasmar.",
       materiales: [
         {
           items: [

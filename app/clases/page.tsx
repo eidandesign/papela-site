@@ -128,7 +128,7 @@ export default async function ClasesPage() {
 
       {/* ── Intro card ── */}
       <section className="w-[90%] mx-auto py-12 md:py-16">
-        <div className="bg-[#EAE6DC] rounded-2xl flex flex-col md:flex-row items-center gap-10 md:gap-[148px] px-8 md:px-20 py-14 md:py-[72px]">
+        <div className="bg-[#EAE6DC] rounded-2xl flex flex-col lg:flex-row items-center gap-10 lg:gap-[148px] px-8 md:px-20 py-14 md:py-[72px]">
           {/* Text */}
           <div className="flex-1 flex flex-col gap-4 min-w-0">
             <h2 className="font-serif font-extralight text-[clamp(2rem,3.5vw,3rem)] text-black leading-[1.17]">
@@ -139,7 +139,7 @@ export default async function ClasesPage() {
             </p>
           </div>
           {/* Image */}
-          <div className="relative w-full md:w-[486px] h-[320px] md:h-[440px] flex-shrink-0 rounded-[20px] overflow-hidden">
+          <div className="relative w-full lg:w-[486px] h-[320px] md:h-[440px] flex-shrink-0 rounded-[20px] overflow-hidden">
             <Image
               src="/images/clases.avif"
               alt="Clase en Papela Atelier"
