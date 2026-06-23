@@ -165,29 +165,6 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         </Link>
       </div>
 
-      {/* Close button inside portal — top right */}
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Cerrar menú"
-        style={{
-          position: "absolute",
-          top: 28,
-          right: 20,
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: 8,
-          opacity: visible ? 1 : 0,
-          transition: "opacity 0.3s ease 0.3s",
-          WebkitTapHighlightColor: "transparent",
-          touchAction: "manipulation",
-        }}
-      >
-        <AnimatedBurger isOpen color={FG} />
-      </button>
-
-
       {/* Nav links */}
       <nav style={{ display: "flex", flexDirection: "column", width: "100%" }}>
         {NAV_LINKS.map((link, i) => (
@@ -428,7 +405,7 @@ export default function SiteNavbar() {
               backdropFilter: "blur(20px) saturate(200%)",
               border: "1px solid rgba(255, 255, 255, 0.2)",
               boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-              zIndex: menuOpen ? 100000 : 50,
+              zIndex: menuOpen ? 100003 : 50,
             }}
           >
             {/* Logo */}
