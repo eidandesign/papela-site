@@ -148,6 +148,7 @@ const ACTIVIDADES: Record<string, Actividad[]> = {
     {
       titulo: "Acuarela para principiantes",
       edades: "Adolescentes y adultos",
+      imagen: "/images/acuarela-liz-acosta-papela.jpeg",
       descripcion:
         "Aprende a controlar el agua y el pigmento para lograr lavados, degradados y transparencias. Una introducción cálida y paciente al mundo de la acuarela.",
       materiales: [
@@ -164,6 +165,7 @@ const ACTIVIDADES: Record<string, Actividad[]> = {
     {
       titulo: "Acrílico sobre lienzo",
       edades: "Adolescentes y adultos",
+      imagen: "/images/oleo-liz-acosta-papela.jpeg",
       descripcion:
         "Trabajamos color, composición y pincelada sobre lienzo para crear una obra terminada que te puedas llevar a casa el mismo día.",
       materiales: [
@@ -180,6 +182,7 @@ const ACTIVIDADES: Record<string, Actividad[]> = {
     {
       titulo: "Óleo y dibujo",
       edades: "Adultos",
+      imagen: "/images/dibujo-liz-acosta-papela.jpeg",
       descripcion:
         "Para quienes quieren ir más a fondo: bases de dibujo, claroscuro y los fundamentos de la pintura al óleo con acompañamiento cercano en cada sesión.",
       materiales: [
