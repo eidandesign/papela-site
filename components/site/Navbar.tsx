@@ -144,7 +144,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 99999,
+        zIndex: 100002,
         backgroundColor: "var(--color-verde)",
         display: "flex",
         flexDirection: "column",
@@ -164,6 +164,28 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           <Image src="/site/logo.png" alt="Papela" width={90} height={90} className="object-contain brightness-200 opacity-80" />
         </Link>
       </div>
+
+      {/* Close button inside portal — top right */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Cerrar menú"
+        style={{
+          position: "absolute",
+          top: 28,
+          right: 20,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 8,
+          opacity: visible ? 1 : 0,
+          transition: "opacity 0.3s ease 0.3s",
+          WebkitTapHighlightColor: "transparent",
+          touchAction: "manipulation",
+        }}
+      >
+        <AnimatedBurger isOpen color={FG} />
+      </button>
 
 
       {/* Nav links */}
@@ -293,7 +315,7 @@ export default function SiteNavbar() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="fixed top-0 inset-x-0 bg-transparent"
-            style={{ zIndex: menuOpen ? 100001 : 50 }}
+            style={{ zIndex: 50 }}
           >
             <nav className="w-[96%] mx-auto relative flex items-center justify-center px-6 md:px-10 h-[140px] md:h-[170px]">
               {/* Desktop: links flank the logo. Each side gets flex-1 so the logo
@@ -374,7 +396,7 @@ export default function SiteNavbar() {
               {/* Mobile/tablet: cart + hamburger */}
               <div
                 className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3"
-                style={{ zIndex: menuOpen ? 100001 : "auto" }}
+                style={{ zIndex: "auto" }}
               >
                 <CartButton color={iconColor} />
                 <button
