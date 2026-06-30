@@ -15,6 +15,7 @@ export type Taller = {
   instructor_foto_url: string | null;
   instructor_instagram: string | null;
   activo: boolean;
+  estado: "Activo" | "Agotado";
   cupo_total: number | null;
   imagenes: string[];
   videos: string[];

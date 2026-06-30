@@ -30,6 +30,8 @@ export default async function TallerCheckoutPage({
 
   if (!taller) notFound();
 
+  const agotado = taller.estado === "Agotado";
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <div className="w-[90%] mx-auto pt-[150px] md:pt-[200px] pb-4">
@@ -95,12 +97,32 @@ export default async function TallerCheckoutPage({
 
           {/* Right — form */}
           <div className="bg-white rounded-2xl p-6 md:p-[33px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] border border-[var(--color-border)] w-full md:flex-1 md:min-w-0">
-            <TallerCheckoutForm
-              tallerId={taller.id}
-              titulo={taller.titulo}
-              precio={taller.precio}
-              cupoTotal={taller.cupo_total ?? 10}
-            />
+            {agotado ? (
+              <div className="flex flex-col items-center text-center gap-4 py-6">
+                <span className="bg-[var(--color-terracota)] rounded-full px-3 py-1 font-sans font-bold text-[var(--color-cremita)] text-[10px] tracking-[1px] uppercase leading-[15px]">
+                  Agotado
+                </span>
+                <h3 className="font-serif font-extralight text-[1.5rem] text-[var(--color-text)] leading-tight">
+                  Este taller ya no tiene lugares
+                </h3>
+                <p className="font-sans text-[var(--color-muted)] text-base max-w-xs leading-[24px]">
+                  Se agotaron los cupos para este taller. Revisa los demás talleres disponibles.
+                </p>
+                <Link
+                  href="/talleres"
+                  className="inline-flex items-center justify-center gap-2 bg-[var(--color-verde)] text-[var(--color-cremita)] rounded-lg px-5 py-3 font-sans text-[16px] leading-[24px] hover:opacity-90 transition-opacity"
+                >
+                  Ver otros talleres
+                </Link>
+              </div>
+            ) : (
+              <TallerCheckoutForm
+                tallerId={taller.id}
+                titulo={taller.titulo}
+                precio={taller.precio}
+                cupoTotal={taller.cupo_total ?? 10}
+              />
+            )}
           </div>
         </div>
       </div>

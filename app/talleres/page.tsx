@@ -62,10 +62,14 @@ export default async function TalleresPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {talleres.map((taller) => (
+            {talleres.map((taller) => {
+              const agotado = taller.estado === "Agotado";
+              return (
               <article
                 key={taller.id}
-                className="flex flex-col bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-[26px] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[4px_6px_0px_#d6bdb2]"
+                className={`flex flex-col bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-[26px] transition-[transform,box-shadow] duration-300 ease-out ${
+                  agotado ? "opacity-60" : "hover:-translate-y-1 hover:shadow-[4px_6px_0px_#d6bdb2]"
+                }`}
               >
                 {/* Image + thumbnails + lightbox */}
                 <TallerGaleriaSection
@@ -79,11 +83,18 @@ export default async function TalleresPage() {
                 {/* Body */}
                 <div className="flex flex-col flex-1 pt-6">
                   <div className="flex flex-col flex-1 items-center gap-[11px] pb-6">
-                    {taller.categoria && (
-                      <span className="bg-[#f3e6cf] rounded-full px-3 py-1 font-sans font-bold text-[#12535c] text-[10px] tracking-[1px] uppercase leading-[15px]">
-                        {taller.categoria}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {taller.categoria && (
+                        <span className="bg-[#f3e6cf] rounded-full px-3 py-1 font-sans font-bold text-[#12535c] text-[10px] tracking-[1px] uppercase leading-[15px]">
+                          {taller.categoria}
+                        </span>
+                      )}
+                      {agotado && (
+                        <span className="bg-[var(--color-terracota)] rounded-full px-3 py-1 font-sans font-bold text-[var(--color-cremita)] text-[10px] tracking-[1px] uppercase leading-[15px]">
+                          Agotado
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex flex-col items-center gap-4 w-full border-b border-[#dbc2b3] pb-4">
                       <h2 className="font-serif italic text-[#664917] text-[24px] leading-[32px] text-center">
@@ -118,18 +129,28 @@ export default async function TalleresPage() {
                         ${taller.precio.toLocaleString()}
                       </p>
                     </div>
-                    <Link
-                      href={`/talleres/${taller.id}/checkout`}
-                      aria-label={`Apartar lugar en ${taller.titulo}`}
-                      className="flex items-center justify-center gap-2 bg-[#12535c] text-[#f3e6cf] rounded-lg px-4 py-3 font-sans text-[16px] leading-[24px] hover:opacity-90 transition-opacity"
-                    >
-                      Apartar lugar
-                      <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
-                    </Link>
+                    {agotado ? (
+                      <span
+                        aria-disabled="true"
+                        className="flex items-center justify-center gap-2 bg-[#9b8f86] text-[#f3e6cf] rounded-lg px-4 py-3 font-sans text-[16px] leading-[24px] cursor-not-allowed select-none"
+                      >
+                        Agotado
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/talleres/${taller.id}/checkout`}
+                        aria-label={`Apartar lugar en ${taller.titulo}`}
+                        className="flex items-center justify-center gap-2 bg-[#12535c] text-[#f3e6cf] rounded-lg px-4 py-3 font-sans text-[16px] leading-[24px] hover:opacity-90 transition-opacity"
+                      >
+                        Apartar lugar
+                        <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
