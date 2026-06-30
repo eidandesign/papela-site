@@ -86,9 +86,10 @@ Los heroes son una `section` con `width: 98vw` (margin lateral `1vw`), `rounded-
 | `CartButton` | `components/site/CartButton.tsx` | ShoppingBagIcon + badge terracota con count, renderiza CartDrawer |
 | `CartDrawer` | `components/site/CartDrawer.tsx` | Portal, slide desde derecha, selector recoger/envío, totales, CTA → `/tienda/checkout` |
 | `AddToCartButton` | `components/site/AddToCartButton.tsx` | Chequea `cantidad >= stock`. Prop `fullWidth` para usar en drawers |
-| `QuickAddButton` | `components/site/QuickAddButton.tsx` | Círculo `+` que expande a pill `− N +` con spring animation. Capped al stock. Usa `e.stopPropagation()` para no disparar el drawer padre |
-| `ProductCard` | `components/site/ProductCard.tsx` | Client component, onClick → `productDrawerStore.open()`. Contiene QuickAddButton. Prop `fullWidth` para grids (catálogo); sin él usa ancho fijo (carruseles del home) |
-| `ProductDrawer` | `components/site/ProductDrawer.tsx` | Portal. Mobile: `top-0 h-full left-[15%] rounded-l-3xl`. Desktop: `sm:left-auto sm:max-w-lg sm:rounded-none`. Footer fijo con WhatsApp + AddToCartButton |
+| `QuickAddButton` | `components/site/QuickAddButton.tsx` | Círculo `+` que expande a pill `− N +` con spring animation. Capped al stock. Usa `e.stopPropagation()` para no disparar el drawer padre. NO se usa en productos con variaciones (ahí el `+` abre el drawer) |
+| `ProductCard` | `components/site/ProductCard.tsx` | Client component, onClick → `productDrawerStore.open()`. Prop `fullWidth` para grids; `variant="catalog"` = tarjeta compacta Figma (imagen cuadrada, título serif). Si el producto tiene variaciones, el `+` abre el drawer; si no, muestra QuickAddButton |
+| `ProductCarousel` | `components/site/ProductCarousel.tsx` | Fila única con scroll horizontal + flechas circulares verdes (solo desktop, se ocultan en los extremos). `gap-8` (32px). Usado en home (Libretas/Favoritos) y `/productos`. Patrón de spacers `w-[5vw]` |
+| `ProductDrawer` | `components/site/ProductDrawer.tsx` | Portal. Mobile: `top-0 h-full left-[15%] rounded-l-3xl`. Desktop: `sm:left-auto sm:max-w-lg sm:rounded-none`. Footer fijo con WhatsApp + AddToCartButton. **Selector de variaciones**: thumbnails (solo stock ≥ 1) que cambian imagen/precio/color/medida/stock al hacer click |
 | `ClaseCalendar` | `components/site/ClaseCalendar.tsx` | Mobile: lista de filas (fecha pill + detalles + Reservar). Desktop: grid 5 col. Nav por semana con mes serif grande + "Semana N" |
 | `ClearCartOnMount` | `components/site/ClearCartOnMount.tsx` | Limpia el carrito al montar (usado en `/tienda/pago/gracias`) |
 
@@ -101,7 +102,7 @@ Used in info cards and Instagram carousels. Key rules:
 
 ## Supabase
 - URL: `https://qrrqptkcgezposfmkvqy.supabase.co`
-- Client: `lib/supabase/client.ts` (browser), `lib/supabase/server.ts` (RSC)
+- Client: `lib/supabase/client.ts` (browser, anon), `lib/supabase/server.ts` (RSC, anon), `lib/supabase/admin.ts` (`createAdminClient`, **service role** — solo server: webhook de pagos y checkout, bypassa RLS; requiere env `SUPABASE_SERVICE_ROLE_KEY`)
 - `lib/productos.ts` — `getProductos(categoria?)`, `getProductoById(id)` — direct Supabase queries
 
 ### productos table columns
@@ -110,6 +111,7 @@ Used in info cards and Instagram carousels. Key rules:
 - Filter in-stock: `.gt("stock", 0)`
 - No `slug` column — use `id` for URLs
 - `categoria = "Tienda"` for products shown on the public site
+- **Variaciones**: viven en la columna `atributos` (jsonb) → `atributos.variaciones[]`. NO hay tabla aparte. `productos.stock` = suma de los stocks de variaciones; `imagen_url` = imagen de la variación portada. El admin lee stock con `stockEfectivo()` = suma de variaciones (ignora `productos.stock` cuando hay variaciones)
 
 ## Admin API (productos públicos)
 The homepage carousels do NOT query Supabase directly — they consume the admin's public API:
@@ -120,7 +122,7 @@ GET https://admin.papela-atelier.com/api/public/productos?coleccion=favoritos
 ```
 
 - Implemented in `lib/productos-publicos.ts` → `getProductosPorColeccion(coleccion)` y `getProductosPublicos()` (todos los públicos, sin filtrar por colección — usado por `/productos`)
-- Returns `{ productos: ProductoPublico[] }` — `Producto` + `tags?: string[]` (la API NO expone `categoria`)
+- Returns `{ productos: ProductoPublico[] }` — `Producto` + `tags?: string[]` (la API NO expone `categoria`). Cada producto trae `variaciones[]` (`{id, nombre, precio, stock, imagen_url, color, tamano, ...}`) + `precio_min/max`. `lib/productos-publicos.ts` normaliza y **filtra: solo variaciones con stock ≥ 1 y solo productos disponibles** (regla "mostrar solo lo que tenga ≥1 en stock")
 - Filters by `categoria = "Tienda"` (y, con `?coleccion=`, además `tags` contiene ese valor)
 - `revalidate: 60` — refreshes every minute
 - **Admin middleware** (`/Users/adanch/Documents/papela-admin/middleware.ts`) excludes `api/public` from auth so the endpoint is public
@@ -138,9 +140,10 @@ To add a new carousel: call `getProductosPorColeccion("nueva-coleccion")` and ta
 Flujo completo: catálogo → drawer → carrito → checkout → MercadoPago → webhook → gracias/error
 
 - **Zustand stores**: `lib/stores/cartStore.ts` (persist localStorage `papela-cart`) y `lib/stores/productDrawerStore.ts`
-- **Checkout API**: `app/api/tienda/checkout/route.ts` — valida stock en Supabase, inserta en `tienda_pedidos`, crea Preference MP
-- **Webhook**: `app/api/webhooks/mercadopago/route.ts` — valida firma HMAC, distingue por `external_reference` prefix (`tienda:`, `taller:`, clase sin prefix), decrementa stock atómicamente vía RPC
-- **`tienda_pedidos` columns**: `id, external_reference, items (jsonb), tipo_envio, estado, payment_id, monto_total, comprador_nombre, comprador_email, comprador_telefono, direccion_envio (jsonb), created_at`
+- **Checkout API**: `app/api/tienda/checkout/route.ts` — usa `createAdminClient()` (service role). Valida stock **agregado por producto Y por variación**, inserta en `tienda_pedidos` (verifica error), crea Preference MP
+- **Webhook**: `app/api/webhooks/mercadopago/route.ts` — usa `createAdminClient()` (service role). Valida firma HMAC, distingue por `external_reference` prefix (`tienda:`, `taller:`, clase sin prefix). Si la línea trae `variacionId` descuenta esa variación vía RPC `decrementar_stock_variacion(p_id, p_variacion_id, p_cant)` (actualiza `atributos.variaciones` y re-sincroniza `productos.stock`); si no, `decrementar_stock_producto`
+- **RLS crítico**: `tienda_pedidos` es "service only" (`qual=false`) y `productos` solo deja escribir a authenticated → el webhook/checkout DEBEN usar el cliente service role (con la anon key fallan en silencio). RPC en `papela-admin/supabase/migrations/20260629_decrementar_stock_variacion.sql`
+- **`tienda_pedidos` columns**: `id, external_reference, items (jsonb), tipo_envio, estado, payment_id, monto_total, comprador_nombre, comprador_email, comprador_telefono, direccion_envio (jsonb), created_at`. `items[]` ahora incluye `variacionId` y `variacionNombre`
 - **Envío**: $80 MXN fijo (`COSTO_ENVIO` en cartStore). Opciones: `recoger` | `envio`
 - Los productos NO navegan a `/productos/[slug]` — abren `ProductDrawer` via Zustand store
 
