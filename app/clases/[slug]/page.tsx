@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getClaseBySlug } from "@/lib/clases";
+import { getClaseBySlug, getHorariosSemanales } from "@/lib/clases";
 import { getActividades } from "@/lib/clases-actividades";
 import { SITE_URL } from "@/lib/site";
 import ReservaButton from "@/components/site/ReservaButton";
@@ -48,6 +48,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
   if (!maestra) notFound();
 
   const actividades = getActividades(maestra.slug);
+  const horariosSemanales = getHorariosSemanales(maestra.horarios);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -121,6 +122,23 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
               <p className="font-sans text-[var(--color-muted)] text-[15px] leading-7 mt-3">
                 {maestra.experiencia}
               </p>
+            )}
+
+            {horariosSemanales.length > 0 && (
+              <div className="mt-7">
+                <p className="label text-[var(--color-terracota)]">Horarios disponibles</p>
+                <ul className="mt-3 flex flex-col gap-1.5">
+                  {horariosSemanales.map((h) => (
+                    <li
+                      key={`${h.dia}-${h.rango}`}
+                      className="font-sans text-[var(--color-text)] text-[15px] leading-6"
+                    >
+                      <span className="font-semibold text-[#664917]">{h.dia}</span>{" "}
+                      {h.rango}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <div className="mt-7">
