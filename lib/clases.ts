@@ -1,5 +1,6 @@
 import { createClient } from "./supabase/server";
 import { logger } from "./logger";
+import { TZ } from "./fecha";
 
 export type Horario = {
   id: string;
@@ -91,6 +92,11 @@ export async function getClasesConHorarios(): Promise<MaestraConHorarios[]> {
 // Así el sitio muestra los horarios sin que nadie tenga que cargarlos aparte.
 export type HorarioSemanal = { dia: string; rango: string; orden: number; minutos: number };
 
+// Lun=0 … Dom=6, para ordenar la semana empezando en lunes.
+const ORDEN_DIA: Record<string, number> = {
+  Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6,
+};
+
 export function getHorariosSemanales(horarios: Horario[]): HorarioSemanal[] {
   const vistos = new Map<string, HorarioSemanal>();
 
@@ -98,13 +104,16 @@ export function getHorariosSemanales(horarios: Horario[]): HorarioSemanal[] {
     const inicio = new Date(h.fecha_hora);
     const fin = new Date(inicio.getTime() + (h.duracion_minutos || 0) * 60 * 1000);
 
-    const dia = inicio.toLocaleDateString("es-MX", { weekday: "long" });
-    const horaInicio = inicio.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-    const horaFin = fin.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+    const dia = inicio.toLocaleDateString("es-MX", { weekday: "long", timeZone: TZ });
+    const horaInicio = inicio.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
+    const horaFin = fin.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 
-    // getDay(): 0=Domingo. Reordenamos para que Lunes vaya primero.
-    const orden = (inicio.getDay() + 6) % 7;
-    const minutos = inicio.getHours() * 60 + inicio.getMinutes();
+    // Día de la semana y minutos del día, calculados en la zona de México.
+    const diaCorto = inicio.toLocaleDateString("en-US", { weekday: "short", timeZone: TZ });
+    const hhmm = inicio.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: TZ });
+    const [hh, mm] = hhmm.split(":").map(Number);
+    const orden = ORDEN_DIA[diaCorto] ?? 7;
+    const minutos = hh * 60 + mm;
 
     const diaCap = dia.charAt(0).toUpperCase() + dia.slice(1);
     const rango = `${horaInicio} a ${horaFin}`;

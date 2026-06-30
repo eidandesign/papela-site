@@ -24,7 +24,11 @@ export const metadata: Metadata = {
 function formatFecha(fecha: string | null) {
   if (!fecha) return "";
   const d = new Date(fecha);
-  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" }).toUpperCase();
+  // `fecha` es fecha sola (sin hora): se interpreta como medianoche UTC. Forzamos
+  // timeZone UTC para mostrar la fecha calendario literal y no desplazarla un día.
+  return d
+    .toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })
+    .toUpperCase();
 }
 
 export default async function TalleresPage() {

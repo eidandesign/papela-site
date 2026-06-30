@@ -7,11 +7,14 @@ import TallerCheckoutForm from "@/components/site/TallerCheckoutForm";
 import TalleresGallery from "@/components/site/TalleresGallery";
 
 function formatFecha(fecha: string) {
+  // `fecha` es fecha sola (sin hora): se interpreta como medianoche UTC. Forzamos
+  // timeZone UTC para mostrar la fecha calendario literal y no desplazarla un día.
   return new Date(fecha).toLocaleDateString("es-MX", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 

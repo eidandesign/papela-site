@@ -2,43 +2,36 @@
 
 import { useState } from "react";
 import type { Horario } from "@/lib/clases";
+import {
+  TZ,
+  diaMexico,
+  horaMexico,
+  sumarDiasAClave,
+  diaSemanaLunes0,
+  diaDelMes,
+  mesYAnio,
+} from "@/lib/fecha";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
 const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie"];
 
-function startOfWeek(date: Date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = (day === 0 ? -6 : 1 - day);
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
+// Toda la grilla se razona con claves "YYYY-MM-DD" del día calendario en hora de
+// México. Así el bucketing y las horas mostradas coinciden con el admin, sin que
+// el TZ del runtime (SSR en UTC, o un visitante en otra zona) desplace los días.
+
+// Lunes de la semana a la que pertenece una clave de día.
+function lunesDeLaSemana(key: string) {
+  return sumarDiasAClave(key, -diaSemanaLunes0(key));
 }
 
-function addDays(date: Date, days: number) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-function formatMes(date: Date) {
-  return date.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
-}
-
-function getWeekOfMonth(date: Date) {
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-  const firstMonday = new Date(firstDay);
-  const day = firstDay.getDay();
-  const diff = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
-  firstMonday.setDate(firstDay.getDate() + diff);
-  if (date < firstMonday) return 1;
-  return Math.floor((date.getDate() - firstMonday.getDate()) / 7) + (diff === 0 ? 1 : 2);
-}
-
-function isSameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
+// Número de semana dentro del mes, calculado sobre la clave de día.
+function semanaDelMes(key: string) {
+  const [y, m, d] = key.split("-").map(Number);
+  const primerDiaSemana = new Date(Date.UTC(y, m - 1, 1)).getUTCDay(); // 0=Dom
+  const diff = primerDiaSemana === 0 ? 1 : primerDiaSemana === 1 ? 0 : 8 - primerDiaSemana;
+  const primerLunes = 1 + diff;
+  if (d < primerLunes) return 1;
+  return Math.floor((d - primerLunes) / 7) + (diff === 0 ? 1 : 2);
 }
 
 export default function ClaseCalendar({
@@ -58,17 +51,19 @@ export default function ClaseCalendar({
         (min, h) => (new Date(h.fecha_hora) < new Date(min.fecha_hora) ? h : min),
         horarios[0]
       );
-      return startOfWeek(new Date(earliest.fecha_hora));
+      return lunesDeLaSemana(diaMexico(new Date(earliest.fecha_hora)));
     }
-    return startOfWeek(new Date());
+    return lunesDeLaSemana(diaMexico(new Date()));
   });
   const [loading, setLoading] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const weekDays = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i));
+  // Claves de día (Lun–Vie) de la semana visible.
+  const weekDays = Array.from({ length: 5 }, (_, i) => sumarDiasAClave(weekStart, i));
+  const todayKey = diaMexico(new Date());
 
-  const slotsByDay = weekDays.map((day) =>
-    horarios.filter((h) => isSameDay(new Date(h.fecha_hora), day))
+  const slotsByDay = weekDays.map((dayKey) =>
+    horarios.filter((h) => diaMexico(new Date(h.fecha_hora)) === dayKey)
   );
 
   const hasAnySlot = slotsByDay.some((s) => s.length > 0);
@@ -79,8 +74,8 @@ export default function ClaseCalendar({
     try {
       const date = new Date(h.fecha_hora);
       const fechaHora = date.toLocaleDateString("es-MX", {
-        weekday: "long", day: "numeric", month: "long",
-      }) + " a las " + date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+        weekday: "long", day: "numeric", month: "long", timeZone: TZ,
+      }) + " a las " + horaMexico(date);
 
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -112,25 +107,25 @@ export default function ClaseCalendar({
   }
 
   // Flat sorted list of slots for mobile view
-  const allSlots = weekDays.flatMap((day, i) =>
-    slotsByDay[i].map((h) => ({ h, day, dayIdx: i }))
+  const allSlots = weekDays.flatMap((dayKey, i) =>
+    slotsByDay[i].map((h) => ({ h, dayKey, dayIdx: i }))
   );
 
-  const weekNum = getWeekOfMonth(weekStart);
+  const weekNum = semanaDelMes(weekStart);
 
   const weekNav = (
     <div className="flex items-center justify-between gap-4">
       <button
         type="button"
         aria-label="Semana anterior"
-        onClick={() => setWeekStart((w) => addDays(w, -7))}
+        onClick={() => setWeekStart((w) => sumarDiasAClave(w, -7))}
         className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
       >
         <ChevronLeftIcon className="w-4 h-4" />
       </button>
       <div className="flex flex-col items-center gap-0.5">
         <span className="font-serif font-extralight text-[clamp(1.4rem,5vw,2rem)] capitalize text-[var(--color-text)] leading-tight">
-          {formatMes(weekStart)}
+          {mesYAnio(weekStart)}
         </span>
         <span className="font-sans text-xs uppercase tracking-widest text-[var(--color-muted)]">
           Semana {weekNum}
@@ -139,7 +134,7 @@ export default function ClaseCalendar({
       <button
         type="button"
         aria-label="Siguiente semana"
-        onClick={() => setWeekStart((w) => addDays(w, 7))}
+        onClick={() => setWeekStart((w) => sumarDiasAClave(w, 7))}
         className="flex-shrink-0 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center hover:opacity-80 transition-opacity"
       >
         <ChevronRightIcon className="w-4 h-4" />
@@ -162,11 +157,9 @@ export default function ClaseCalendar({
           <p className="text-center font-sans text-[var(--color-muted)] py-6">
             No hay clases disponibles esta semana. Navega a la siguiente.
           </p>
-        ) : allSlots.map(({ h, day, dayIdx }) => {
-          const isToday = isSameDay(day, new Date());
-          const hora = new Date(h.fecha_hora).toLocaleTimeString("es-MX", {
-            hour: "2-digit", minute: "2-digit",
-          });
+        ) : allSlots.map(({ h, dayKey, dayIdx }) => {
+          const isToday = dayKey === todayKey;
+          const hora = horaMexico(new Date(h.fecha_hora));
           return (
             <div
               key={h.id}
@@ -178,7 +171,7 @@ export default function ClaseCalendar({
                   {DAYS[dayIdx]}
                 </span>
                 <span className={`font-serif text-2xl leading-tight ${isToday ? "text-[var(--color-cremita)]" : "text-[var(--color-text)]"}`}>
-                  {day.getDate()}
+                  {diaDelMes(dayKey)}
                 </span>
               </div>
 
@@ -208,9 +201,9 @@ export default function ClaseCalendar({
 
       {/* ── DESKTOP: 5-column calendar grid ── */}
       <div className="hidden md:grid grid-cols-5 gap-3">
-        {weekDays.map((day, i) => {
+        {weekDays.map((dayKey, i) => {
           const slots = slotsByDay[i];
-          const isToday = isSameDay(day, new Date());
+          const isToday = dayKey === todayKey;
           return (
             <div key={i} className="flex flex-col gap-3">
               <div className={`flex flex-col items-center py-3 rounded-xl ${isToday ? "bg-[var(--color-verde)]" : "bg-[#f2f0e9]"}`}>
@@ -218,13 +211,11 @@ export default function ClaseCalendar({
                   {DAYS[i]}
                 </span>
                 <span className={`font-serif text-2xl leading-tight ${isToday ? "text-[var(--color-cremita)]" : "text-[var(--color-text)]"}`}>
-                  {day.getDate()}
+                  {diaDelMes(dayKey)}
                 </span>
               </div>
               {slots.map((h) => {
-                const hora = new Date(h.fecha_hora).toLocaleTimeString("es-MX", {
-                  hour: "2-digit", minute: "2-digit",
-                });
+                const hora = horaMexico(new Date(h.fecha_hora));
                 return (
                   <div key={h.id} className="flex flex-col items-center gap-2 bg-[#e7d6cf] rounded-xl p-3 text-center w-full">
                     <span className="font-sans font-medium text-sm text-[var(--color-verde)]">{hora}</span>
