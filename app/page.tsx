@@ -5,7 +5,7 @@ import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import TextCarousel from "@/components/site/TextCarousel";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import HeroExperience from "@/components/site/HeroExperience";
-import ProductCard from "@/components/site/ProductCard";
+import ProductCarousel from "@/components/site/ProductCarousel";
 import TalleresGallery from "@/components/site/TalleresGallery";
 import { getProductosPorColeccion } from "@/lib/productos-publicos";
 
@@ -169,47 +169,43 @@ export default async function HomePage() {
       </section>
 
       {/* ── Libretas ──────────────────────────────────────────────────────── */}
-      <section className="py-12 md:py-16">
-        <ScrollReveal className="w-[90%] mx-auto mb-6 flex items-end justify-between">
-          <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
-            Libretas
-          </h2>
-          <Link
-            href="/productos?categoria=libretas"
-            className="text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-verde)] transition-colors"
-          >
-            Ver todo →
-          </Link>
-        </ScrollReveal>
-        <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {libretas.map((p) => (
-            <ProductCard key={p.id} producto={p} />
-          ))}
-        </div>
-      </section>
+      {libretas.length > 0 && (
+        <section className="py-12 md:py-16">
+          <ScrollReveal className="w-[90%] mx-auto mb-6 flex items-end justify-between">
+            <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
+              Libretas
+            </h2>
+            <Link
+              href="/productos?categoria=libretas"
+              className="text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-verde)] transition-colors"
+            >
+              Ver todo →
+            </Link>
+          </ScrollReveal>
+          <ProductCarousel productos={libretas} />
+        </section>
+      )}
 
       {/* ── Más de 100 personas (galería animada) ─────────────────────────── */}
       <TalleresGallery cta={{ label: "Ver talleres", href: "/talleres" }} />
 
       {/* ── Los Favoritos ─────────────────────────────────────────────────── */}
-      <section className="py-8 md:py-12 bg-[var(--color-cremita)]/40">
-        <ScrollReveal className="w-[90%] mx-auto mb-6 flex items-end justify-between">
-          <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
-            Los favoritos
-          </h2>
-          <Link
-            href="/productos"
-            className="text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-verde)] transition-colors"
-          >
-            Ver todo →
-          </Link>
-        </ScrollReveal>
-        <div className="pl-5 md:pl-[max(80px,calc((100vw-1280px)/2+80px))] flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {favoritos.map((p) => (
-            <ProductCard key={p.id} producto={p} />
-          ))}
-        </div>
-      </section>
+      {favoritos.length > 0 && (
+        <section className="py-8 md:py-12 bg-[var(--color-cremita)]/40">
+          <ScrollReveal className="w-[90%] mx-auto mb-6 flex items-end justify-between">
+            <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
+              Los favoritos
+            </h2>
+            <Link
+              href="/productos"
+              className="text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-verde)] transition-colors"
+            >
+              Ver todo →
+            </Link>
+          </ScrollReveal>
+          <ProductCarousel productos={favoritos} />
+        </section>
+      )}
 
       {/* ── Instagram ─────────────────────────────────────────────────────── */}
       <section className="py-16 md:py-20">

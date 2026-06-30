@@ -1,6 +1,23 @@
 import { createClient } from "./supabase/server";
 import { logger } from "./logger";
 
+/**
+ * Variación de un producto, tal como la expone la API pública del admin.
+ * Cada variación trae sus valores ya resueltos (override o heredados del producto).
+ */
+export type Variacion = {
+  id: string;
+  nombre: string;
+  precio: number;
+  stock: number;
+  imagen_url: string | null;
+  color: string | null;
+  tamano: string | null;
+  material?: string | null;
+  tipo_papel?: string | null;
+  gramaje?: string | null;
+};
+
 export type Producto = {
   id: string;
   nombre: string;
@@ -11,6 +28,12 @@ export type Producto = {
   stock: number;
   color: string | null;
   medida: string | null;
+  // ── Campos extra de la API pública (opcionales: las queries directas a
+  //    Supabase no los traen) ───────────────────────────────────────────────
+  variaciones?: Variacion[] | null;
+  imagenes?: string[];
+  precio_min?: number;
+  precio_max?: number;
 };
 
 export async function getProductos(categoria?: string, limit?: number): Promise<Producto[]> {

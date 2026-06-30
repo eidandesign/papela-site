@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/site";
 import { randomUUID } from "crypto";
 import { COSTO_ENVIO } from "@/lib/stores/cartStore";
@@ -14,6 +14,8 @@ const client = new MercadoPagoConfig({
 interface CartItemInput {
   productoId: string;
   cantidad: number;
+  variacionId?: string | null;
+  variacionNombre?: string | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -48,12 +50,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fetch authoritative prices + stock from DB
-    const supabase = await createClient();
+    // Fetch authoritative prices + stock from DB. Service role: la inserción en
+    // tienda_pedidos requiere bypassar RLS ("service only").
+    const supabase = createAdminClient();
     const ids = items.map((i) => i.productoId);
     const { data: productos, error: dbError } = await supabase
       .from("productos")
-      .select("id, nombre, precio, stock, imagen_url")
+      .select("id, nombre, precio, stock, imagen_url, atributos")
       .in("id", ids);
 
     if (dbError || !productos) {
@@ -62,6 +65,49 @@ export async function POST(req: NextRequest) {
 
     // Check all products exist and have stock
     const productoMap = new Map(productos.map((p) => [p.id, p]));
+
+    // El stock es a nivel producto (suma de variaciones). Validamos la cantidad
+    // TOTAL por producto, sumando todas sus líneas de variación, para no sobrevender.
+    const cantidadPorProducto = new Map<string, number>();
+    for (const item of items) {
+      cantidadPorProducto.set(
+        item.productoId,
+        (cantidadPorProducto.get(item.productoId) ?? 0) + item.cantidad
+      );
+    }
+    for (const [productoId, cantidadTotal] of cantidadPorProducto) {
+      const prod = productoMap.get(productoId);
+      if (!prod) {
+        return NextResponse.json({ error: `Producto no encontrado: ${productoId}` }, { status: 404 });
+      }
+      if (prod.stock < cantidadTotal) {
+        return NextResponse.json({ error: `Stock insuficiente para: ${prod.nombre}` }, { status: 409 });
+      }
+    }
+
+    // Validación por variación: el stock real vive en atributos.variaciones.
+    type VariacionDB = { id: string; stock?: number; nombre?: string };
+    const cantidadPorVariacion = new Map<string, number>(); // key = productoId::variacionId
+    for (const item of items) {
+      if (!item.variacionId) continue;
+      const k = `${item.productoId}::${item.variacionId}`;
+      cantidadPorVariacion.set(k, (cantidadPorVariacion.get(k) ?? 0) + item.cantidad);
+    }
+    for (const [k, cant] of cantidadPorVariacion) {
+      const sep = k.indexOf("::");
+      const productoId = k.slice(0, sep);
+      const variacionId = k.slice(sep + 2);
+      const prod = productoMap.get(productoId);
+      const variaciones = ((prod?.atributos as { variaciones?: VariacionDB[] } | null)?.variaciones) ?? [];
+      const v = variaciones.find((x) => x.id === variacionId);
+      if (!v) {
+        return NextResponse.json({ error: `Variación no encontrada para: ${prod?.nombre ?? productoId}` }, { status: 404 });
+      }
+      if ((v.stock ?? 0) < cant) {
+        return NextResponse.json({ error: `Stock insuficiente para: ${prod?.nombre}${v.nombre ? ` · ${v.nombre}` : ""}` }, { status: 409 });
+      }
+    }
+
     const mpItems: {
       id: string;
       title: string;
@@ -70,19 +116,24 @@ export async function POST(req: NextRequest) {
       currency_id: string;
       picture_url?: string;
     }[] = [];
-    const orderItems: { productoId: string; nombre: string; cantidad: number; precio_unitario: number }[] = [];
+    const orderItems: {
+      productoId: string;
+      nombre: string;
+      cantidad: number;
+      precio_unitario: number;
+      variacionId?: string | null;
+      variacionNombre?: string | null;
+    }[] = [];
 
     for (const item of items) {
-      const prod = productoMap.get(item.productoId);
-      if (!prod) {
-        return NextResponse.json({ error: `Producto no encontrado: ${item.productoId}` }, { status: 404 });
-      }
-      if (prod.stock < item.cantidad) {
-        return NextResponse.json({ error: `Stock insuficiente para: ${prod.nombre}` }, { status: 409 });
-      }
+      const prod = productoMap.get(item.productoId)!;
+      const nombreCompleto = item.variacionNombre
+        ? `${prod.nombre} · ${item.variacionNombre}`
+        : prod.nombre;
+      // Precio autoritativo del producto base (las variaciones comparten precio).
       mpItems.push({
         id: prod.id,
-        title: prod.nombre,
+        title: nombreCompleto,
         quantity: item.cantidad,
         unit_price: prod.precio,
         currency_id: "MXN",
@@ -90,9 +141,11 @@ export async function POST(req: NextRequest) {
       });
       orderItems.push({
         productoId: prod.id,
-        nombre: prod.nombre,
+        nombre: nombreCompleto,
         cantidad: item.cantidad,
         precio_unitario: prod.precio,
+        variacionId: item.variacionId ?? null,
+        variacionNombre: item.variacionNombre ?? null,
       });
     }
 
@@ -114,7 +167,7 @@ export async function POST(req: NextRequest) {
       orderItems.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0) +
       (tipoEnvio === "envio" ? COSTO_ENVIO : 0);
 
-    await supabase.from("tienda_pedidos").insert({
+    const { error: insertError } = await supabase.from("tienda_pedidos").insert({
       external_reference: externalReference,
       estado: "pendiente",
       tipo_envio: tipoEnvio,
@@ -124,6 +177,12 @@ export async function POST(req: NextRequest) {
       comprador_telefono: compradorTelefono ?? null,
       direccion_envio: direccionEnvio ?? null,
     });
+    if (insertError) {
+      // No mandamos al cliente a pagar un pedido que no se registró: sin el
+      // pedido, el webhook no podría descontar stock ni marcarlo pagado.
+      logger.error("tienda checkout: no se pudo guardar el pedido", { externalReference }, insertError);
+      return NextResponse.json({ error: "No se pudo crear el pedido. Intenta de nuevo." }, { status: 500 });
+    }
 
     // Create MercadoPago preference
     const preference = new Preference(client);

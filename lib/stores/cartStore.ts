@@ -8,11 +8,23 @@ export interface CartItem {
   precio: number;
   imagenUrl: string | null;
   cantidad: number;
+  // Variación elegida (opcional). Una variación es una línea distinta del carrito.
+  variacionId?: string | null;
+  variacionNombre?: string | null;
 }
 
 export type TipoEnvio = "recoger" | "envio";
 
 export const COSTO_ENVIO = 80;
+
+/**
+ * Clave única de una línea del carrito. Un producto sin variación usa su id;
+ * con variación, `${productoId}::${variacionId}`, así cada variante es su
+ * propia línea. Compatible con líneas viejas (sin variacionId → solo productoId).
+ */
+export function cartKey(item: { productoId: string; variacionId?: string | null }): string {
+  return item.variacionId ? `${item.productoId}::${item.variacionId}` : item.productoId;
+}
 
 interface CartStore {
   items: CartItem[];
@@ -20,8 +32,8 @@ interface CartStore {
   isOpen: boolean;
 
   addItem: (item: Omit<CartItem, "cantidad">) => void;
-  removeItem: (productoId: string) => void;
-  updateCantidad: (productoId: string, cantidad: number) => void;
+  removeItem: (key: string) => void;
+  updateCantidad: (key: string, cantidad: number) => void;
   clearCart: () => void;
   setTipoEnvio: (tipo: TipoEnvio) => void;
   openCart: () => void;
@@ -41,13 +53,12 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (item) => {
         set((s) => {
-          const existing = s.items.find((i) => i.productoId === item.productoId);
+          const key = cartKey(item);
+          const existing = s.items.find((i) => cartKey(i) === key);
           if (existing) {
             return {
               items: s.items.map((i) =>
-                i.productoId === item.productoId
-                  ? { ...i, cantidad: i.cantidad + 1 }
-                  : i
+                cartKey(i) === key ? { ...i, cantidad: i.cantidad + 1 } : i
               ),
             };
           }
@@ -55,18 +66,18 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      removeItem: (productoId) => {
-        set((s) => ({ items: s.items.filter((i) => i.productoId !== productoId) }));
+      removeItem: (key) => {
+        set((s) => ({ items: s.items.filter((i) => cartKey(i) !== key) }));
       },
 
-      updateCantidad: (productoId, cantidad) => {
+      updateCantidad: (key, cantidad) => {
         if (cantidad < 1) {
-          get().removeItem(productoId);
+          get().removeItem(key);
           return;
         }
         set((s) => ({
           items: s.items.map((i) =>
-            i.productoId === productoId ? { ...i, cantidad } : i
+            cartKey(i) === key ? { ...i, cantidad } : i
           ),
         }));
       },

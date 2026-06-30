@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { MercadoPagoConfig, Payment } from "mercadopago";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 
 const mpClient = new MercadoPagoConfig({
@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
   }
 
   const externalRef = payment.external_reference ?? "";
-  const supabase = await createClient();
+  // Service role: el webhook escribe tablas protegidas por RLS (tienda_pedidos
+  // "service only", stock en productos, cupos de clases/talleres).
+  const supabase = createAdminClient();
 
   // ── Taller ────────────────────────────────────────────────────────────────
   if (externalRef.startsWith("taller:")) {
@@ -118,15 +120,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Decrement stock for each item atomically
-    const items = pedido.items as { productoId: string; cantidad: number }[];
+    // Decrement stock for each item atomically. Si la línea trae variación,
+    // se descuenta esa variación dentro de atributos.variaciones (y se
+    // re-sincroniza productos.stock); si no, se descuenta el stock agregado.
+    const items = pedido.items as {
+      productoId: string;
+      cantidad: number;
+      variacionId?: string | null;
+    }[];
     for (const item of items) {
-      const { data: ok } = await supabase.rpc("decrementar_stock_producto", {
-        p_id: item.productoId,
-        p_cant: item.cantidad,
-      });
+      const { data: ok } = item.variacionId
+        ? await supabase.rpc("decrementar_stock_variacion", {
+            p_id: item.productoId,
+            p_variacion_id: item.variacionId,
+            p_cant: item.cantidad,
+          })
+        : await supabase.rpc("decrementar_stock_producto", {
+            p_id: item.productoId,
+            p_cant: item.cantidad,
+          });
       if (!ok) {
-        logger.error("webhook: stock insuficiente producto", { productoId: item.productoId, cantidad: item.cantidad, paymentId });
+        logger.error("webhook: stock insuficiente producto", { productoId: item.productoId, variacionId: item.variacionId ?? null, cantidad: item.cantidad, paymentId });
         // Continue — log and update order with partial note rather than blocking
       }
     }

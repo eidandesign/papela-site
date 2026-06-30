@@ -12,6 +12,7 @@ const WHATSAPP = "522211865590";
 
 export default function ProductDrawer() {
   const [mounted, setMounted] = useState(false);
+  const [selectedVarId, setSelectedVarId] = useState<string | null>(null);
   const { product, close } = useProductDrawerStore();
   const isOpen = product !== null;
 
@@ -31,7 +32,26 @@ export default function ProductDrawer() {
     return () => window.removeEventListener("keydown", onKey);
   }, [close]);
 
+  // Al abrir/cambiar de producto: seleccionar la primera variación disponible.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    const vs = product?.variaciones ?? [];
+    setSelectedVarId(vs.length > 0 ? vs[0].id : null);
+  }, [product?.id]);
+
   if (!mounted) return null;
+
+  // ── Valores a mostrar: la variación seleccionada manda; si no hay, el producto ──
+  const variaciones = product?.variaciones ?? [];
+  const selectedVar = variaciones.find((v) => v.id === selectedVarId) ?? null;
+  const dispImagen = selectedVar?.imagen_url ?? product?.imagen_url ?? null;
+  const dispPrecio = selectedVar?.precio ?? product?.precio ?? 0;
+  const dispStock = selectedVar?.stock ?? product?.stock ?? 0;
+  const dispColor = selectedVar?.color ?? product?.color ?? null;
+  const dispMedida = selectedVar?.tamano ?? product?.medida ?? null;
+  const dispNombreCompleto = selectedVar
+    ? `${product?.nombre} · ${selectedVar.nombre}`
+    : product?.nombre ?? "";
 
   return createPortal(
     <AnimatePresence>
@@ -59,10 +79,10 @@ export default function ProductDrawer() {
           >
             {/* Image + close button on top */}
             <div className="relative w-full aspect-square flex-shrink-0 bg-[var(--color-cremita-2)]">
-              {product.imagen_url ? (
+              {dispImagen ? (
                 <Image
-                  src={product.imagen_url}
-                  alt={product.nombre}
+                  src={dispImagen}
+                  alt={dispNombreCompleto}
                   fill
                   sizes="(max-width: 512px) 100vw, 512px"
                   className="object-cover"
@@ -88,9 +108,46 @@ export default function ProductDrawer() {
                   {product.nombre}
                 </h2>
                 <p className="font-sans text-2xl text-[var(--color-verde)] mt-2">
-                  ${product.precio.toLocaleString()} MXN
+                  ${dispPrecio.toLocaleString()} MXN
                 </p>
               </div>
+
+              {/* Variaciones — thumbnails (solo en stock) */}
+              {variaciones.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">
+                    Opciones{selectedVar ? `: ${selectedVar.nombre}` : ""}
+                  </p>
+                  <div className="flex flex-wrap gap-2.5">
+                    {variaciones.map((v) => {
+                      const activa = v.id === selectedVarId;
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVarId(v.id)}
+                          aria-label={v.nombre}
+                          aria-pressed={activa}
+                          title={v.nombre}
+                          className={`relative w-16 h-16 rounded-xl overflow-hidden bg-[var(--color-cremita-2)] transition-all ${
+                            activa
+                              ? "ring-2 ring-[var(--color-verde)] ring-offset-2 ring-offset-[var(--color-bg)]"
+                              : "ring-1 ring-[var(--color-border)] hover:ring-[var(--color-verde)]/50"
+                          }`}
+                        >
+                          {v.imagen_url ? (
+                            <Image src={v.imagen_url} alt={v.nombre} fill sizes="64px" className="object-cover" />
+                          ) : (
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] text-center text-[var(--color-muted)] px-1">
+                              {v.nombre}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Description */}
               {product.descripcion && (
@@ -100,29 +157,29 @@ export default function ProductDrawer() {
               )}
 
               {/* Attributes */}
-              {(product.color || product.medida) && (
+              {(dispColor || dispMedida) && (
                 <dl className="flex flex-wrap gap-x-8 gap-y-3">
-                  {product.color && (
+                  {dispColor && (
                     <div className="flex flex-col gap-0.5">
                       <dt className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">Color</dt>
-                      <dd className="font-sans text-sm text-[var(--color-text)] font-medium">{product.color}</dd>
+                      <dd className="font-sans text-sm text-[var(--color-text)] font-medium">{dispColor}</dd>
                     </div>
                   )}
-                  {product.medida && (
+                  {dispMedida && (
                     <div className="flex flex-col gap-0.5">
                       <dt className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)]">Medida</dt>
-                      <dd className="font-sans text-sm text-[var(--color-text)] font-medium">{product.medida}</dd>
+                      <dd className="font-sans text-sm text-[var(--color-text)] font-medium">{dispMedida}</dd>
                     </div>
                   )}
                 </dl>
               )}
 
               {/* Stock status */}
-              <p className={`text-sm font-sans flex items-center gap-1.5 ${product.stock > 0 ? "text-[var(--color-verde)]" : "text-[var(--color-muted)]"}`}>
-                <span>{product.stock > 0 ? "✓" : "✕"}</span>
-                {product.stock > 0
-                  ? product.stock <= 3
-                    ? `Solo ${product.stock} disponible${product.stock > 1 ? "s" : ""}`
+              <p className={`text-sm font-sans flex items-center gap-1.5 ${dispStock > 0 ? "text-[var(--color-verde)]" : "text-[var(--color-muted)]"}`}>
+                <span>{dispStock > 0 ? "✓" : "✕"}</span>
+                {dispStock > 0
+                  ? dispStock <= 3
+                    ? `Solo ${dispStock} disponible${dispStock > 1 ? "s" : ""}`
                     : "Disponible"
                   : "Agotado"}
               </p>
@@ -132,7 +189,7 @@ export default function ProductDrawer() {
             {/* CTAs — fixed footer */}
             <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3 px-6 py-5 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
               <a
-                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola Papela 🌿 me interesa: ${product.nombre}`)}`}
+                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola Papela 🌿 me interesa: ${dispNombreCompleto}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-verde)] text-[var(--color-verde)] px-5 py-3.5 text-sm font-semibold hover:bg-[var(--color-verde)]/5 transition-colors"
@@ -144,10 +201,12 @@ export default function ProductDrawer() {
               </a>
               <AddToCartButton
                 productoId={product.id}
-                nombre={product.nombre}
-                precio={product.precio}
-                imagenUrl={product.imagen_url ?? null}
-                stock={product.stock}
+                nombre={dispNombreCompleto}
+                precio={dispPrecio}
+                imagenUrl={dispImagen}
+                stock={dispStock}
+                variacionId={selectedVar?.id ?? null}
+                variacionNombre={selectedVar?.nombre ?? null}
                 fullWidth
               />
             </div>

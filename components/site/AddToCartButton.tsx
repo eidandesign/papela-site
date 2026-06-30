@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ShoppingBagIcon, CheckIcon } from "@heroicons/react/24/solid";
-import { useCartStore } from "@/lib/stores/cartStore";
+import { useCartStore, cartKey } from "@/lib/stores/cartStore";
 
 interface Props {
   productoId: string;
@@ -11,18 +11,21 @@ interface Props {
   imagenUrl: string | null;
   stock: number;
   fullWidth?: boolean;
+  variacionId?: string | null;
+  variacionNombre?: string | null;
 }
 
-export default function AddToCartButton({ productoId, nombre, precio, imagenUrl, stock, fullWidth }: Props) {
+export default function AddToCartButton({ productoId, nombre, precio, imagenUrl, stock, fullWidth, variacionId, variacionNombre }: Props) {
   const [added, setAdded] = useState(false);
   const { items, addItem, openCart } = useCartStore();
 
-  const cantidad = items.find((i) => i.productoId === productoId)?.cantidad ?? 0;
+  const key = cartKey({ productoId, variacionId });
+  const cantidad = items.find((i) => cartKey(i) === key)?.cantidad ?? 0;
   const atLimit = cantidad >= stock;
 
   const handleAdd = () => {
     if (atLimit) return;
-    addItem({ productoId, nombre, precio, imagenUrl });
+    addItem({ productoId, nombre, precio, imagenUrl, variacionId, variacionNombre });
     setAdded(true);
     setTimeout(() => {
       setAdded(false);

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { PlusIcon } from "@heroicons/react/24/solid";
 import QuickAddButton from "./QuickAddButton";
 import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
 import type { Producto } from "@/lib/productos";
@@ -8,12 +9,18 @@ import type { Producto } from "@/lib/productos";
 export default function ProductCard({
   producto,
   fullWidth = false,
+  variant = "default",
 }: {
   producto: Producto;
   fullWidth?: boolean;
+  /** "catalog" = diseño Figma compacto (imagen cuadrada, título serif) usado en el carrusel de /productos */
+  variant?: "default" | "catalog";
 }) {
   const open = useProductDrawerStore((s) => s.open);
   const { id, nombre, precio, imagen_url, stock } = producto;
+  const isCatalog = variant === "catalog";
+  // Con variaciones, el "+" abre el detalle para que el cliente elija una.
+  const hasVariaciones = (producto.variaciones?.length ?? 0) > 0;
 
   return (
     <div
@@ -22,10 +29,18 @@ export default function ProductCard({
       onClick={() => open(producto)}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(producto); } }}
       className={`group cursor-pointer ${
-        fullWidth ? "w-full" : "flex-shrink-0 w-[220px] md:w-[240px]"
+        fullWidth
+          ? "w-full"
+          : isCatalog
+          ? "flex-shrink-0 w-[200px] md:w-[240px]"
+          : "flex-shrink-0 w-[220px] md:w-[240px]"
       }`}
     >
-      <div className="w-full aspect-[3/4] rounded-2xl bg-[var(--color-cremita-2)] mb-3 overflow-hidden relative">
+      <div
+        className={`w-full ${
+          isCatalog ? "aspect-square rounded-[16px]" : "aspect-[3/4] rounded-2xl"
+        } bg-[var(--color-cremita-2)] mb-3 overflow-hidden relative`}
+      >
         {imagen_url ? (
           <Image
             src={imagen_url}
@@ -37,16 +52,36 @@ export default function ProductCard({
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
         )}
-        <QuickAddButton
-          productoId={id}
-          nombre={nombre}
-          precio={precio}
-          imagenUrl={imagen_url}
-          stock={stock}
-        />
+        {hasVariaciones ? (
+          <button
+            type="button"
+            aria-label="Ver opciones"
+            onClick={(e) => { e.stopPropagation(); open(producto); }}
+            className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center"
+          >
+            <PlusIcon className="w-4 h-4" />
+          </button>
+        ) : (
+          <QuickAddButton
+            productoId={id}
+            nombre={nombre}
+            precio={precio}
+            imagenUrl={imagen_url}
+            stock={stock}
+          />
+        )}
       </div>
-      <p className="text-sm font-medium text-[var(--color-text)] leading-tight">{nombre}</p>
-      <p className="text-sm text-[var(--color-muted)] mt-0.5">${precio.toLocaleString()} MXN</p>
+      {isCatalog ? (
+        <>
+          <p className="font-serif text-[18px] leading-[24px] text-[var(--color-muted)]">{nombre}</p>
+          <p className="text-[14px] text-[var(--color-muted)] mt-0.5">${precio.toLocaleString()} MXN</p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-medium text-[var(--color-text)] leading-tight">{nombre}</p>
+          <p className="text-sm text-[var(--color-muted)] mt-0.5">${precio.toLocaleString()} MXN</p>
+        </>
+      )}
     </div>
   );
 }

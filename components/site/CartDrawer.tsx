@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { XMarkIcon, MinusIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
-import { useCartStore, COSTO_ENVIO } from "@/lib/stores/cartStore";
+import { useCartStore, COSTO_ENVIO, cartKey } from "@/lib/stores/cartStore";
 
 export default function CartDrawer() {
   const [mounted, setMounted] = useState(false);
@@ -89,7 +89,7 @@ export default function CartDrawer() {
                 <ul className="flex flex-col gap-4">
                   {items.map((item) => (
                     <li
-                      key={item.productoId}
+                      key={cartKey(item)}
                       className="flex gap-4 py-4 border-b border-[var(--color-border)] last:border-0"
                     >
                       {/* Image */}
@@ -118,20 +118,20 @@ export default function CartDrawer() {
                         {/* Quantity controls */}
                         <div className="flex items-center gap-2 mt-2">
                           <button
-                            onClick={() => updateCantidad(item.productoId, item.cantidad - 1)}
+                            onClick={() => updateCantidad(cartKey(item), item.cantidad - 1)}
                             className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:border-[var(--color-verde)] transition-colors"
                           >
                             <MinusIcon className="w-3 h-3 text-[var(--color-text)]" />
                           </button>
                           <span className="font-sans text-sm w-4 text-center">{item.cantidad}</span>
                           <button
-                            onClick={() => updateCantidad(item.productoId, item.cantidad + 1)}
+                            onClick={() => updateCantidad(cartKey(item), item.cantidad + 1)}
                             className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:border-[var(--color-verde)] transition-colors"
                           >
                             <PlusIcon className="w-3 h-3 text-[var(--color-text)]" />
                           </button>
                           <button
-                            onClick={() => removeItem(item.productoId)}
+                            onClick={() => removeItem(cartKey(item))}
                             className="ml-auto p-1 rounded-full hover:bg-[var(--color-cremita-2)] transition-colors"
                             aria-label="Eliminar"
                           >

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getProductosPublicos, type ProductoPublico } from "@/lib/productos-publicos";
 import HeroSection from "@/components/site/HeroSection";
-import ProductCard from "@/components/site/ProductCard";
+import ProductCarousel from "@/components/site/ProductCarousel";
 
 export const revalidate = 60;
 
@@ -89,11 +89,7 @@ export default async function ProductosPage() {
                   {sec.titulo}
                 </h2>
               </div>
-              <div className="w-[90%] mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {sec.productos.map((p) => (
-                  <ProductCard key={p.id} producto={p} fullWidth />
-                ))}
-              </div>
+              <ProductCarousel productos={sec.productos} />
             </section>
           ))}
         </div>

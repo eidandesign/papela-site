@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlusIcon, MinusIcon } from "@heroicons/react/24/solid";
-import { useCartStore } from "@/lib/stores/cartStore";
+import { useCartStore, cartKey } from "@/lib/stores/cartStore";
 
 interface Props {
   productoId: string;
@@ -17,7 +17,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
   const { items, addItem, updateCantidad, openCart } = useCartStore();
   const [justAdded, setJustAdded] = useState(false);
 
-  const cartItem = items.find((i) => i.productoId === productoId);
+  const cartItem = items.find((i) => cartKey(i) === productoId);
   const cantidad = cartItem?.cantidad ?? 0;
   const expanded = cantidad > 0;
   const atLimit = cantidad >= stock;

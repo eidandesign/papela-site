@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import { useCartStore, COSTO_ENVIO } from "@/lib/stores/cartStore";
+import { useCartStore, COSTO_ENVIO, cartKey } from "@/lib/stores/cartStore";
 
 const ESTADOS_MX = [
   "Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas",
@@ -94,7 +94,12 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad })),
+          items: items.map((i) => ({
+            productoId: i.productoId,
+            cantidad: i.cantidad,
+            variacionId: i.variacionId ?? null,
+            variacionNombre: i.variacionNombre ?? null,
+          })),
           tipoEnvio,
           compradorNombre: form.nombre,
           compradorTelefono: form.telefono,
@@ -223,7 +228,7 @@ export default function CheckoutPage() {
 
           <ul className="flex flex-col gap-4 divide-y divide-[var(--color-border)]">
             {items.map((item) => (
-              <li key={item.productoId} className="flex gap-3 pt-4 first:pt-0">
+              <li key={cartKey(item)} className="flex gap-3 pt-4 first:pt-0">
                 <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--color-cremita-2)]">
                   {item.imagenUrl && (
                     <Image src={item.imagenUrl} alt={item.nombre} fill sizes="56px" className="object-cover" />
