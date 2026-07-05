@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -160,8 +159,8 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
     >
       {/* Logo top center */}
       <div style={{ position: "absolute", top: 20, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: visible ? 1 : 0, transition: "opacity 0.3s ease 0.3s" }}>
-        <Link href="/" onClick={onClose}>
-          <Image src="/site/logo.png" alt="Papela" width={90} height={90} className="object-contain brightness-200 opacity-80" />
+        <Link href="/" onClick={onClose} aria-label="Papela Atelier — inicio">
+          <AnimatedLogo className="w-[90px] h-[90px]" />
         </Link>
       </div>
 
