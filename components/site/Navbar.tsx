@@ -293,7 +293,12 @@ export default function SiteNavbar() {
             className="fixed top-0 inset-x-0 bg-transparent"
             // Como el nav flotante: sobre el overlay del menú (z-100002) cuando
             // está abierto, para que la hamburguesa/X siga visible y clickeable.
-            style={{ zIndex: menuOpen ? 100003 : 50 }}
+            // pointerEvents none deja pasar los taps al overlay (logo del menú);
+            // solo el contenedor de la X los recaptura con pointerEvents auto.
+            style={{
+              zIndex: menuOpen ? 100003 : 50,
+              pointerEvents: menuOpen ? "none" : "auto",
+            }}
           >
             <nav className="w-[96%] mx-auto relative flex items-center justify-center px-6 md:px-10 h-[140px] md:h-[170px]">
               {/* Desktop: links flank the logo. Each side gets flex-1 so the logo
@@ -374,7 +379,7 @@ export default function SiteNavbar() {
               {/* Mobile/tablet: cart + hamburger */}
               <div
                 className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3"
-                style={{ zIndex: menuOpen ? 100001 : "auto" }}
+                style={{ zIndex: menuOpen ? 100001 : "auto", pointerEvents: "auto" }}
               >
                 <CartButton color={iconColor} />
                 <button
