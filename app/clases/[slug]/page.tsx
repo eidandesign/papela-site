@@ -2,13 +2,20 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getClaseBySlug, getHorariosSemanales } from "@/lib/clases";
+import { getClaseBySlug, getClases, getHorariosSemanales } from "@/lib/clases";
 import { getActividades } from "@/lib/clases-actividades";
 import { SITE_URL } from "@/lib/site";
 import ReservaButton from "@/components/site/ReservaButton";
 import ActividadCard from "@/components/site/ActividadCard";
 
 export const revalidate = 60;
+
+// Prerenderiza el detalle de cada maestra activa (son pocas); las nuevas
+// se generan on-demand y se cachean con el mismo revalidate.
+export async function generateStaticParams() {
+  const maestras = await getClases();
+  return maestras.map((m) => ({ slug: m.slug }));
+}
 
 export async function generateMetadata({
   params,

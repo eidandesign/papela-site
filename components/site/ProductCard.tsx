@@ -26,9 +26,10 @@ export default function ProductCard({
     <div
       role="button"
       tabIndex={0}
+      aria-label={`Ver detalle de ${nombre}`}
       onClick={() => open(producto)}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(producto); } }}
-      className={`group cursor-pointer ${
+      className={`group cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-verde)] rounded-2xl ${
         fullWidth
           ? "w-full"
           : isCatalog

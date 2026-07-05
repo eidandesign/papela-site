@@ -28,3 +28,4 @@ tsconfig.tsbuildinfo
 # claude code local skills
 .claude/skills/
 skills-lock.json
+.vercel

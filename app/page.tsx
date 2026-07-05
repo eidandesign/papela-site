@@ -82,7 +82,7 @@ export default async function HomePage() {
             >
               {/* Image top */}
               <div className="relative w-full" style={{ height: "200px" }}>
-                <Image src={card.image} alt={card.title} fill className="object-cover" />
+                <Image src={card.image} alt={card.title} fill sizes="72vw" className="object-cover" />
               </div>
               {/* Text bottom */}
               <div className="flex flex-col justify-between p-6 flex-1">
@@ -118,7 +118,7 @@ export default async function HomePage() {
                 </div>
                 <div className="w-[52%] flex-shrink-0 p-3 pl-0 h-full">
                   <div className="relative w-full h-full rounded-xl overflow-hidden">
-                    <Image src={card.image} alt={card.title} fill className="object-cover" />
+                    <Image src={card.image} alt={card.title} fill sizes="16vw" className="object-cover" />
                   </div>
                 </div>
               </Link>

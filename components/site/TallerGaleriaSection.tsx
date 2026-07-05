@@ -133,7 +133,9 @@ export default function TallerGaleriaSection({
   const [openAt, setOpenAt] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  // Intentional: gates the SSR portal so the lightbox renders client-side only.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setMounted(true); }, []);
 
   return (
     <>
@@ -143,7 +145,13 @@ export default function TallerGaleriaSection({
         onClick={() => hasExtra && setOpenAt(0)}
       >
         {mainImage ? (
-          <Image src={mainImage} alt={titulo} fill className="object-cover" />
+          <Image
+            src={mainImage}
+            alt={titulo}
+            fill
+            sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 90vw"
+            className="object-cover"
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
         )}
@@ -192,7 +200,7 @@ export default function TallerGaleriaSection({
                 }`}
                 aria-label={`Ver imagen extra ${i + 1}`}
               >
-                <Image src={url} alt="" fill className="object-cover" />
+                <Image src={url} alt="" fill sizes="56px" className="object-cover" />
               </button>
             );
           })}

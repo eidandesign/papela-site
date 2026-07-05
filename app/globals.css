@@ -43,21 +43,6 @@
   font-style: italic;
   font-display: swap;
 }
-@font-face {
-  font-family: 'Canela Condensed';
-  src: url('/fonts/CanelaCondensed-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Canela Condensed';
-  src: url('/fonts/CanelaCondensed-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
   --color-bg: #F0EFEB;
   --color-white: #FFFFFF;
@@ -87,7 +72,6 @@
 
   --font-serif: 'PP Editorial New', Georgia, serif;
   --font-sans: 'Satoshi', system-ui, sans-serif;
-  --font-display: 'Canela Condensed', Georgia, serif;
 
   --shadow-card: 0 2px 12px rgba(18, 83, 76, 0.07);
   --shadow-card-hover: 0 8px 28px rgba(18, 83, 76, 0.13);

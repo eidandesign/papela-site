@@ -12,7 +12,9 @@ const WHATSAPP = "522211865590";
 
 export default function ProductDrawer() {
   const [mounted, setMounted] = useState(false);
-  const [selectedVarId, setSelectedVarId] = useState<string | null>(null);
+  // Selección del usuario ligada al producto: si cambia el producto, la
+  // selección guardada deja de aplicar y cae a la primera variación.
+  const [seleccion, setSeleccion] = useState<{ productId: string; varId: string } | null>(null);
   const { product, close } = useProductDrawerStore();
   const isOpen = product !== null;
 
@@ -32,17 +34,13 @@ export default function ProductDrawer() {
     return () => window.removeEventListener("keydown", onKey);
   }, [close]);
 
-  // Al abrir/cambiar de producto: seleccionar la primera variación disponible.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    const vs = product?.variaciones ?? [];
-    setSelectedVarId(vs.length > 0 ? vs[0].id : null);
-  }, [product?.id]);
-
   if (!mounted) return null;
 
   // ── Valores a mostrar: la variación seleccionada manda; si no hay, el producto ──
+  // La selección solo aplica si pertenece al producto abierto; si no, primera variación.
   const variaciones = product?.variaciones ?? [];
+  const selectedVarId =
+    seleccion && seleccion.productId === product?.id ? seleccion.varId : variaciones[0]?.id ?? null;
   const selectedVar = variaciones.find((v) => v.id === selectedVarId) ?? null;
   const dispImagen = selectedVar?.imagen_url ?? product?.imagen_url ?? null;
   const dispPrecio = selectedVar?.precio ?? product?.precio ?? 0;
@@ -125,7 +123,7 @@ export default function ProductDrawer() {
                         <button
                           key={v.id}
                           type="button"
-                          onClick={() => setSelectedVarId(v.id)}
+                          onClick={() => product && setSeleccion({ productId: product.id, varId: v.id })}
                           aria-label={v.nombre}
                           aria-pressed={activa}
                           title={v.nombre}

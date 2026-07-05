@@ -1,4 +1,4 @@
-import { createClient } from "./supabase/server";
+import { createPublicClient } from "./supabase/public";
 import { logger } from "./logger";
 import { TZ } from "./fecha";
 
@@ -26,7 +26,7 @@ export type Maestra = {
 export type MaestraConHorarios = Maestra & { horarios: Horario[] };
 
 export async function getClases(): Promise<Maestra[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("clases")
     .select("id, nombre, slug, tecnicas, descripcion, experiencia, foto, galeria, whatsapp, activa")
@@ -41,7 +41,7 @@ export async function getClases(): Promise<Maestra[]> {
 }
 
 export async function getClasesConHorarios(): Promise<MaestraConHorarios[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: maestras, error } = await supabase
     .from("clases")
@@ -128,7 +128,7 @@ export function getHorariosSemanales(horarios: Horario[]): HorarioSemanal[] {
 }
 
 export async function getClaseBySlug(slug: string): Promise<MaestraConHorarios | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: maestra, error } = await supabase
     .from("clases")

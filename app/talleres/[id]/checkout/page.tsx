@@ -63,6 +63,7 @@ export default async function TallerCheckoutPage({
                   src={taller.imagen_url}
                   alt={taller.titulo}
                   fill
+                  sizes="(min-width: 768px) 45vw, 90vw"
                   className="object-cover"
                 />
               </div>

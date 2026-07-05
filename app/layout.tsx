@@ -137,6 +137,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className="h-full antialiased">
       <head>
+        {/* Satoshi viene por @import de Fontshare en globals.css; el preconnect
+            adelanta el handshake TLS. Los preload cubren los dos cortes de
+            PP Editorial que pintan el hero y los headings (evita FOUT). */}
+        <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/otf" href="/fonts/PPEditorialNew-Italic.otf" crossOrigin="anonymous" />
+        <link rel="preload" as="font" type="font/otf" href="/fonts/PPEditorialNew-Ultralight.otf" crossOrigin="anonymous" />
         <Script id="gtm" strategy="beforeInteractive">
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

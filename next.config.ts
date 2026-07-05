@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Hay un package-lock.json suelto en ~/ que confunde la auto-detección
+  // del root del workspace; lo fijamos explícitamente a este repo.
+  turbopack: {
+    root: __dirname,
+  },
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",

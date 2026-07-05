@@ -27,7 +27,8 @@
 |---|---|---|
 | `font-serif` | PP Editorial New | Headings, display text |
 | `font-sans` | Satoshi | Body, UI labels |
-| `font-display` | Canela Condensed | Decorative display |
+
+(Canela Condensed / `font-display` se eliminó: los .otf nunca existieron en `public/fonts` y ningún componente la usaba.)
 
 **Rules:**
 - Section headings on light bg: `font-serif font-extralight text-[#403C3C]` (weight 200 = ultralight)

@@ -144,6 +144,7 @@ export default async function ClasesPage() {
               src="/images/clases.avif"
               alt="Clase en Papela Atelier"
               fill
+              sizes="(min-width: 1024px) 486px, 90vw"
               className="object-cover"
             />
           </div>

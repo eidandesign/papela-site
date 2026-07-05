@@ -46,6 +46,8 @@ export default function ProductCarousel({ productos }: { productos: Producto[] }
     <div className="relative">
       <div
         ref={scrollerRef}
+        role="region"
+        aria-label="Carrusel de productos"
         className="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-2"
         style={{ scrollbarWidth: "none", scrollPaddingLeft: "5vw" }}
       >

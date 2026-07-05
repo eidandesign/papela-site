@@ -1,4 +1,4 @@
-import { createClient } from "./supabase/server";
+import { createPublicClient } from "./supabase/public";
 import { logger } from "./logger";
 
 /**
@@ -37,7 +37,7 @@ export type Producto = {
 };
 
 export async function getProductos(categoria?: string, limit?: number): Promise<Producto[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from("productos")
@@ -64,7 +64,7 @@ export async function getProductos(categoria?: string, limit?: number): Promise<
 }
 
 export async function getProductoById(id: string): Promise<Producto | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("productos")
