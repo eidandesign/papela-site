@@ -97,19 +97,27 @@ export default function TalleresGallery({ cta }: { cta?: { label: string; href: 
     );
     io.observe(section);
 
+    // Advance to the next photo not shown in any other frame, so the
+    // same photo never appears twice on screen at once
     const advance = (
-      setter: React.Dispatch<React.SetStateAction<number[]>>,
-      step: number
+      setter: React.Dispatch<React.SetStateAction<number[]>>
     ) => (i: number) =>
       setter((prev) => {
         if (!visibleRef.current) return prev;
-        const next = [...prev];
-        next[i] = (next[i] + step) % POOL.length;
-        return next;
+        const used = new Set(prev);
+        for (let s = 1; s <= POOL.length; s++) {
+          const candidate = (prev[i] + s) % POOL.length;
+          if (!used.has(candidate)) {
+            const next = [...prev];
+            next[i] = candidate;
+            return next;
+          }
+        }
+        return prev;
       });
 
-    const advD = advance(setDIdx, DESKTOP_FRAMES.length);
-    const advM = advance(setMIdx, MOBILE_FRAMES.length);
+    const advD = advance(setDIdx);
+    const advM = advance(setMIdx);
 
     const timers = [
       ...DESKTOP_FRAMES.map((_, i) => setInterval(() => advD(i), 3600 + i * 700)),
