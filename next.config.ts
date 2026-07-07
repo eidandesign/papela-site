@@ -7,16 +7,20 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
-    formats: ["image/avif", "image/webp"],
+    // Solo WebP: AVIF+WebP duplicaba las transformaciones de Vercel
+    // (cada imagen × tamaño se optimizaba en ambos formatos).
+    formats: ["image/webp"],
+    // Las imágenes de Supabase tienen nombre único e inmutable
+    // (Date.now()-random); cachear la versión optimizada 31 días evita
+    // re-transformar cada 4h (default). Si se cambia una imagen LOCAL de
+    // /public sin renombrarla, puede quedar servida vieja hasta 31 días:
+    // renombrar el archivo al reemplazarla.
+    minimumCacheTTL: 2678400,
     remotePatterns: [
       {
         protocol: "https",
         hostname: "qrrqptkcgezposfmkvqy.supabase.co",
         pathname: "/storage/v1/object/public/**",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
       },
     ],
   },
