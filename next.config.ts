@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
+    // ⚠️ jul-2026: la cuota de Image Optimization de Vercel (plan Hobby) se
+    // agotó y /_next/image responde 402 (OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED),
+    // dejando el sitio sin imágenes. Con unoptimized, next/image sirve las URLs
+    // originales de Supabase directamente (igual van por CDN). Para reactivar
+    // el optimizador cuando reinicie el ciclo: quitar esta línea.
+    unoptimized: true,
     // Solo WebP: AVIF+WebP duplicaba las transformaciones de Vercel
     // (cada imagen × tamaño se optimizaba en ambos formatos).
     formats: ["image/webp"],
