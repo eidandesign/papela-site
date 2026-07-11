@@ -144,59 +144,6 @@ const ACTIVIDADES: Record<string, Actividad[]> = {
       ],
     },
   ],
-  "liz-art": [
-    {
-      titulo: "Acuarela para principiantes",
-      edades: "Adolescentes y adultos",
-      imagen: "/images/acuarela-liz-acosta-papela.jpeg",
-      descripcion:
-        "Aprende a controlar el agua y el pigmento para lograr lavados, degradados y transparencias. Una introducción cálida y paciente al mundo de la acuarela.",
-      materiales: [
-        {
-          items: [
-            "Papel para acuarela 300 g",
-            "Set de acuarelas",
-            "Pinceles redondos #6 y #10",
-            "Paleta y recipiente para agua",
-          ],
-        },
-      ],
-    },
-    {
-      titulo: "Acrílico sobre lienzo",
-      edades: "Adolescentes y adultos",
-      imagen: "/images/oleo-liz-acosta-papela.jpeg",
-      descripcion:
-        "Trabajamos color, composición y pincelada sobre lienzo para crear una obra hermosa, con el estilo y personalidad que quieres plasmar.",
-      materiales: [
-        {
-          items: [
-            "Lienzo o bastidor",
-            "Pinturas acrílicas",
-            "Pinceles planos y redondos",
-            "Mandil y trapo",
-          ],
-        },
-      ],
-    },
-    {
-      titulo: "Óleo y dibujo",
-      edades: "Adultos",
-      imagen: "/images/dibujo-liz-acosta-papela.jpeg",
-      descripcion:
-        "Para quienes quieren ir más a fondo: bases de dibujo, claroscuro y los fundamentos de la pintura al óleo con acompañamiento cercano en cada sesión.",
-      materiales: [
-        {
-          items: [
-            "Set de óleos",
-            "Médium y solvente inodoro",
-            "Pinceles para óleo",
-            "Lienzo imprimado",
-          ],
-        },
-      ],
-    },
-  ],
 };
 
 // Lista por si una maestra no tiene contenido propio todavía.
@@ -210,7 +157,6 @@ export function getActividades(slug: string): Actividad[] {
 // HARDCODE — no existe campo en Supabase. Editar aquí por maestra.
 const PUBLICO: Record<string, string> = {
   celia: "Niños y adultos",
-  "liz-art": "Mayores de 11 años",
 };
 
 export function getPublico(slug: string): string | null {

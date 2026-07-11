@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { MapPinIcon } from "@heroicons/react/24/solid";
 import { getClasesConHorarios } from "@/lib/clases";
 import { getActividades, getPublico } from "@/lib/clases-actividades";
 import HeroSection from "@/components/site/HeroSection";
@@ -59,23 +60,23 @@ export default async function ClasesPage() {
             <p className="text-[var(--color-muted)]">Estamos preparando nuevas clases. ¡Vuelve pronto!</p>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-5 md:gap-6">
+          <div className="flex flex-col gap-5 md:gap-6">
             {maestras.map((maestra) => {
               const publico = getPublico(maestra.slug);
               const actividades = getActividades(maestra.slug).map((a) => a.titulo);
               return (
                 <article
                   key={maestra.id}
-                  className="w-full sm:w-[340px] lg:w-[360px] bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-4 md:p-5 flex flex-col gap-4 transition-[transform,box-shadow] duration-300 ease-out hover:shadow-[4px_6px_0px_#d6bdb2] hover:-translate-y-1"
+                  className="w-full bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-5 md:p-8 flex flex-col md:flex-row items-center gap-5 md:gap-10"
                 >
                   {/* Foto + badge de edad */}
-                  <div className="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-[#d6bdb2]">
+                  <div className="relative w-full md:w-[370px] flex-shrink-0 aspect-[4/3] rounded-xl overflow-hidden border-2 border-[#d6bdb2]">
                     {maestra.foto ? (
                       <Image
                         src={maestra.foto}
                         alt={maestra.nombre}
                         fill
-                        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 400px"
+                        sizes="(max-width: 768px) 90vw, 370px"
                         className="object-cover"
                       />
                     ) : (
@@ -88,9 +89,9 @@ export default async function ClasesPage() {
                     )}
                   </div>
 
-                  {/* Nombre + técnicas */}
-                  <div className="flex flex-col gap-1 px-1 flex-1">
-                    <h3 className="font-serif italic text-[#664917] text-[clamp(1.5rem,2vw,1.75rem)] leading-tight">
+                  {/* Nombre + técnicas + descripción + CTAs */}
+                  <div className="flex flex-col gap-3 flex-1 min-w-0">
+                    <h3 className="font-serif italic text-[#664917] text-[clamp(1.6rem,2.5vw,2rem)] leading-tight">
                       {maestra.nombre}
                     </h3>
                     {maestra.tecnicas?.length > 0 && (
@@ -98,26 +99,28 @@ export default async function ClasesPage() {
                         {maestra.tecnicas.join(" · ")}
                       </p>
                     )}
-                  </div>
-
-                  {/* CTAs */}
-                  <div className="flex items-center gap-2.5">
-                    <Link
-                      href={`/clases/${maestra.slug}`}
-                      className="flex-shrink-0 inline-flex items-center justify-center rounded-full border border-[var(--color-verde)] px-5 py-2.5 font-sans text-sm font-semibold text-[var(--color-verde)] hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition-colors"
-                    >
-                      Ver detalles
-                    </Link>
-                    <ReservaButton
-                      horarios={maestra.horarios}
-                      claseNombre={maestra.nombre}
-                      whatsapp={maestra.whatsapp}
-                      actividades={actividades}
-                      label="Reservar Clase"
-                      size="sm"
-                      showArrow={false}
-                      className="flex-1"
-                    />
+                    {maestra.descripcion && (
+                      <p className="font-sans text-[var(--color-text)] text-base leading-relaxed">
+                        {maestra.descripcion}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2.5 mt-1">
+                      <Link
+                        href={`/clases/${maestra.slug}`}
+                        className="inline-flex items-center justify-center rounded-full border border-[var(--color-verde)] px-5 py-2.5 font-sans text-sm font-semibold text-[var(--color-verde)] hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition-colors"
+                      >
+                        Ver más detalles
+                      </Link>
+                      <ReservaButton
+                        horarios={maestra.horarios}
+                        claseNombre={maestra.nombre}
+                        whatsapp={maestra.whatsapp}
+                        actividades={actividades}
+                        label="Reservar Clase"
+                        size="sm"
+                        showArrow={false}
+                      />
+                    </div>
                   </div>
                 </article>
               );
@@ -126,29 +129,81 @@ export default async function ClasesPage() {
         )}
       </section>
 
-      {/* ── Intro card ── */}
-      <section className="w-[90%] mx-auto py-12 md:py-16">
-        <div className="bg-[#EAE6DC] rounded-2xl flex flex-col lg:flex-row items-center gap-10 lg:gap-[148px] px-8 md:px-20 py-14 md:py-[72px]">
-          {/* Text */}
-          <div className="flex-1 flex flex-col gap-4 min-w-0">
-            <h2 className="font-serif font-extralight text-[clamp(2rem,3.5vw,3rem)] text-black leading-[1.17]">
-              A veces solo hace falta una mesa, buenos materiales y alguien que te guíe.
-            </h2>
-            <p className="font-sans text-[var(--color-text)] text-[clamp(1rem,1.3vw,1.5rem)] leading-[1.35]">
-              Nuestras clases están pensadas para que cada persona avance a su ritmo: desde quien quiere aprender una técnica desde cero, hasta quien busca un momento creativo para desconectarse, practicar y crear algo propio.
-            </p>
-          </div>
-          {/* Image */}
-          <div className="relative w-full lg:w-[486px] h-[320px] md:h-[440px] flex-shrink-0 rounded-[20px] overflow-hidden">
-            <Image
-              src="/images/clases.avif"
-              alt="Clase en Papela Atelier"
-              fill
-              sizes="(min-width: 1024px) 486px, 90vw"
-              className="object-cover"
-            />
+      {/* ── Club de Arcilla banner ── */}
+      <section className="w-[90%] mx-auto pb-12 md:pb-16">
+        <div className="relative rounded-[32px] md:rounded-[48px] overflow-hidden">
+          <Image
+            src="/images/fondo_arcilla_banner.jpg"
+            alt=""
+            fill
+            className="object-cover"
+            sizes="90vw"
+          />
+
+          <Image
+            src="/images/linea_rosa_club.png"
+            alt=""
+            width={3078}
+            height={729}
+            aria-hidden="true"
+            className="absolute inset-x-0 top-10 md:top-1/2 md:-translate-y-1/2 w-full h-auto pointer-events-none"
+          />
+
+          <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-10 px-8 md:px-14 py-14 md:py-6">
+            {/* Texto */}
+            <div className="flex-1 flex flex-col items-center text-center gap-3">
+              <Image
+                src="/images/club_arcilla_nombre.png"
+                alt="Club de Arcilla"
+                width={457}
+                height={204}
+                className="w-[220px] md:w-[300px] h-auto"
+              />
+              <p className="font-serif text-[var(--color-cremita)] text-lg md:text-xl">
+                Todos los Jueves de 5:00 a 7:00 pm
+              </p>
+              <p className="flex items-center gap-1.5 font-sans text-[var(--color-cremita)]/80 text-sm">
+                <MapPinIcon aria-hidden="true" className="w-4 h-4 flex-shrink-0" />
+                Lomas de Angelópolis – Papela Atelier
+              </p>
+              <a
+                href={`https://wa.me/522211865590?text=${encodeURIComponent("Hola Papela 🌿 quiero unirme al Club de Arcilla")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-verde)] px-6 py-2.5 font-sans text-sm font-semibold text-[var(--color-cremita)] hover:opacity-90 transition-opacity"
+              >
+                ¡Quiero Unirme!
+              </a>
+            </div>
+
+            {/* Foto */}
+            <div className="relative w-full md:w-[58%] aspect-[1508/750] flex-shrink-0">
+              <Image
+                src="/images/clases_club_arcilla.png"
+                alt="Sesión del Club de Arcilla en Papela Atelier"
+                fill
+                className="object-contain"
+                sizes="(min-width: 768px) 58vw, 90vw"
+              />
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* ── Intro ── */}
+      <section className="w-[90%] mx-auto py-12 md:py-16 flex flex-col items-center gap-8 md:gap-10">
+        <div className="relative w-full max-w-[340px] aspect-square rounded-[20px] overflow-hidden">
+          <Image
+            src="/images/clases.avif"
+            alt="Clase en Papela Atelier"
+            fill
+            sizes="340px"
+            className="object-cover"
+          />
+        </div>
+        <h2 className="font-serif font-extralight text-[clamp(2rem,3.5vw,3rem)] text-black leading-[1.17] text-center max-w-[620px]">
+          A veces solo hace falta una mesa, tus manos y alguien que te guíe.
+        </h2>
       </section>
     </>
   );
