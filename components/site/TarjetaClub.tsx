@@ -20,7 +20,10 @@ import Image from "next/image";
 import Link from "next/link";
 import PlanillaClub from "./club/PlanillaClub";
 import RascaSticker from "./club/RascaSticker";
-import { ADMIN_ORIGIN, copiarTexto, stickerSrc, type Catalogo, type MisStickers } from "./club/clubTipos";
+import {
+  ADMIN_ORIGIN, copiarTexto, stickerSrc,
+  type Catalogo, type MensajeClub, type MisStickers,
+} from "./club/clubTipos";
 
 const ADMIN_API = `${ADMIN_ORIGIN}/api/public/club`;
 // Espacios del preview en la tarjeta (la planilla completa muestra los 100).
@@ -308,6 +311,34 @@ export default function TarjetaClub() {
   const [rascando, setRascando] = useState(false);
   const [compartido, setCompartido] = useState(false);
 
+  // Campana de notificaciones: mensajes del negocio + aviso de pendientes.
+  // Los descartes viven en localStorage por token ("quitar y ver más adelante":
+  // la pill se oculta pero todo sigue disponible en la campana).
+  const [mensajes, setMensajes] = useState<MensajeClub[]>([]);
+  const [campana, setCampana] = useState(false);
+  // Inicialización perezosa desde localStorage (los descartes sobreviven
+  // recargas; si el storage está bloqueado, la campana funciona sin memoria).
+  const [notifs, setNotifs] = useState<{ pillEn: number | null; leidos: string[] }>(() => {
+    if (typeof window === "undefined" || !token) return { pillEn: null, leidos: [] };
+    try {
+      const raw = localStorage.getItem(`papela_club_notifs_${token}`);
+      if (raw) return { pillEn: null, leidos: [], ...JSON.parse(raw) };
+    } catch { /* storage bloqueado */ }
+    return { pillEn: null, leidos: [] };
+  });
+
+  function guardaNotifs(n: { pillEn: number | null; leidos: string[] }) {
+    setNotifs(n);
+    try { localStorage.setItem(`papela_club_notifs_${token}`, JSON.stringify(n)); } catch { /* idem */ }
+  }
+
+  useEffect(() => {
+    fetch(`${ADMIN_API}/mensajes`)
+      .then((res) => res.json())
+      .then((json) => { if (Array.isArray(json?.mensajes)) setMensajes(json.mensajes); })
+      .catch(() => {});
+  }, []);
+
   // Editor de personalización (bottom sheet)
   const [editor, setEditor] = useState(false);
   const [draft, setDraft] = useState<Estilo>(ESTILO_DEFAULT);
@@ -459,6 +490,21 @@ export default function TarjetaClub() {
 
   const misStickers = tarjeta?.stickers ?? { obtenidos: 0, pendientes: 0, album: [] };
   const albumTotal = catalogo?.total ?? 100;
+
+  // Pill de aviso: se oculta al descartarla, pero REAPARECE si el número de
+  // pendientes cambia (llegó un sticker nuevo). La campana siempre lo lista.
+  const pillVisible = misStickers.pendientes > 0 && notifs.pillEn !== misStickers.pendientes;
+  const noLeidos =
+    mensajes.filter((m) => !notifs.leidos.includes(m.id)).length +
+    (misStickers.pendientes > 0 ? 1 : 0);
+
+  function abrirCampana() {
+    setCampana(true);
+    // Abrir la campana marca los mensajes como leídos (el aviso de pendientes
+    // no se "lee": sigue contando hasta que se rasquen).
+    const leidos = [...new Set([...notifs.leidos, ...mensajes.map((m) => m.id)])];
+    if (leidos.length !== notifs.leidos.length) guardaNotifs({ ...notifs, leidos });
+  }
   // El pase se pinta con el DRAFT mientras el editor está abierto (preview en vivo).
   const vista = editor ? draft : estilo;
   const tema = TEMAS[vista.tema];
@@ -551,13 +597,48 @@ export default function TarjetaClub() {
         .club-dash { border-color: color-mix(in srgb, var(--ink) 38%, transparent); }
       `}</style>
 
-      {/* Logo → página principal + lema del álbum */}
-      <Link href="/" className="mt-1" aria-label="Ir a Papela Atelier">
-        <Image src="/images/Logo-papela-verde.svg" alt="Papela Atelier" width={80} height={80} className="h-20 w-20" />
-      </Link>
-      <p className="font-serif italic text-sm text-[var(--color-muted)] text-center mt-2 mb-6 max-w-[260px]">
-        Entre más stickers juntes, mejor la recompensa.
-      </p>
+      {/* Header: logo centrado + campana de notificaciones a la derecha */}
+      <div className="w-full max-w-[420px] relative flex justify-center mb-6">
+        <Link href="/" className="mt-1" aria-label="Ir a Papela Atelier">
+          <Image src="/images/Logo-papela-verde.svg" alt="Papela Atelier" width={80} height={80} className="h-20 w-20" />
+        </Link>
+        {estado === "ok" && (
+          <button onClick={abrirCampana} aria-label={`Notificaciones${noLeidos > 0 ? ` (${noLeidos} nuevas)` : ""}`}
+            className="absolute right-0 top-3 w-11 h-11 rounded-full bg-white shadow-[0_2px_10px_rgba(18,83,92,.12)] flex items-center justify-center text-[var(--color-verde)] hover:shadow-[0_4px_14px_rgba(18,83,92,.2)] transition">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.7 21a2 2 0 01-3.4 0" />
+            </svg>
+            {noLeidos > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--color-terracota)] text-white text-[10px] font-bold flex items-center justify-center">
+                {noLeidos}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Aviso de sticker sorpresa — descartable; sigue viva en la campana */}
+      {estado === "ok" && pillVisible && (
+        <div className="mb-5 flex items-center gap-2 rounded-full pl-4 pr-1.5 py-1.5"
+          style={{
+            background: "color-mix(in srgb, var(--color-verde) 10%, #ffffff)",
+            border: "1px solid color-mix(in srgb, var(--color-verde) 25%, transparent)",
+          }}>
+          <span className="text-sm font-semibold text-[var(--color-verde)]">
+            🎁 Tienes {misStickers.pendientes} sticker{misStickers.pendientes !== 1 ? "s" : ""} por revelar
+          </span>
+          <button onClick={() => setRascando(true)}
+            className="text-sm font-bold text-[var(--color-verde)] underline underline-offset-2">
+            Rascar
+          </button>
+          <button onClick={() => guardaNotifs({ ...notifs, pillEn: misStickers.pendientes })}
+            aria-label="Descartar aviso (queda en la campana)"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-verde)]/60 hover:text-[var(--color-verde)] hover:bg-white/70 transition text-sm">
+            ✕
+          </button>
+        </div>
+      )}
 
       {estado === "cargando" && (
         <div className="w-full max-w-[380px] rounded-3xl bg-white/60 border border-[var(--color-border)] animate-pulse h-[560px]" />
@@ -587,6 +668,11 @@ export default function TarjetaClub() {
                 transition: tilt.activo ? "transform .08s linear" : "transform .5s ease",
                 transformStyle: "preserve-3d",
                 filter: "drop-shadow(0 24px 40px rgba(18,83,92,0.28))",
+                // iOS/Safari: overflow-hidden + border-radius pierde las esquinas
+                // cuando un hijo tiene transform animado (el fondo con deriva).
+                // El mask fuerza el recorte redondeado en su propia capa.
+                isolation: "isolate",
+                WebkitMaskImage: "-webkit-radial-gradient(#fff, #000)",
               }}
             >
               {/* Cuerpo de color (header + sellos + miembro) */}
@@ -621,14 +707,6 @@ export default function TarjetaClub() {
                       {misStickers.obtenidos} / {albumTotal}
                     </span>
                   </div>
-
-                  {misStickers.pendientes > 0 && (
-                    <button onClick={() => setRascando(true)}
-                      className="w-full mb-4 rounded-2xl bg-white/90 text-[var(--color-verde)] px-4 py-3 text-sm font-bold flex items-center justify-between shadow-[0_4px_14px_rgba(0,0,0,.18)] hover:bg-white transition">
-                      <span>🎁 Sticker sorpresa por revelar{misStickers.pendientes > 1 ? ` (×${misStickers.pendientes})` : ""}</span>
-                      <span className="underline">Rascar</span>
-                    </button>
-                  )}
 
                   <div className="grid grid-cols-3 gap-y-4 justify-items-center"
                     role="img" aria-label={`${misStickers.obtenidos} de ${albumTotal} stickers`}>
@@ -735,12 +813,59 @@ export default function TarjetaClub() {
             {avisoGuardar && <p className="text-xs text-[var(--color-terracota)]">{avisoGuardar}</p>}
           </div>
 
+          {/* ── Campana: avisos y mensajes del Club ── */}
+          {campana && (
+            <div role="dialog" aria-modal="true" aria-label="Notificaciones del Club"
+              className="fixed inset-0 z-[100002]">
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onClick={() => setCampana(false)} aria-hidden="true" />
+              <div className="absolute right-4 top-16 w-[calc(100%-2rem)] max-w-sm bg-white rounded-3xl shadow-2xl max-h-[70vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white px-5 pt-4 pb-3 flex items-center justify-between border-b border-[var(--color-border)]">
+                  <h2 className="font-serif italic text-lg text-[var(--color-text)]">Avisos del Club</h2>
+                  <button onClick={() => setCampana(false)} aria-label="Cerrar"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-cremita-3)] transition">
+                    ✕
+                  </button>
+                </div>
+                <div className="p-4 space-y-3">
+                  {misStickers.pendientes > 0 && (
+                    <button onClick={() => { setCampana(false); setRascando(true); }}
+                      className="w-full text-left rounded-2xl p-3.5 flex items-center justify-between gap-3 transition hover:opacity-90"
+                      style={{
+                        background: "color-mix(in srgb, var(--color-verde) 10%, #ffffff)",
+                        border: "1px solid color-mix(in srgb, var(--color-verde) 25%, transparent)",
+                      }}>
+                      <span className="text-sm font-semibold text-[var(--color-verde)]">
+                        🎁 Tienes {misStickers.pendientes} sticker{misStickers.pendientes !== 1 ? "s" : ""} sorpresa por revelar
+                      </span>
+                      <span className="text-sm font-bold text-[var(--color-verde)] underline underline-offset-2 flex-shrink-0">Rascar</span>
+                    </button>
+                  )}
+                  {mensajes.map((m) => (
+                    <div key={m.id} className="rounded-2xl border border-[var(--color-border)] p-3.5">
+                      <p className="text-sm font-semibold text-[var(--color-text)]">{m.titulo}</p>
+                      {m.cuerpo && <p className="text-sm text-[var(--color-muted)] mt-1 whitespace-pre-line">{m.cuerpo}</p>}
+                      <p className="text-[11px] text-[var(--color-muted)] mt-2">
+                        {new Date(m.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "long" })}
+                      </p>
+                    </div>
+                  ))}
+                  {misStickers.pendientes === 0 && mensajes.length === 0 && (
+                    <p className="text-sm text-[var(--color-muted)] text-center py-6">
+                      Sin avisos por ahora — aquí verás tus stickers sorpresa y las noticias del Club. ✨
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── Planilla completa (los 100 espacios del álbum) ── */}
           {planilla && catalogo && (
             <PlanillaClub
               token={token}
               catalogo={catalogo}
               album={misStickers.album}
+              detalles={misStickers.detalles}
               obtenidos={misStickers.obtenidos}
               pendientes={misStickers.pendientes}
               onCerrar={() => setPlanilla(false)}

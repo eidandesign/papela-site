@@ -1,33 +1,41 @@
 "use client";
 
-// Planilla completa del Club Creativo: los 100 espacios del álbum estilo
-// coleccionables. Los obtenidos se ven a color (con ×N si hay repetidos y
-// botón Regalar en los duplicados); los definidos-pero-no-obtenidos se ven
-// como silueta misteriosa; los espacios aún sin definir muestran "?".
-// También vive aquí el canje de códigos de regalo de otros miembros.
+// Planilla del Club Creativo — los 100 espacios del álbum, estilo vitrina de
+// coleccionables y SIMPLE: flecha atrás + "Mi planilla Papela" + X/100 y la
+// pura cuadrícula. Obtenidos a color (los raros/legendarios con MARCO
+// HOLOGRÁFICO animado); los definidos-pero-no-obtenidos se ven fantasma (la
+// imagen real muy tenue — se antoja); espacios sin definir muestran "?".
+//
+// Tap en cualquier coleccionable definido → FICHA (bottom sheet) con su
+// historia y, si tiene, su premio descargable — ambos solo para quien YA lo
+// tiene (el servidor ni los manda si no). Regalar duplicados y canjear un
+// código de regalo también viven aquí, discretos.
 
 import { useMemo, useState } from "react";
 import {
-  ADMIN_ORIGIN, RAREZA_LABEL, copiarTexto, stickerSrc,
-  type AlbumItem, type Catalogo, type StickerInfo,
+  ADMIN_ORIGIN, copiarTexto, stickerSrc,
+  type AlbumItem, type Catalogo, type DetalleSticker, type StickerInfo,
 } from "./clubTipos";
 
 export default function PlanillaClub({
-  token, origen = ADMIN_ORIGIN, catalogo, album, obtenidos, pendientes,
+  token, origen = ADMIN_ORIGIN, catalogo, album, detalles = {}, obtenidos, pendientes,
   onCerrar, onRascar, onCambio,
 }: {
   token: string;
   origen?: string;
   catalogo: Catalogo;
   album: AlbumItem[];
+  detalles?: Record<number, DetalleSticker>;
   obtenidos: number;
   pendientes: number;
   onCerrar: () => void;
   onRascar: () => void;   // abre el rascado de un pendiente
   onCambio: () => void;   // refresca la tarjeta (tras reclamar un regalo)
 }) {
+  const [detalle, setDetalle] = useState<StickerInfo | null>(null);
   const [regalo, setRegalo] = useState<{ sticker: StickerInfo; codigo?: string; error?: string; cargando: boolean } | null>(null);
   const [codigoCopiado, setCodigoCopiado] = useState(false);
+  const [canjeAbierto, setCanjeAbierto] = useState(false);
   const [codigo, setCodigo] = useState("");
   const [reclamando, setReclamando] = useState(false);
   const [avisoReclamo, setAvisoReclamo] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -73,51 +81,51 @@ export default function PlanillaClub({
     }
   }
 
+  const mioDetalle = detalle ? porId.get(detalle.id) : undefined;
+  const infoDetalle = detalle ? detalles[detalle.id] : undefined;
+  const especial = (r: StickerInfo["rareza"]) => r !== "comun";
+
   return (
-    <div role="dialog" aria-modal="true" aria-label="Mi planilla de stickers"
+    <div role="dialog" aria-modal="true" aria-label="Mi planilla Papela"
       className="fixed inset-0 z-[100002] bg-[var(--color-bg)] overflow-y-auto">
-      {/* Header sticky */}
-      <div className="sticky top-0 z-10 bg-[var(--color-bg)]/95 backdrop-blur-sm border-b border-[var(--color-border)] px-5 py-4">
-        <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
-          <div>
-            <h2 className="font-serif italic text-2xl text-[var(--color-text)] leading-none">Mi planilla</h2>
-            <p className="text-xs text-[var(--color-muted)] mt-1">
-              {obtenidos} / {catalogo.total} coleccionables
-            </p>
-          </div>
-          <button onClick={onCerrar} aria-label="Cerrar planilla"
-            className="w-9 h-9 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-verde)] transition">
-            ✕
+      <style>{`
+        /* Marco holográfico para raros/legendarios: gradiente pastel girando. */
+        @keyframes club-marco-holo {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .club-marco-holo {
+          background: linear-gradient(120deg, #ffb6d9, #a8e6ff, #fff3b0, #d9c8ff, #ffb6d9);
+          background-size: 300% 300%;
+          animation: club-marco-holo 4s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .club-marco-holo { animation: none; }
+        }
+      `}</style>
+
+      {/* Header — flecha atrás + título centrado */}
+      <div className="sticky top-0 z-10 bg-[var(--color-bg)]/95 backdrop-blur-sm px-5 pt-5 pb-4">
+        <div className="max-w-lg mx-auto relative text-center">
+          <button onClick={onCerrar} aria-label="Volver a mi tarjeta"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-[0_2px_10px_rgba(18,83,92,.12)] flex items-center justify-center text-[var(--color-text)] hover:text-[var(--color-verde)] transition">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
           </button>
+          <h2 className="font-serif italic text-2xl text-[var(--color-text)] leading-none">Mi planilla Papela</h2>
+          <p className="text-sm text-[var(--color-muted)] mt-1.5">{obtenidos} / {catalogo.total}</p>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-5 py-5 space-y-5 pb-16">
-        {/* Pendientes por rascar */}
+      <div className="max-w-lg mx-auto px-5 pt-2 pb-16 space-y-6">
         {pendientes > 0 && (
           <button onClick={onRascar}
-            className="w-full rounded-2xl bg-[var(--color-verde)] text-[var(--color-cremita)] px-5 py-4 text-sm font-semibold flex items-center justify-between hover:opacity-90 transition">
-            <span>🎁 Tienes {pendientes} sticker{pendientes !== 1 ? "s" : ""} por revelar</span>
-            <span className="underline">Rascar</span>
+            className="block mx-auto text-sm font-semibold text-[var(--color-verde)] underline underline-offset-2">
+            🎁 Tienes {pendientes} por revelar — rascar
           </button>
         )}
-
-        {/* Hitos de recompensa */}
-        <div className="flex flex-wrap gap-2">
-          {catalogo.hitos.map((h) => {
-            const logrado = obtenidos >= h.en;
-            return (
-              <span key={h.en}
-                className={`text-[11px] font-semibold rounded-full px-3 py-1.5 border ${
-                  logrado
-                    ? "bg-[var(--color-verde)] text-[var(--color-cremita)] border-[var(--color-verde)]"
-                    : "border-[var(--color-border)] text-[var(--color-muted)] bg-white"
-                }`}>
-                {logrado ? "✓ " : ""}{h.en} stickers → {h.premio}
-              </span>
-            );
-          })}
-        </div>
 
         {/* Los 100 espacios */}
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
@@ -127,80 +135,167 @@ export default function PlanillaClub({
             const mio = sticker ? porId.get(sticker.id) : undefined;
 
             if (sticker && mio) {
-              // Obtenido: a color, burbuja glossy estilo coleccionable
-              return (
-                <div key={orden}
-                  className="relative rounded-2xl bg-white border border-[var(--color-border)] p-2 pt-3 text-center shadow-[inset_0_2px_6px_rgba(255,255,255,.9),0_2px_8px_rgba(18,83,92,.08)]">
+              const tile = (
+                <button onClick={() => setDetalle(sticker)}
+                  className="relative w-full h-full rounded-2xl bg-white p-2 pt-3 text-center shadow-[0_2px_8px_rgba(18,83,92,.07)] hover:shadow-[0_4px_14px_rgba(18,83,92,.14)] transition">
                   {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
                   <img src={stickerSrc(origen, sticker)} alt={sticker.nombre}
                     className="w-full aspect-square object-contain" loading="lazy" draggable={false} />
-                  <p className="text-[10px] font-semibold text-[var(--color-text)] truncate mt-1">{sticker.nombre}</p>
-                  <p className="text-[9px] text-[var(--color-muted)]">{RAREZA_LABEL[sticker.rareza]}</p>
+                  <p className="text-[10px] font-semibold text-[var(--color-text)] truncate mt-1 mb-0.5">{sticker.nombre}</p>
                   {mio.cantidad > 1 && (
                     <span className="absolute top-1.5 right-1.5 text-[10px] font-bold bg-[var(--color-terracota)] text-white rounded-full px-1.5 py-0.5">
                       ×{mio.cantidad}
                     </span>
                   )}
-                  {mio.transferible && (
-                    <button onClick={() => pedirCodigo(sticker)}
-                      className="mt-1 text-[10px] font-semibold text-[var(--color-verde)] underline">
-                      Regalar
-                    </button>
-                  )}
-                </div>
+                </button>
+              );
+              // Los especiales llevan marco holográfico animado.
+              return especial(sticker.rareza) ? (
+                <div key={orden} className="club-marco-holo rounded-[18px] p-[2.5px]">{tile}</div>
+              ) : (
+                <div key={orden}>{tile}</div>
+              );
+            }
+
+            if (sticker) {
+              // Definido pero no obtenido: fantasma (la imagen real, tenue).
+              return (
+                <button key={orden} onClick={() => setDetalle(sticker)}
+                  className="rounded-2xl border-[1.5px] border-dashed border-[var(--color-border)] bg-white/60 p-2 pt-3 text-center hover:border-[var(--color-verde)]/40 transition">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
+                  <img src={stickerSrc(origen, sticker)} alt=""
+                    className="w-full aspect-square object-contain opacity-[0.18]"
+                    loading="lazy" draggable={false} aria-hidden="true" />
+                  <p className="text-[10px] font-semibold text-[var(--color-muted)] mt-1 mb-0.5">N.º {orden}</p>
+                </button>
               );
             }
 
             return (
               <div key={orden}
-                className="rounded-2xl border-[1.5px] border-dashed border-[var(--color-border)] bg-white/50 p-2 pt-3 text-center flex flex-col items-center justify-center aspect-[3/4]">
-                {sticker ? (
-                  // Definido pero no obtenido: silueta misteriosa
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
-                    <img src={stickerSrc(origen, sticker)} alt=""
-                      className="w-3/4 aspect-square object-contain opacity-20"
-                      style={{ filter: "brightness(0)" }} loading="lazy" draggable={false} aria-hidden="true" />
-                    <p className="text-[10px] font-semibold text-[var(--color-muted)] mt-1">N.º {orden}</p>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-2xl text-[var(--color-muted)]/40" aria-hidden="true">?</span>
-                    <p className="text-[10px] text-[var(--color-muted)]/60 mt-1">N.º {orden}</p>
-                  </>
-                )}
+                className="rounded-2xl border-[1.5px] border-dashed border-[var(--color-border)] bg-white/40 p-2 text-center flex flex-col items-center justify-center aspect-[5/6]">
+                <span className="text-2xl text-[var(--color-muted)]/35" aria-hidden="true">?</span>
+                <p className="text-[10px] text-[var(--color-muted)]/50 mt-1">N.º {orden}</p>
               </div>
             );
           })}
         </div>
 
-        {/* Canjear un código de regalo */}
-        <div className="rounded-2xl bg-white border border-[var(--color-border)] p-4 space-y-2.5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)]">
-            ¿Te regalaron un sticker?
-          </p>
-          <div className="flex gap-2">
-            <input
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              placeholder="Pega aquí el código"
-              className="flex-1 min-w-0 rounded-xl border border-[var(--color-border)] px-3.5 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-verde)]"
-              aria-label="Código de regalo"
-            />
-            <button onClick={reclamar} disabled={reclamando || !codigo.trim()}
-              className="px-4 py-2.5 rounded-xl bg-[var(--color-verde)] text-sm font-semibold text-[var(--color-cremita)] disabled:opacity-40 transition">
-              {reclamando ? "…" : "Canjear"}
+        {/* Canjear un código de regalo — discreto */}
+        <div className="text-center space-y-3">
+          {!canjeAbierto ? (
+            <button onClick={() => setCanjeAbierto(true)}
+              className="text-xs text-[var(--color-muted)] underline underline-offset-2">
+              ¿Te regalaron un código?
             </button>
-          </div>
-          {avisoReclamo && (
-            <p className={`text-xs ${avisoReclamo.ok ? "text-[var(--color-verde)]" : "text-[var(--color-terracota)]"}`}>
-              {avisoReclamo.msg}
-            </p>
+          ) : (
+            <div className="max-w-xs mx-auto space-y-2">
+              <div className="flex gap-2">
+                <input
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  placeholder="Pega aquí el código"
+                  className="flex-1 min-w-0 rounded-xl border border-[var(--color-border)] px-3.5 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-verde)]"
+                  aria-label="Código de regalo"
+                />
+                <button onClick={reclamar} disabled={reclamando || !codigo.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-[var(--color-verde)] text-sm font-semibold text-[var(--color-cremita)] disabled:opacity-40 transition">
+                  {reclamando ? "…" : "Canjear"}
+                </button>
+              </div>
+              {avisoReclamo && (
+                <p className={`text-xs ${avisoReclamo.ok ? "text-[var(--color-verde)]" : "text-[var(--color-terracota)]"}`}>
+                  {avisoReclamo.msg}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>
 
-      {/* Modal de regalo: código + compartir */}
+      {/* ── Ficha del coleccionable (bottom sheet) ── */}
+      {detalle && (
+        <div role="dialog" aria-modal="true" aria-label={detalle.nombre}
+          className="fixed inset-0 z-[100003] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setDetalle(null)} aria-hidden="true" />
+          <div className="relative w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85vh] overflow-y-auto p-6 text-center">
+            <button onClick={() => setDetalle(null)} aria-label="Cerrar"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-cremita-3)] transition">
+              ✕
+            </button>
+
+            {mioDetalle ? (
+              <>
+                {especial(detalle.rareza) ? (
+                  <div className="club-marco-holo rounded-[26px] p-[3px] w-40 mx-auto">
+                    <div className="bg-white rounded-3xl p-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
+                      <img src={stickerSrc(origen, detalle)} alt={detalle.nombre}
+                        className="w-full aspect-square object-contain" draggable={false} />
+                    </div>
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- asset del admin
+                  <img src={stickerSrc(origen, detalle)} alt={detalle.nombre}
+                    className="w-40 aspect-square object-contain mx-auto" draggable={false} />
+                )}
+
+                <h3 className="font-serif italic text-2xl text-[var(--color-text)] mt-3">{detalle.nombre}</h3>
+                {especial(detalle.rareza) && (
+                  <span className="inline-block mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)]">
+                    {detalle.rareza === "legendario" ? "Legendario ★" : "Raro ✦"}
+                  </span>
+                )}
+                {(mioDetalle.cantidad ?? 1) > 1 && (
+                  <p className="text-xs text-[var(--color-muted)] mt-1">Lo tienes ×{mioDetalle.cantidad}</p>
+                )}
+
+                <p className="text-sm text-[var(--color-muted)] leading-relaxed mt-3 whitespace-pre-line">
+                  {infoDetalle?.historia || "Su historia se escribirá muy pronto… ✍️"}
+                </p>
+
+                {infoDetalle?.premio && (
+                  <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-cremita-3)] p-4 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)]">
+                      🎁 Este sticker trae premio
+                    </p>
+                    <p className="text-sm font-semibold text-[var(--color-text)]">{infoDetalle.premio.titulo}</p>
+                    {infoDetalle.premio.descripcion && (
+                      <p className="text-xs text-[var(--color-muted)]">{infoDetalle.premio.descripcion}</p>
+                    )}
+                    <a href={infoDetalle.premio.url} target="_blank" rel="noopener noreferrer"
+                      className="inline-block mt-1 px-5 py-2.5 rounded-full bg-[var(--color-verde)] text-xs font-semibold text-[var(--color-cremita)] hover:opacity-90 transition">
+                      Descargar
+                    </a>
+                  </div>
+                )}
+
+                {mioDetalle.transferible && (
+                  <button onClick={() => { const s = detalle; setDetalle(null); pedirCodigo(s); }}
+                    className="mt-4 text-xs font-semibold text-[var(--color-verde)] underline underline-offset-2">
+                    Regalar mi repetido a otro miembro
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="relative w-40 aspect-square mx-auto">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
+                  <img src={stickerSrc(origen, detalle)} alt=""
+                    className="w-full h-full object-contain opacity-[0.16]" draggable={false} aria-hidden="true" />
+                  <span className="absolute inset-0 flex items-center justify-center text-4xl text-[var(--color-muted)]/50" aria-hidden="true">?</span>
+                </div>
+                <h3 className="font-serif italic text-2xl text-[var(--color-text)] mt-3">N.º {detalle.orden}</h3>
+                <p className="text-sm text-[var(--color-muted)] mt-2">
+                  Por descubrir — consíguelo en tu próxima visita a Papela Atelier para conocer su historia.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de regalo: código + compartir ── */}
       {regalo && (
         <div role="dialog" aria-modal="true" aria-label={`Regalar ${regalo.sticker.nombre}`}
           className="fixed inset-0 z-[100004] flex items-center justify-center p-6">

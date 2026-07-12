@@ -22,9 +22,21 @@ export type Catalogo = {
   stickers: StickerInfo[];
 };
 
-// Lo que el miembro tiene (del GET de su tarjeta).
+// Lo que el miembro tiene (del GET de su tarjeta). `detalles` trae la
+// historia y el premio SOLO de los stickers ya revelados (el catálogo
+// público no los expone).
 export type AlbumItem = { id: number; cantidad: number; transferible: boolean };
-export type MisStickers = { obtenidos: number; pendientes: number; album: AlbumItem[] };
+export type PremioSticker = { titulo: string; url: string; descripcion: string | null };
+export type DetalleSticker = { historia: string | null; premio: PremioSticker | null };
+export type MisStickers = {
+  obtenidos: number;
+  pendientes: number;
+  album: AlbumItem[];
+  detalles?: Record<number, DetalleSticker>;
+};
+
+// Mensajes del negocio (campana de la tarjeta).
+export type MensajeClub = { id: string; titulo: string; cuerpo: string; created_at: string };
 
 export const RAREZA_LABEL: Record<Rareza, string> = {
   comun: "Común",
