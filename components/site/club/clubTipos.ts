@@ -35,3 +35,25 @@ export const RAREZA_LABEL: Record<Rareza, string> = {
 export function stickerSrc(origen: string, s: StickerInfo) {
   return s.imagen_url.startsWith("http") ? s.imagen_url : `${origen}${s.imagen_url}`;
 }
+
+// Copiar al portapapeles con respaldo: el Clipboard API falla silencioso en
+// Safari/webviews o sin permiso; si falla, cae a textarea + execCommand.
+// Devuelve si realmente se copió (para mostrar el "✓" solo cuando sí).
+export async function copiarTexto(texto: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = texto;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+}

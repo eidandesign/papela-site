@@ -8,7 +8,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  ADMIN_ORIGIN, RAREZA_LABEL, stickerSrc,
+  ADMIN_ORIGIN, RAREZA_LABEL, copiarTexto, stickerSrc,
   type AlbumItem, type Catalogo, type StickerInfo,
 } from "./clubTipos";
 
@@ -27,6 +27,7 @@ export default function PlanillaClub({
   onCambio: () => void;   // refresca la tarjeta (tras reclamar un regalo)
 }) {
   const [regalo, setRegalo] = useState<{ sticker: StickerInfo; codigo?: string; error?: string; cargando: boolean } | null>(null);
+  const [codigoCopiado, setCodigoCopiado] = useState(false);
   const [codigo, setCodigo] = useState("");
   const [reclamando, setReclamando] = useState(false);
   const [avisoReclamo, setAvisoReclamo] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -222,9 +223,14 @@ export default function PlanillaClub({
                 </p>
                 <div className="flex gap-2 justify-center">
                   <button
-                    onClick={() => navigator.clipboard.writeText(regalo.codigo!)}
+                    onClick={async () => {
+                      if (await copiarTexto(regalo.codigo!)) {
+                        setCodigoCopiado(true);
+                        setTimeout(() => setCodigoCopiado(false), 2000);
+                      }
+                    }}
                     className="px-4 py-2.5 rounded-full border-2 border-[var(--color-border)] text-xs font-semibold text-[var(--color-text)] hover:border-[var(--color-verde)] transition">
-                    Copiar
+                    {codigoCopiado ? "✓ Copiado" : "Copiar"}
                   </button>
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(`🎁 Te regalo mi sticker repetido "${regalo.sticker.nombre}" del Club Creativo Papela. Canjea este código en tu planilla: ${regalo.codigo}`)}`}

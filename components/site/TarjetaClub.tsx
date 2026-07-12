@@ -20,7 +20,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PlanillaClub from "./club/PlanillaClub";
 import RascaSticker from "./club/RascaSticker";
-import { ADMIN_ORIGIN, stickerSrc, type Catalogo, type MisStickers } from "./club/clubTipos";
+import { ADMIN_ORIGIN, copiarTexto, stickerSrc, type Catalogo, type MisStickers } from "./club/clubTipos";
 
 const ADMIN_API = `${ADMIN_ORIGIN}/api/public/club`;
 // Espacios del preview en la tarjeta (la planilla completa muestra los 100).
@@ -464,15 +464,13 @@ export default function TarjetaClub() {
   const tema = TEMAS[vista.tema];
 
   // Compartir la tarjeta (elección del miembro): share nativo o copiar link.
-  function compartir() {
+  async function compartir() {
     const data = { title: "Mi tarjeta del Club Creativo Papela", url: window.location.href };
     if (navigator.share) {
       navigator.share(data).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        setCompartido(true);
-        setTimeout(() => setCompartido(false), 2000);
-      });
+    } else if (await copiarTexto(window.location.href)) {
+      setCompartido(true);
+      setTimeout(() => setCompartido(false), 2000);
     }
   }
 
