@@ -4,83 +4,238 @@
 // Los DATOS viven en el admin (admin.papela-atelier.com); esta vista los lee
 // de su API pública y solo los presenta. Pase VERTICAL estilo wallet en una
 // sola tarjeta: header, sellos tipo sticker, miembro y talón con nº de socio
-// + QR. El miembro puede PERSONALIZAR su tarjeta (tema, textura, holo y
+// + QR. El miembro puede PERSONALIZAR su tarjeta (fondo, textura, holo y
 // "cositas"); la elección se guarda vía PATCH al mismo endpoint.
 //
-// Los gradientes/texturas de los temas son DECORATIVOS (material del pase);
-// la estructura de la página usa los tokens del sitio.
+// FONDOS en dos grupos: colores de marca (tinta blanca) y acabados —
+// holográficos pastel y papeles con grano (tinta oscura). Cada fondo define
+// su tinta (`ink`) y toda la tipografía/bordes del pase la heredan vía la
+// variable CSS --ink (clases .club-ink-* con color-mix), para que el texto
+// siempre contraste. Los gradientes/texturas son DECORATIVOS (material del
+// pase); la estructura de la página usa los tokens del sitio.
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import PlanillaClub from "./club/PlanillaClub";
+import RascaSticker from "./club/RascaSticker";
+import { ADMIN_ORIGIN, stickerSrc, type Catalogo, type MisStickers } from "./club/clubTipos";
 
-const ADMIN_API = "https://admin.papela-atelier.com/api/public/club";
-const MAX_SELLOS = 10;
-
-// Colección de stickers Papela: cada sello revela una ilustración distinta.
-const STICKERS = ["✂️", "🖌️", "🌷", "💌", "🧵", "🎨", "📖", "🎀", "✏️", "✨"];
-// Rotación fija por posición (look de sticker pegado a mano, estable entre renders).
-const GIROS = [-6, 4, -3, 7, -8, 5, -4, 8, -5, 3];
+const ADMIN_API = `${ADMIN_ORIGIN}/api/public/club`;
+// Espacios del preview en la tarjeta (la planilla completa muestra los 100).
+const PREVIEW_SLOTS = 6;
 
 // ── Personalización (whitelist — debe coincidir con el API del admin) ──
 
-type TemaId = "verde" | "rosa" | "terra" | "lavanda" | "cielo" | "noche";
-type TexturaId = "ninguna" | "puntos" | "rayas" | "cuadricula" | "grano";
-type Estilo = { tema: TemaId; textura: TexturaId; holo: boolean; charms: string[] };
+type TemaId =
+  | "verde" | "rosa" | "terra" | "lavanda" | "cielo" | "noche"
+  | "limon" | "petalo" | "atardecer" | "algodon" | "menta"
+  | "holo" | "aurora" | "prisma" | "papel" | "kraft";
+type TexturaId = "ninguna" | "puntos" | "rayas" | "cuadricula" | "rombos" | "confeti" | "grano";
+// Cosita decorativa: emoji + posición (%) sobre el cuerpo del pase. Sin x/y
+// usa la esquina default de su índice; el miembro la acomoda arrastrándola.
+type Charm = { e: string; x?: number; y?: number };
+type Estilo = { tema: TemaId; textura: TexturaId; holo: boolean; charms: Charm[] };
 
 const ESTILO_DEFAULT: Estilo = { tema: "verde", textura: "ninguna", holo: true, charms: [] };
 
-const TEMAS: Record<TemaId, { nombre: string; grad: string }> = {
-  verde:   { nombre: "Verde Papela", grad: "linear-gradient(165deg, #0d3f47 0%, #12535C 45%, #1a6a75 100%)" },
-  rosa:    { nombre: "Rosa",         grad: "linear-gradient(165deg, #8f1d4e 0%, #c2255c 45%, #e0578d 100%)" },
-  terra:   { nombre: "Terra",        grad: "linear-gradient(165deg, #8a4629 0%, #C4704A 45%, #d98d63 100%)" },
-  lavanda: { nombre: "Lavanda",      grad: "linear-gradient(165deg, #4a3d80 0%, #6f5bb5 45%, #9b8ad6 100%)" },
-  cielo:   { nombre: "Cielo",        grad: "linear-gradient(165deg, #1d4e79 0%, #2e6ea3 45%, #5ba0cf 100%)" },
-  noche:   { nombre: "Noche",        grad: "linear-gradient(165deg, #17181c 0%, #2a2c33 45%, #3d4049 100%)" },
+// Grano de papel: ruido SVG desaturado y tenue (data URI, sin assets externos).
+const PAPEL_URI =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)' opacity='0.16'/%3E%3C/svg%3E\")";
+
+type Tema = {
+  nombre: string;
+  grad: string; // background shorthand (puede llevar varias capas)
+  ink: string;  // tinta del texto/bordes sobre este fondo
+  claro: boolean; // fondo claro → ajusta el blend del acabado holográfico
+  grupo: "color" | "aura" | "acabado";
 };
 
-// Ruido SVG para la textura "grano" (data URI, sin assets externos).
+const TEMAS: Record<TemaId, Tema> = {
+  // ── Colores de marca (tinta blanca) ──
+  verde:   { nombre: "Verde Papela", grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #0d3f47 0%, #12535C 45%, #1a6a75 100%)" },
+  rosa:    { nombre: "Rosa",         grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #8f1d4e 0%, #c2255c 45%, #e0578d 100%)" },
+  terra:   { nombre: "Terra",        grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #8a4629 0%, #C4704A 45%, #d98d63 100%)" },
+  lavanda: { nombre: "Lavanda",      grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #4a3d80 0%, #6f5bb5 45%, #9b8ad6 100%)" },
+  cielo:   { nombre: "Cielo",        grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #1d4e79 0%, #2e6ea3 45%, #5ba0cf 100%)" },
+  noche:   { nombre: "Noche",        grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #17181c 0%, #2a2c33 45%, #3d4049 100%)" },
+
+  // ── Auras (tinta oscura) — manchas de color difusas y vivas, estilo aura
+  // pastel (referencia ubu gohan): grandes radiales que se funden entre sí.
+  limon: {
+    nombre: "Limón", grupo: "aura", ink: "#403c3c", claro: true,
+    grad:
+      "radial-gradient(120% 90% at 18% 12%, rgba(255,232,90,.95), transparent 60%), " +
+      "radial-gradient(110% 90% at 88% 35%, rgba(126,224,138,.9), transparent 60%), " +
+      "radial-gradient(130% 110% at 55% 95%, rgba(91,182,232,.9), transparent 60%), " +
+      "linear-gradient(160deg, #fff3b8 0%, #d6f0e2 100%)",
+  },
+  petalo: {
+    nombre: "Pétalo", grupo: "aura", ink: "#403c3c", claro: true,
+    grad:
+      "radial-gradient(120% 90% at 20% 18%, rgba(255,105,180,.85), transparent 60%), " +
+      "radial-gradient(100% 80% at 75% 15%, rgba(255,190,235,.9), transparent 55%), " +
+      "radial-gradient(120% 100% at 85% 80%, rgba(150,160,255,.85), transparent 60%), " +
+      "linear-gradient(160deg, #ffc9e5 0%, #d9d4ff 100%)",
+  },
+  atardecer: {
+    nombre: "Atardecer", grupo: "aura", ink: "#403c3c", claro: true,
+    grad:
+      "radial-gradient(120% 90% at 22% 20%, rgba(255,150,64,.9), transparent 60%), " +
+      "radial-gradient(120% 90% at 80% 45%, rgba(255,99,146,.85), transparent 60%), " +
+      "radial-gradient(130% 110% at 60% 95%, rgba(96,150,235,.85), transparent 60%), " +
+      "linear-gradient(160deg, #ffd9a8 0%, #cfe0ff 100%)",
+  },
+  algodon: {
+    nombre: "Algodón", grupo: "aura", ink: "#403c3c", claro: true,
+    grad:
+      "radial-gradient(110% 90% at 18% 22%, rgba(150,196,255,.8), transparent 60%), " +
+      "radial-gradient(110% 90% at 84% 24%, rgba(255,182,220,.85), transparent 60%), " +
+      "radial-gradient(120% 110% at 55% 92%, rgba(255,236,150,.85), transparent 60%), " +
+      "linear-gradient(160deg, #e4ecff 0%, #ffeeda 100%)",
+  },
+  menta: {
+    nombre: "Menta", grupo: "aura", ink: "#403c3c", claro: true,
+    grad:
+      "radial-gradient(120% 90% at 20% 18%, rgba(110,226,180,.9), transparent 60%), " +
+      "radial-gradient(120% 100% at 85% 30%, rgba(255,240,120,.85), transparent 58%), " +
+      "radial-gradient(130% 110% at 60% 95%, rgba(88,196,235,.85), transparent 60%), " +
+      "linear-gradient(160deg, #dff7e8 0%, #d2f0fa 100%)",
+  },
+
+  // ── Acabados (tinta oscura) ──
+  // Seda holográfica: manchas pastel iridiscentes que se funden entre sí.
+  holo: {
+    nombre: "Holograma", grupo: "acabado", ink: "#403c3c", claro: true,
+    grad:
+      "radial-gradient(120% 90% at 15% 20%, rgba(255,170,214,.85), transparent 55%), " +
+      "radial-gradient(110% 85% at 85% 12%, rgba(150,214,255,.85), transparent 55%), " +
+      "radial-gradient(130% 100% at 82% 85%, rgba(255,214,160,.8), transparent 55%), " +
+      "radial-gradient(110% 95% at 18% 82%, rgba(186,170,255,.85), transparent 55%), " +
+      "linear-gradient(160deg, #ffdcee 0%, #dcecff 45%, #ffedd2 100%)",
+  },
+  // Remolino pastel con brillitos (dos capas de destellos + giro cónico suave).
+  aurora: {
+    nombre: "Aurora", grupo: "acabado", ink: "#403c3c", claro: true,
+    grad:
+      "radial-gradient(rgba(255,255,255,.9) 1px, transparent 1.6px) 8px 12px / 90px 70px, " +
+      "radial-gradient(rgba(255,255,255,.75) 1.3px, transparent 2px) 48px 44px / 110px 90px, " +
+      "radial-gradient(90% 70% at 50% 45%, rgba(255,255,255,.35), transparent 70%), " +
+      "conic-gradient(from 220deg at 55% 40%, #ffd3e4, #ffe4cf 18%, #d9f2e4 36%, #cfe3ff 55%, #e6d7ff 75%, #ffd3e4 100%)",
+  },
+  // Facetas prismáticas: dos abanicos cónicos pastel que se cruzan.
+  prisma: {
+    nombre: "Prisma", grupo: "acabado", ink: "#403c3c", claro: true,
+    grad:
+      "repeating-conic-gradient(from 25deg at 28% 32%, rgba(255,214,235,.75) 0 11%, rgba(214,232,255,.75) 11% 20%, rgba(255,242,214,.75) 20% 32%, rgba(219,246,232,.75) 32% 43%, rgba(233,221,255,.75) 43% 54%), " +
+      "repeating-conic-gradient(from 190deg at 72% 70%, #ffe9f4 0 14%, #e7f0ff 14% 26%, #fff6e3 26% 40%, #eaf8f0 40% 52%, #f0e8ff 52% 64%)",
+  },
+  // Papeles con grano (textura tradicional de papelería).
+  papel: {
+    nombre: "Papel", grupo: "acabado", ink: "#664917", claro: true,
+    grad: `${PAPEL_URI}, linear-gradient(170deg, #f7eeda 0%, #f0e3c6 100%)`,
+  },
+  kraft: {
+    nombre: "Kraft", grupo: "acabado", ink: "#3f2d14", claro: true,
+    grad: `${PAPEL_URI}, linear-gradient(170deg, #cba576 0%, #b98f5c 100%)`,
+  },
+};
+
+const GRUPOS_TEMA: { titulo: string; grupo: Tema["grupo"] }[] = [
+  { titulo: "Color", grupo: "color" },
+  { titulo: "Auras", grupo: "aura" },
+  { titulo: "Acabados", grupo: "acabado" },
+];
+
+// Ruido SVG para la textura "grano" (con color, se mezcla en overlay).
 const GRANO_URI =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E\")";
 
-const TEXTURAS: Record<TexturaId, { nombre: string; style: React.CSSProperties | null }> = {
+// Patrones dibujados con currentColor (la capa hereda --ink), así se ven
+// tanto en fondos oscuros como claros. `opacidad` calibra cada patrón.
+type Textura = { nombre: string; style: React.CSSProperties | null; opacidad?: number; overlay?: boolean };
+
+const TEXTURAS: Record<TexturaId, Textura> = {
   ninguna: { nombre: "Lisa", style: null },
   puntos: {
-    nombre: "Puntitos",
+    nombre: "Puntitos", opacidad: 0.35,
     style: {
-      backgroundImage: "radial-gradient(rgba(255,255,255,.3) 1.2px, transparent 1.7px)",
+      backgroundImage: "radial-gradient(currentColor 1.2px, transparent 1.7px)",
       backgroundSize: "16px 16px",
     },
   },
   rayas: {
-    nombre: "Rayitas",
+    nombre: "Rayitas", opacidad: 0.16,
     style: {
-      backgroundImage: "repeating-linear-gradient(45deg, rgba(255,255,255,.14) 0 10px, transparent 10px 26px)",
+      backgroundImage: "repeating-linear-gradient(45deg, currentColor 0 10px, transparent 10px 26px)",
     },
   },
   cuadricula: {
-    nombre: "Cuadrícula",
+    nombre: "Cuadrícula", opacidad: 0.22,
     style: {
       backgroundImage:
-        "linear-gradient(rgba(255,255,255,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.14) 1px, transparent 1px)",
+        "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)",
       backgroundSize: "22px 22px",
     },
   },
-  grano: { nombre: "Grano", style: { backgroundImage: GRANO_URI } },
+  rombos: {
+    nombre: "Rombos", opacidad: 0.25,
+    style: {
+      backgroundImage:
+        "repeating-linear-gradient(45deg, currentColor 0 1.5px, transparent 1.5px 18px), repeating-linear-gradient(-45deg, currentColor 0 1.5px, transparent 1.5px 18px)",
+    },
+  },
+  confeti: {
+    nombre: "Confeti", opacidad: 0.4,
+    style: {
+      backgroundImage:
+        "radial-gradient(currentColor 1.6px, transparent 2.2px), radial-gradient(currentColor 1px, transparent 1.5px), radial-gradient(currentColor 2.2px, transparent 2.8px)",
+      backgroundSize: "26px 26px, 26px 26px, 34px 34px",
+      backgroundPosition: "0 0, 13px 9px, 7px 21px",
+    },
+  },
+  grano: { nombre: "Grano", opacidad: 0.9, overlay: true, style: { backgroundImage: GRANO_URI } },
 };
 
 const CHARMS = ["🌷", "🎀", "✨", "🧵", "🍓", "🌙", "🦋", "🍰", "🐚", "🍒"];
 const MAX_CHARMS = 4;
-// Posiciones fijas para las cositas (esquinas de la zona de sellos).
-const CHARM_POS: React.CSSProperties[] = [
-  { top: "4%", left: "3%", transform: "rotate(-14deg)" },
-  { top: "6%", right: "3%", transform: "rotate(10deg)" },
-  { bottom: "5%", left: "4%", transform: "rotate(8deg)" },
-  { bottom: "7%", right: "4%", transform: "rotate(-10deg)" },
+// Posiciones default al agregar una cosita (esquinas de la zona de sellos,
+// en % del cuerpo del pase) y giro fijo por índice (look pegado a mano).
+const CHARM_POS_DEFAULT = [
+  { x: 8, y: 34 }, { x: 92, y: 32 }, { x: 9, y: 58 }, { x: 91, y: 60 },
 ];
+const CHARM_GIROS = [-14, 10, 8, -10];
 
-type Tarjeta = { nombre: string; sellos: number; desde: string; numero: string; estilo: Estilo };
+// El API puede devolver charms como strings (formato viejo) u objetos {e,x,y}.
+function normalizaCharms(v: unknown): Charm[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .flatMap((c): Charm[] => {
+      if (typeof c === "string") return CHARMS.includes(c) ? [{ e: c }] : [];
+      if (c && typeof c === "object") {
+        const o = c as { e?: unknown; x?: unknown; y?: unknown };
+        if (typeof o.e === "string" && CHARMS.includes(o.e)) {
+          return [{
+            e: o.e,
+            x: typeof o.x === "number" ? o.x : undefined,
+            y: typeof o.y === "number" ? o.y : undefined,
+          }];
+        }
+      }
+      return [];
+    })
+    .slice(0, MAX_CHARMS);
+}
+
+type Tarjeta = {
+  nombre: string;
+  sellos: number; // deprecated (sistema viejo)
+  desde: string;
+  numero: string;
+  estilo: Estilo;
+  stickers?: MisStickers;
+};
 
 function fechaLarga(iso: string) {
   const d = new Date(iso);
@@ -104,12 +259,22 @@ function useReducedMotion() {
 
 // Capas decorativas del pase: textura + acabado holográfico.
 function DecorBloque({ estilo, reducida, animada }: { estilo: Estilo; reducida: boolean; animada?: boolean }) {
-  const textura = TEXTURAS[estilo.textura].style;
+  const textura = TEXTURAS[estilo.textura];
+  const claro = TEMAS[estilo.tema].claro;
   return (
     <>
-      {textura && (
+      {/* Grano fino SIEMPRE presente sobre el fondo (acabado de impresión
+          tipo póster riso/grainy gradient, ref. Baugasm/MANS). */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: GRANO_URI, mixBlendMode: "overlay", opacity: 0.45 }} />
+      {textura.style && (
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
-          style={{ ...textura, mixBlendMode: "overlay", opacity: 0.9 }} />
+          style={{
+            ...textura.style,
+            color: "var(--ink)",
+            opacity: textura.opacidad,
+            ...(textura.overlay ? { mixBlendMode: "overlay" as const } : {}),
+          }} />
       )}
       {estilo.holo && (
         <div
@@ -119,8 +284,9 @@ function DecorBloque({ estilo, reducida, animada }: { estilo: Estilo; reducida: 
             background:
               "linear-gradient(115deg, transparent 12%, rgba(255,119,168,.34) 30%, rgba(120,220,232,.38) 42%, rgba(255,232,150,.3) 54%, rgba(168,140,255,.34) 66%, transparent 84%)",
             backgroundSize: "250% 250%",
-            mixBlendMode: "color-dodge",
-            opacity: 0.8,
+            // color-dodge quema los fondos claros; ahí el brillo va en overlay suave.
+            mixBlendMode: claro ? "overlay" : "color-dodge",
+            opacity: claro ? 0.55 : 0.8,
           }}
         />
       )}
@@ -136,28 +302,54 @@ export default function TarjetaClub() {
   const [qr, setQr] = useState<string | null>(null);
   const reducida = useReducedMotion();
 
+  // Álbum de coleccionables: catálogo público (cacheado en CDN) + overlays.
+  const [catalogo, setCatalogo] = useState<Catalogo | null>(null);
+  const [planilla, setPlanilla] = useState(false);
+  const [rascando, setRascando] = useState(false);
+  const [compartido, setCompartido] = useState(false);
+
   // Editor de personalización (bottom sheet)
   const [editor, setEditor] = useState(false);
   const [draft, setDraft] = useState<Estilo>(ESTILO_DEFAULT);
-  const [guardando, setGuardando] = useState(false);
-  const [errorGuardar, setErrorGuardar] = useState<string | null>(null);
+  // Aviso si el guardado en segundo plano falla (el modal cierra al instante).
+  const [avisoGuardar, setAvisoGuardar] = useState<string | null>(null);
 
   // Tilt 3D: rx/ry en grados, px/py = posición del puntero (%) para el brillo.
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50, activo: false });
 
-  useEffect(() => {
+  // Arrastre de cositas: índice en drag + espejo del estilo para persistir al soltar.
+  const cuerpoRef = useRef<HTMLDivElement>(null);
+  const dragIdx = useRef<number | null>(null);
+  const estiloRef = useRef(estilo);
+  useEffect(() => { estiloRef.current = estilo; }, [estilo]);
+
+  const cargarTarjeta = useCallback(() => {
     if (!token) return;
     fetch(`${ADMIN_API}/${token}`)
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error);
         setTarjeta(json);
-        setEstilo(json.estilo ?? ESTILO_DEFAULT);
+        setEstilo(
+          json.estilo
+            ? { ...ESTILO_DEFAULT, ...json.estilo, charms: normalizaCharms(json.estilo.charms) }
+            : ESTILO_DEFAULT,
+        );
         setEstado("ok");
       })
       .catch(() => setEstado("error"));
   }, [token]);
+
+  useEffect(() => { cargarTarjeta(); }, [cargarTarjeta]);
+
+  // Catálogo del álbum (sin datos personales, cacheable).
+  useEffect(() => {
+    fetch(`${ADMIN_API}/stickers`)
+      .then((res) => res.json())
+      .then((json) => { if (json?.stickers) setCatalogo(json); })
+      .catch(() => {});
+  }, []);
 
   // QR con el link privado del pase (client-side, sin backend).
   useEffect(() => {
@@ -175,7 +367,8 @@ export default function TarjetaClub() {
   }, [estado]);
 
   function onMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (reducida || !cardRef.current) return;
+    // Sin tilt mientras se arrastra una cosita (mueve el plano bajo el cursor).
+    if (reducida || !cardRef.current || dragIdx.current !== null) return;
     const r = cardRef.current.getBoundingClientRect();
     const x = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
     const y = Math.min(Math.max((e.clientY - r.top) / r.height, 0), 1);
@@ -188,66 +381,185 @@ export default function TarjetaClub() {
 
   function abrirEditor() {
     setDraft(estilo);
-    setErrorGuardar(null);
+    setAvisoGuardar(null);
     setEditor(true);
   }
 
-  async function guardarEstilo() {
-    setGuardando(true);
-    setErrorGuardar(null);
-    try {
-      const res = await fetch(`${ADMIN_API}/${token}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estilo: draft }),
+  // Persiste el estilo en segundo plano; si falla, avisa bajo la tarjeta.
+  function patchEstilo(nuevo: Estilo) {
+    fetch(`${ADMIN_API}/${token}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estilo: nuevo }),
+    })
+      .then((res) => {
+        if (res.status === 404) throw new Error("Este link ya no es válido — pide uno nuevo en Papela Atelier.");
+        if (!res.ok) throw new Error();
+      })
+      .catch((e: unknown) => {
+        setAvisoGuardar(
+          (e as Error)?.message || "No se pudo guardar tu personalización — revisa tu conexión e intenta de nuevo.",
+        );
       });
-      const json = await res.json();
-      if (res.status === 404) throw new Error("Este link ya no es válido — pide uno nuevo en Papela Atelier.");
-      if (!res.ok) throw new Error(json.error ?? "No se pudo guardar, intenta de nuevo.");
-      setEstilo(json.estilo);
-      setEditor(false);
-    } catch (e: unknown) {
-      setErrorGuardar((e as Error).message);
-    } finally {
-      setGuardando(false);
-    }
   }
 
-  const sellos = tarjeta?.sellos ?? 0;
-  const completa = sellos >= MAX_SELLOS;
+  // Guardar cierra el modal AL INSTANTE (optimista): la tarjeta ya se ve con
+  // el draft por el preview en vivo, y el PATCH corre en segundo plano.
+  function guardarEstilo() {
+    setEstilo(draft);
+    setEditor(false);
+    setAvisoGuardar(null);
+    patchEstilo(draft);
+  }
+
+  // ── Arrastre de cositas sobre el cuerpo del pase ──
+  function moverCharm(i: number, x: number, y: number) {
+    const upd = (s: Estilo): Estilo => ({
+      ...s,
+      charms: s.charms.map((c, j) => (j === i ? { ...c, x, y } : c)),
+    });
+    // Con el editor abierto se mueve el draft (se guarda con "Guardar");
+    // cerrado, se mueve el estilo real y se persiste al soltar.
+    if (editor) setDraft(upd);
+    else setEstilo(upd);
+  }
+
+  // El drag va con listeners en window (patrón clásico): más confiable que
+  // setPointerCapture y sigue funcionando si el dedo/cursor sale del emoji.
+  function charmPointerDown(i: number) {
+    return (e: React.PointerEvent<HTMLSpanElement>) => {
+      e.preventDefault(); // sin selección de texto ni drag nativo del emoji
+      e.stopPropagation();
+      const enEditor = editor; // no cambia a media arrastrada
+      dragIdx.current = i;
+
+      const alMover = (ev: PointerEvent) => {
+        const idx = dragIdx.current;
+        if (idx === null || !cuerpoRef.current) return;
+        const r = cuerpoRef.current.getBoundingClientRect();
+        const x = Math.min(96, Math.max(4, ((ev.clientX - r.left) / r.width) * 100));
+        const y = Math.min(96, Math.max(4, ((ev.clientY - r.top) / r.height) * 100));
+        moverCharm(idx, Math.round(x * 10) / 10, Math.round(y * 10) / 10);
+      };
+      const alSoltar = () => {
+        window.removeEventListener("pointermove", alMover);
+        window.removeEventListener("pointerup", alSoltar);
+        window.removeEventListener("pointercancel", alSoltar);
+        if (dragIdx.current === null) return;
+        dragIdx.current = null;
+        // setTimeout: deja que React confirme la última posición en estiloRef.
+        // (En el editor la posición vive en el draft y se guarda con "Guardar".)
+        if (!enEditor) setTimeout(() => patchEstilo(estiloRef.current), 0);
+      };
+      window.addEventListener("pointermove", alMover);
+      window.addEventListener("pointerup", alSoltar);
+      window.addEventListener("pointercancel", alSoltar);
+    };
+  }
+
+  const misStickers = tarjeta?.stickers ?? { obtenidos: 0, pendientes: 0, album: [] };
+  const albumTotal = catalogo?.total ?? 100;
   // El pase se pinta con el DRAFT mientras el editor está abierto (preview en vivo).
   const vista = editor ? draft : estilo;
-  const grad = TEMAS[vista.tema].grad;
+  const tema = TEMAS[vista.tema];
+
+  // Compartir la tarjeta (elección del miembro): share nativo o copiar link.
+  function compartir() {
+    const data = { title: "Mi tarjeta del Club Creativo Papela", url: window.location.href };
+    if (navigator.share) {
+      navigator.share(data).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        setCompartido(true);
+        setTimeout(() => setCompartido(false), 2000);
+      });
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center px-5 pt-8 pb-16">
       <style>{`
-        @keyframes club-sticker-pop {
-          0% { opacity: 0; transform: scale(0.2) rotate(20deg); }
-          70% { transform: scale(1.15) rotate(var(--giro)); }
-          100% { opacity: 1; transform: scale(1) rotate(var(--giro)); }
-        }
         @keyframes club-holo-drift {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        @keyframes club-confeti {
-          0% { opacity: 1; transform: translateY(0) rotate(0deg); }
-          100% { opacity: 0; transform: translateY(140px) rotate(320deg); }
+        /* Deriva ambiental del fondo: TODOS los fondos se mueven (aura viva).
+           Recorrido amplio en 3 puntos + giro y zoom para que el color viaje
+           visiblemente por el pase. */
+        @keyframes club-fondo-drift {
+          0%   { transform: translate(-6%, -4%) rotate(-3deg) scale(1.06); }
+          33%  { transform: translate(5%, -2%) rotate(2.5deg) scale(1.14); }
+          66%  { transform: translate(-2%, 5%) rotate(-1.5deg) scale(1.18); }
+          100% { transform: translate(-6%, -4%) rotate(-3deg) scale(1.06); }
         }
-        .club-sticker { animation: club-sticker-pop .45s cubic-bezier(.2,1.4,.4,1) both; }
+        .club-fondo-anim { animation: club-fondo-drift 9s ease-in-out infinite; }
         .club-holo-idle { animation: club-holo-drift 7s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .club-sticker { animation: none; opacity: 1; transform: rotate(var(--giro)); }
           .club-holo-idle { animation: none; }
+          .club-fondo-anim { animation: none; }
         }
+        /* Texto FOIL: el glifo se pinta con un gradiente metálico derivado de
+           --ink (bandas iridiscentes rosa/blanco/cian). El reflejo es VIVO y
+           CONSTANTE: el ángulo del gradiente gira 360° en loop (via @property)
+           y la posición recorre el texto, como si la tarjeta se inclinara y la
+           letra reflejara la luz desde direcciones cambiantes. */
+        @property --foilA {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: 105deg;
+        }
+        @keyframes club-foil-vivo {
+          0%   { --foilA: 80deg;  background-position: 0% 50%; }
+          25%  { --foilA: 170deg; background-position: 65% 10%; }
+          50%  { --foilA: 260deg; background-position: 100% 65%; }
+          75%  { --foilA: 350deg; background-position: 35% 100%; }
+          100% { --foilA: 440deg; background-position: 0% 50%; }
+        }
+        .club-foil {
+          background-image: linear-gradient(var(--foilA),
+            var(--ink) 0%,
+            color-mix(in srgb, var(--ink) 45%, #ffb6d9) 16%,
+            color-mix(in srgb, var(--ink) 8%, #ffffff) 30%,
+            color-mix(in srgb, var(--ink) 45%, #a8e6ff) 44%,
+            var(--ink) 58%,
+            color-mix(in srgb, var(--ink) 55%, #d9c8ff) 74%,
+            var(--ink) 88%,
+            var(--ink) 100%);
+          background-size: 240% 240%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: club-foil-vivo 7s linear infinite;
+        }
+        @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+          .club-foil { background: none; color: var(--ink); animation: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .club-foil { animation: none; background-position: 50% 50%; }
+        }
+
+        /* Tinta adaptativa del pase: cada fondo define --ink y todo hereda. */
+        .club-ink { color: var(--ink); }
+        .club-ink-85 { color: color-mix(in srgb, var(--ink) 85%, transparent); }
+        .club-ink-75 { color: color-mix(in srgb, var(--ink) 75%, transparent); }
+        .club-ink-60 { color: color-mix(in srgb, var(--ink) 60%, transparent); }
+        .club-ink-50 { color: color-mix(in srgb, var(--ink) 50%, transparent); }
+        .club-ink-40 { color: color-mix(in srgb, var(--ink) 45%, transparent); }
+        .club-chip {
+          background: color-mix(in srgb, var(--ink) 13%, transparent);
+          border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+        }
+        .club-dash { border-color: color-mix(in srgb, var(--ink) 38%, transparent); }
       `}</style>
 
-      {/* Logo → página principal */}
-      <Link href="/" className="mb-7 mt-1" aria-label="Ir a Papela Atelier">
-        <Image src="/images/Logo-papela-verde.svg" alt="Papela Atelier" width={56} height={56} className="h-14 w-14" />
+      {/* Logo → página principal + lema del álbum */}
+      <Link href="/" className="mt-1" aria-label="Ir a Papela Atelier">
+        <Image src="/images/Logo-papela-verde.svg" alt="Papela Atelier" width={80} height={80} className="h-20 w-20" />
       </Link>
+      <p className="font-serif italic text-sm text-[var(--color-muted)] text-center mt-2 mb-6 max-w-[260px]">
+        Entre más stickers juntes, mejor la recompensa.
+      </p>
 
       {estado === "cargando" && (
         <div className="w-full max-w-[380px] rounded-3xl bg-white/60 border border-[var(--color-border)] animate-pulse h-[560px]" />
@@ -280,98 +592,112 @@ export default function TarjetaClub() {
               }}
             >
               {/* Cuerpo de color (header + sellos + miembro) */}
-              <div className="relative overflow-hidden" style={{ background: grad }}>
+              <div
+                ref={cuerpoRef}
+                className="relative overflow-hidden"
+                style={{ "--ink": tema.ink } as React.CSSProperties}
+              >
+                {/* Fondo en capa propia, más grande que el pase, con deriva viva */}
+                <div
+                  aria-hidden="true"
+                  className={`absolute -inset-[25%] pointer-events-none ${reducida ? "" : "club-fondo-anim"}`}
+                  style={{ background: tema.grad }}
+                />
                 <DecorBloque estilo={vista} reducida={reducida} animada />
 
-                {/* Header */}
-                <div className="relative flex items-start justify-between gap-3 p-5 pb-2">
-                  <p className="font-sans font-black uppercase leading-[0.95] tracking-tight text-white text-[34px]">
-                    Club<br />Creativo
+                {/* Header — título editorial en una línea + pill translúcida */}
+                <div className="relative flex items-center justify-between gap-3 p-5 pb-2">
+                  <p className="club-foil font-serif italic text-[28px] leading-tight whitespace-nowrap">
+                    Club Creativo
                   </p>
-                  <div className="bg-[var(--color-bg)] rounded-2xl px-3 py-2 text-right flex-shrink-0">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--color-text)] leading-tight">
-                      Papela Atelier
-                    </p>
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)] leading-tight mt-0.5">
-                      Pase de miembro
-                    </p>
-                  </div>
+                  <span className="club-ink club-chip rounded-full px-3.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] whitespace-nowrap flex-shrink-0 backdrop-blur-sm">
+                    Miembro
+                  </span>
                 </div>
 
-                {/* Sellos (las cositas decoran esta zona) */}
+                {/* Álbum de stickers — preview de los primeros espacios */}
                 <div className="relative px-5 pt-4 pb-5">
-                  {vista.charms.map((c, i) => (
-                    <span key={`${c}-${i}`} aria-hidden="true"
-                      className="absolute text-2xl pointer-events-none drop-shadow-[0_2px_3px_rgba(0,0,0,0.25)]"
-                      style={CHARM_POS[i % CHARM_POS.length]}>
-                      {c}
-                    </span>
-                  ))}
                   <div className="flex items-center justify-between mb-4 px-1">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/75">Mis sellos</p>
-                    <span className="text-[11px] font-semibold text-white bg-white/15 border border-white/25 rounded-full px-3 py-0.5 backdrop-blur-sm">
-                      {sellos} / {MAX_SELLOS}
+                    <p className="club-ink-75 text-[10px] font-bold uppercase tracking-[0.22em]">Mis stickers</p>
+                    <span className="club-ink club-chip text-[11px] font-semibold rounded-full px-3 py-0.5 backdrop-blur-sm">
+                      {misStickers.obtenidos} / {albumTotal}
                     </span>
                   </div>
-                  <div
-                    className="grid grid-cols-5 gap-y-4 justify-items-center"
-                    role="img"
-                    aria-label={`${sellos} de ${MAX_SELLOS} sellos`}
-                  >
-                    {Array.from({ length: MAX_SELLOS }, (_, i) => {
-                      const lleno = i < sellos;
-                      return lleno ? (
-                        <span
-                          key={i}
-                          className="club-sticker flex items-center justify-center w-12 h-12 rounded-full bg-white text-xl shadow-[0_3px_8px_rgba(0,0,0,0.3)] ring-2 ring-white/60"
-                          style={{ "--giro": `${GIROS[i]}deg`, animationDelay: `${i * 70}ms` } as React.CSSProperties}
-                          aria-hidden="true"
-                        >
-                          {STICKERS[i]}
-                        </span>
-                      ) : (
-                        <span
-                          key={i}
-                          className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-dashed border-white/35 text-white/40 text-xs font-semibold"
-                          aria-hidden="true"
-                        >
-                          {i + 1}
+
+                  {misStickers.pendientes > 0 && (
+                    <button onClick={() => setRascando(true)}
+                      className="w-full mb-4 rounded-2xl bg-white/90 text-[var(--color-verde)] px-4 py-3 text-sm font-bold flex items-center justify-between shadow-[0_4px_14px_rgba(0,0,0,.18)] hover:bg-white transition">
+                      <span>🎁 Sticker sorpresa por revelar{misStickers.pendientes > 1 ? ` (×${misStickers.pendientes})` : ""}</span>
+                      <span className="underline">Rascar</span>
+                    </button>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-y-4 justify-items-center"
+                    role="img" aria-label={`${misStickers.obtenidos} de ${albumTotal} stickers`}>
+                    {Array.from({ length: PREVIEW_SLOTS }, (_, i) => {
+                      const orden = i + 1;
+                      const sticker = catalogo?.stickers.find((s) => s.orden === orden);
+                      const mio = sticker && misStickers.album.find((a) => a.id === sticker.id);
+                      const hito = catalogo?.hitos.find((h) => h.en === orden);
+                      if (sticker && mio) {
+                        return (
+                          <span key={orden}
+                            className="flex items-center justify-center w-[74px] h-[74px] rounded-full bg-white/90 p-1.5"
+                            style={{ boxShadow: "0 3px 8px rgba(0,0,0,.22), 0 0 0 2px color-mix(in srgb, var(--ink) 30%, transparent)" }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
+                            <img src={stickerSrc(ADMIN_ORIGIN, sticker)} alt={sticker.nombre}
+                              className="w-full h-full object-contain" draggable={false} />
+                          </span>
+                        );
+                      }
+                      return (
+                        <span key={orden}
+                          className="club-dash club-ink-40 flex flex-col items-center justify-center w-[74px] h-[74px] rounded-full border-[1.5px] border-dashed text-center leading-tight"
+                          aria-hidden="true">
+                          <span className="text-xs font-semibold">{orden}</span>
+                          {hito && <span className="text-[8.5px] font-medium px-2">Gana un {hito.premio.replace(" de descuento", "")}</span>}
                         </span>
                       );
                     })}
                   </div>
+
+                  <button onClick={() => setPlanilla(true)}
+                    className="club-ink-85 block mx-auto mt-4 text-xs font-semibold underline underline-offset-2">
+                    Ver mi planilla completa
+                  </button>
                 </div>
 
                 {/* Miembro */}
-                <div className="relative p-5 pt-1">
-                  <p className="font-serif text-2xl text-white leading-snug break-words">{tarjeta.nombre}</p>
-                  <div className="flex items-end justify-between gap-3 mt-2">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/60">Miembro desde</p>
-                      <p className="text-xs text-white/85 mt-0.5">{fechaLarga(tarjeta.desde)}</p>
-                    </div>
-                    <span className="text-white/50 text-lg" aria-hidden="true">❋</span>
+                <div className="relative p-5 pt-1 flex items-end justify-between gap-3">
+                  <p className="club-foil font-serif text-2xl leading-snug break-words min-w-0">{tarjeta.nombre}</p>
+                  <div className="text-right flex-shrink-0">
+                    <p className="club-ink-60 text-[9px] font-bold uppercase tracking-[0.2em]">Miembro desde</p>
+                    <p className="club-ink-85 text-xs mt-0.5">{fechaLarga(tarjeta.desde)}</p>
                   </div>
                 </div>
 
-                {/* Confeti al completar la tarjeta */}
-                {completa && !reducida && (
-                  <div aria-hidden="true" className="absolute inset-x-0 top-0 pointer-events-none">
-                    {Array.from({ length: 14 }, (_, i) => (
-                      <span
-                        key={i}
-                        className="absolute text-sm"
-                        style={{
-                          left: `${(i * 7.3 + 4) % 100}%`,
-                          top: `${(i * 13) % 30}%`,
-                          animation: `club-confeti ${1.6 + (i % 5) * 0.3}s ease-in ${i * 0.12}s infinite`,
-                        }}
-                      >
-                        {["🎉", "✨", "🎊"][i % 3]}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                {/* Cositas decorativas — arrastrables sobre todo el cuerpo del pase */}
+                {vista.charms.map((c, i) => {
+                  const def = CHARM_POS_DEFAULT[i % CHARM_POS_DEFAULT.length];
+                  return (
+                    <span
+                      key={`${c.e}-${i}`}
+                      role="button"
+                      aria-label={`Mover ${c.e}`}
+                      onPointerDown={charmPointerDown(i)}
+                      className="absolute z-10 text-2xl cursor-grab active:cursor-grabbing drop-shadow-[0_2px_3px_rgba(0,0,0,0.25)]"
+                      style={{
+                        left: `${c.x ?? def.x}%`,
+                        top: `${c.y ?? def.y}%`,
+                        transform: `translate(-50%, -50%) rotate(${CHARM_GIROS[i % CHARM_GIROS.length]}deg)`,
+                        touchAction: "none",
+                      }}
+                    >
+                      {c.e}
+                    </span>
+                  );
+                })}
+
               </div>
 
               {/* Talón — número de socio + QR (misma tarjeta, corte punteado) */}
@@ -389,30 +715,50 @@ export default function TarjetaClub() {
             </div>
           </div>
 
-          {/* Personalizar */}
-          <button
-            onClick={abrirEditor}
-            className="mt-5 px-6 py-3 rounded-full border-2 border-[var(--color-verde)] bg-transparent text-sm font-sans font-semibold text-[var(--color-verde)] hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition-all duration-300"
-          >
-            🎨 Personalizar mi tarjeta
-          </button>
-
-          {/* Leyenda */}
-          <div className="text-center mt-5 space-y-1 max-w-sm">
-            {completa ? (
-              <>
-                <p className="font-serif text-xl text-[var(--color-verde)]">¡Tarjeta completa! 🎉</p>
-                <p className="text-sm text-[var(--color-muted)]">
-                  Visítanos en Papela Atelier para elegir tu recompensa:
-                  una clase gratis o 25% de descuento en papelería.
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-[var(--color-muted)]">
-                Junta {MAX_SELLOS} stickers y elige una clase creativa gratis o 25% de descuento en tu compra.
-              </p>
-            )}
+          {/* Personalizar + compartir */}
+          <div className="mt-5 flex items-center gap-2.5">
+            <button
+              onClick={abrirEditor}
+              className="px-7 py-3 rounded-full bg-[var(--color-verde)] text-sm font-sans font-semibold text-[var(--color-cremita)] hover:opacity-85 transition"
+            >
+              Personalizar tarjeta
+            </button>
+            <button onClick={compartir} aria-label="Compartir mi tarjeta" title="Compartir mi tarjeta"
+              className="w-11 h-11 rounded-full border-2 border-[var(--color-verde)] text-[var(--color-verde)] flex items-center justify-center hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
+              </svg>
+            </button>
           </div>
+
+          <div className="text-center mt-4 space-y-1 max-w-sm">
+            {compartido && <p className="text-xs text-[var(--color-verde)]">Link copiado ✓</p>}
+            {avisoGuardar && <p className="text-xs text-[var(--color-terracota)]">{avisoGuardar}</p>}
+          </div>
+
+          {/* ── Planilla completa (los 100 espacios del álbum) ── */}
+          {planilla && catalogo && (
+            <PlanillaClub
+              token={token}
+              catalogo={catalogo}
+              album={misStickers.album}
+              obtenidos={misStickers.obtenidos}
+              pendientes={misStickers.pendientes}
+              onCerrar={() => setPlanilla(false)}
+              onRascar={() => setRascando(true)}
+              onCambio={cargarTarjeta}
+            />
+          )}
+
+          {/* ── Rascado de sticker sorpresa ── */}
+          {rascando && (
+            <RascaSticker
+              token={token}
+              onCerrar={() => { setRascando(false); cargarTarjeta(); }}
+              onPegado={() => { setRascando(false); cargarTarjeta(); setPlanilla(true); }}
+            />
+          )}
 
           {/* ── Editor de personalización (bottom sheet) ── */}
           {editor && (
@@ -429,20 +775,24 @@ export default function TarjetaClub() {
                 </div>
 
                 <div className="px-5 py-4 space-y-5">
-                  {/* Tema */}
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-2">Color</p>
-                    <div className="flex flex-wrap gap-2.5">
-                      {(Object.keys(TEMAS) as TemaId[]).map((t) => (
-                        <button key={t} onClick={() => setDraft(d => ({ ...d, tema: t }))}
-                          aria-label={TEMAS[t].nombre} aria-pressed={draft.tema === t} title={TEMAS[t].nombre}
-                          className={`w-11 h-11 rounded-full transition ${
-                            draft.tema === t ? "ring-2 ring-[var(--color-verde)] ring-offset-2 scale-105" : "hover:scale-105"
-                          }`}
-                          style={{ background: TEMAS[t].grad }} />
-                      ))}
+                  {/* Fondo: colores de marca + acabados */}
+                  {GRUPOS_TEMA.map(({ titulo, grupo }) => (
+                    <div key={grupo}>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-2">{titulo}</p>
+                      <div className="flex flex-wrap gap-2.5">
+                        {(Object.keys(TEMAS) as TemaId[])
+                          .filter((t) => TEMAS[t].grupo === grupo)
+                          .map((t) => (
+                            <button key={t} onClick={() => setDraft(d => ({ ...d, tema: t }))}
+                              aria-label={TEMAS[t].nombre} aria-pressed={draft.tema === t} title={TEMAS[t].nombre}
+                              className={`w-11 h-11 rounded-full border border-black/10 transition ${
+                                draft.tema === t ? "ring-2 ring-[var(--color-verde)] ring-offset-2 scale-105" : "hover:scale-105"
+                              }`}
+                              style={{ background: TEMAS[t].grad }} />
+                          ))}
+                      </div>
                     </div>
-                  </div>
+                  ))}
 
                   {/* Textura */}
                   <div>
@@ -483,18 +833,21 @@ export default function TarjetaClub() {
                   {/* Cositas */}
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-1">Cositas creativas</p>
-                    <p className="text-xs text-[var(--color-muted)] mb-2">Elige hasta {MAX_CHARMS} para decorar tus sellos.</p>
+                    <p className="text-xs text-[var(--color-muted)] mb-2">
+                      Elige hasta {MAX_CHARMS} y arrástralas sobre tu tarjeta para acomodarlas.
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {CHARMS.map((c) => {
-                        const activo = draft.charms.includes(c);
+                        const activo = draft.charms.some(ch => ch.e === c);
                         const lleno = draft.charms.length >= MAX_CHARMS;
                         return (
                           <button key={c} aria-pressed={activo} aria-label={`Cosita ${c}`}
                             onClick={() =>
                               setDraft(d => ({
                                 ...d,
-                                charms: activo ? d.charms.filter(x => x !== c)
-                                  : d.charms.length >= MAX_CHARMS ? d.charms : [...d.charms, c],
+                                charms: activo ? d.charms.filter(ch => ch.e !== c)
+                                  : d.charms.length >= MAX_CHARMS ? d.charms
+                                  : [...d.charms, { e: c, ...CHARM_POS_DEFAULT[d.charms.length % CHARM_POS_DEFAULT.length] }],
                               }))
                             }
                             disabled={!activo && lleno}
@@ -510,7 +863,6 @@ export default function TarjetaClub() {
                     </div>
                   </div>
 
-                  {errorGuardar && <p className="text-xs text-[var(--color-terracota)]">{errorGuardar}</p>}
                 </div>
 
                 <div className="sticky bottom-0 bg-white border-t border-[var(--color-border)] px-5 py-4 flex items-center justify-between gap-3">
@@ -523,9 +875,9 @@ export default function TarjetaClub() {
                       className="px-5 py-2.5 rounded-full border-2 border-[var(--color-border)] text-sm font-sans font-semibold text-[var(--color-text)] hover:border-[var(--color-verde)] hover:text-[var(--color-verde)] transition">
                       Cancelar
                     </button>
-                    <button onClick={guardarEstilo} disabled={guardando}
-                      className="px-5 py-2.5 rounded-full bg-[var(--color-verde)] text-sm font-sans font-semibold text-[var(--color-cremita)] hover:opacity-85 transition disabled:opacity-50">
-                      {guardando ? "Guardando…" : "Guardar"}
+                    <button onClick={guardarEstilo}
+                      className="px-5 py-2.5 rounded-full bg-[var(--color-verde)] text-sm font-sans font-semibold text-[var(--color-cremita)] hover:opacity-85 transition">
+                      Guardar
                     </button>
                   </div>
                 </div>
