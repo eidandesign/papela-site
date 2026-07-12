@@ -21,11 +21,10 @@ import Link from "next/link";
 import PlanillaClub from "./club/PlanillaClub";
 import RascaSticker from "./club/RascaSticker";
 import {
-  ADMIN_ORIGIN, copiarTexto, stickerSrc,
+  ADMIN_ORIGIN, CLUB_API as ADMIN_API, copiarTexto, stickerSrc,
   type Catalogo, type MensajeClub, type MisStickers,
 } from "./club/clubTipos";
 
-const ADMIN_API = `${ADMIN_ORIGIN}/api/public/club`;
 // Espacios del preview en la tarjeta (la planilla completa muestra los 100).
 const PREVIEW_SLOTS = 6;
 
@@ -233,7 +232,6 @@ function normalizaCharms(v: unknown): Charm[] {
 
 type Tarjeta = {
   nombre: string;
-  sellos: number; // deprecated (sistema viejo)
   desde: string;
   numero: string;
   estilo: Estilo;
@@ -347,7 +345,7 @@ export default function TarjetaClub() {
 
   // Tilt 3D: rx/ry en grados, px/py = posición del puntero (%) para el brillo.
   const cardRef = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50, activo: false });
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, activo: false });
 
   // Arrastre de cositas: índice en drag + espejo del estilo para persistir al soltar.
   const cuerpoRef = useRef<HTMLDivElement>(null);
@@ -362,6 +360,16 @@ export default function TarjetaClub() {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error);
         setTarjeta(json);
+        // Sin pendientes, la pill descartada vuelve a estar "armada" para el
+        // siguiente sticker que llegue.
+        if ((json.stickers?.pendientes ?? 0) === 0) {
+          setNotifs((n) => {
+            if (n.pillEn === null) return n;
+            const limpio = { ...n, pillEn: null };
+            try { localStorage.setItem(`papela_club_notifs_${token}`, JSON.stringify(limpio)); } catch { /* sin memoria */ }
+            return limpio;
+          });
+        }
         setEstilo(
           json.estilo
             ? { ...ESTILO_DEFAULT, ...json.estilo, charms: normalizaCharms(json.estilo.charms) }
@@ -403,11 +411,11 @@ export default function TarjetaClub() {
     const r = cardRef.current.getBoundingClientRect();
     const x = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
     const y = Math.min(Math.max((e.clientY - r.top) / r.height, 0), 1);
-    setTilt({ ry: (x - 0.5) * 10, rx: -(y - 0.5) * 8, px: x * 100, py: y * 100, activo: true });
+    setTilt({ ry: (x - 0.5) * 10, rx: -(y - 0.5) * 8, activo: true });
   }
 
   function onLeave() {
-    setTilt({ rx: 0, ry: 0, px: 50, py: 50, activo: false });
+    setTilt({ rx: 0, ry: 0, activo: false });
   }
 
   function abrirEditor() {
@@ -444,15 +452,13 @@ export default function TarjetaClub() {
   }
 
   // ── Arrastre de cositas sobre el cuerpo del pase ──
+  // Solo ocurre con el editor CERRADO (abierto, el backdrop cubre la tarjeta),
+  // así que siempre mueve el estilo real y se persiste al soltar.
   function moverCharm(i: number, x: number, y: number) {
-    const upd = (s: Estilo): Estilo => ({
+    setEstilo((s) => ({
       ...s,
       charms: s.charms.map((c, j) => (j === i ? { ...c, x, y } : c)),
-    });
-    // Con el editor abierto se mueve el draft (se guarda con "Guardar");
-    // cerrado, se mueve el estilo real y se persiste al soltar.
-    if (editor) setDraft(upd);
-    else setEstilo(upd);
+    }));
   }
 
   // El drag va con listeners en window (patrón clásico): más confiable que
@@ -461,7 +467,6 @@ export default function TarjetaClub() {
     return (e: React.PointerEvent<HTMLSpanElement>) => {
       e.preventDefault(); // sin selección de texto ni drag nativo del emoji
       e.stopPropagation();
-      const enEditor = editor; // no cambia a media arrastrada
       dragIdx.current = i;
 
       const alMover = (ev: PointerEvent) => {
@@ -479,8 +484,7 @@ export default function TarjetaClub() {
         if (dragIdx.current === null) return;
         dragIdx.current = null;
         // setTimeout: deja que React confirme la última posición en estiloRef.
-        // (En el editor la posición vive en el draft y se guarda con "Guardar".)
-        if (!enEditor) setTimeout(() => patchEstilo(estiloRef.current), 0);
+        setTimeout(() => patchEstilo(estiloRef.current), 0);
       };
       window.addEventListener("pointermove", alMover);
       window.addEventListener("pointerup", alSoltar);
@@ -491,9 +495,13 @@ export default function TarjetaClub() {
   const misStickers = tarjeta?.stickers ?? { obtenidos: 0, pendientes: 0, album: [] };
   const albumTotal = catalogo?.total ?? 100;
 
-  // Pill de aviso: se oculta al descartarla, pero REAPARECE si el número de
-  // pendientes cambia (llegó un sticker nuevo). La campana siempre lo lista.
-  const pillVisible = misStickers.pendientes > 0 && notifs.pillEn !== misStickers.pendientes;
+  // Pill de aviso: se oculta al descartarla y REAPARECE solo si llegan MÁS
+  // pendientes que cuando se descartó (rascar la baja, no la revive). La
+  // memoria se resetea al llegar a 0 (en cargarTarjeta). La campana siempre
+  // lista el aviso aunque la pill esté oculta.
+  const pillVisible =
+    misStickers.pendientes > 0 &&
+    (notifs.pillEn === null || misStickers.pendientes > notifs.pillEn);
   const noLeidos =
     mensajes.filter((m) => !notifs.leidos.includes(m.id)).length +
     (misStickers.pendientes > 0 ? 1 : 0);
@@ -662,7 +670,7 @@ export default function TarjetaClub() {
               ref={cardRef}
               onPointerMove={onMove}
               onPointerLeave={onLeave}
-              className="rounded-3xl overflow-hidden select-none touch-none"
+              className="rounded-3xl overflow-hidden select-none touch-pan-y"
               style={{
                 transform: reducida ? undefined : `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
                 transition: tilt.activo ? "transform .08s linear" : "transform .5s ease",
@@ -957,7 +965,7 @@ export default function TarjetaClub() {
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-1">Cositas creativas</p>
                     <p className="text-xs text-[var(--color-muted)] mb-2">
-                      Elige hasta {MAX_CHARMS} y arrástralas sobre tu tarjeta para acomodarlas.
+                      Elige hasta {MAX_CHARMS} — al guardar podrás arrastrarlas sobre tu tarjeta para acomodarlas.
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {CHARMS.map((c) => {
