@@ -93,6 +93,7 @@ Los heroes son una `section` con `width: 98vw` (margin lateral `1vw`), `rounded-
 | `ProductDrawer` | `components/site/ProductDrawer.tsx` | Portal. Mobile: `top-0 h-full left-[15%] rounded-l-3xl`. Desktop: `sm:left-auto sm:max-w-lg sm:rounded-none`. Footer fijo con WhatsApp + AddToCartButton. **Selector de variaciones**: thumbnails (solo stock ≥ 1) que cambian imagen/precio/color/medida/stock al hacer click |
 | `ClaseCalendar` | `components/site/ClaseCalendar.tsx` | Mobile: lista de filas (fecha pill + detalles + Reservar). Desktop: grid 5 col. Nav por semana con mes serif grande + "Semana N" |
 | `ClearCartOnMount` | `components/site/ClearCartOnMount.tsx` | Limpia el carrito al montar (usado en `/tienda/pago/gracias`) |
+| `TarjetaClub` | `components/site/TarjetaClub.tsx` | **Tarjeta de lealtad del Club Creativo** (`/club/[token]`, ruta standalone en `ConditionalShell` + `noindex`). Los datos viven en el admin: `GET/PATCH https://admin.papela-atelier.com/api/public/club/<token>` (CORS abierto). Pase vertical estilo wallet en UNA tarjeta (header, sellos sticker, miembro, talón punteado con nº de socio + QR client-side con `qrcode`), tilt 3D, respeta `prefers-reduced-motion`. Personalización del miembro (tema/textura/holo/hasta 4 charms) con preview en vivo → se guarda vía PATCH (whitelist en el admin). Los gradientes de temas son decorativos (material del pase) |
 
 ## Mobile horizontal scroll pattern
 Used in info cards and Instagram carousels. Key rules:
