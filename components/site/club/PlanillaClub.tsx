@@ -1,21 +1,44 @@
 "use client";
 
 // Planilla del Club Creativo — los 100 espacios del álbum, estilo vitrina de
-// coleccionables y SIMPLE: flecha atrás + "Mi planilla Papela" + X/100 y la
-// pura cuadrícula. Obtenidos a color (los raros/legendarios con MARCO
-// HOLOGRÁFICO animado); los definidos-pero-no-obtenidos se ven fantasma (la
-// imagen real muy tenue — se antoja); espacios sin definir muestran "?".
+// coleccionables y SIMPLE: logo + flecha atrás + "Mi planilla Papela" + X/100
+// y la pura cuadrícula. Obtenidos a color (los raros/legendarios con MARCO
+// HOLOGRÁFICO animado); los definidos-pero-no-obtenidos se ven como SILUETA
+// (la forma en sombra, sin revelar la imagen — misterio); espacios sin
+// definir (o sin imagen) muestran "?".
 //
 // Tap en cualquier coleccionable definido → FICHA (bottom sheet) con su
-// historia y, si tiene, su premio descargable — ambos solo para quien YA lo
+// historia, botón "Copiar sticker" (la imagen al portapapeles, para usarla
+// en redes) y, si tiene, su premio descargable — todo solo para quien YA lo
 // tiene (el servidor ni los manda si no). Regalar duplicados y canjear un
 // código de regalo también viven aquí, discretos.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import {
-  ADMIN_ORIGIN, copiarTexto, stickerSrc,
-  type AlbumItem, type Catalogo, type DetalleSticker, type StickerInfo,
+  ADMIN_ORIGIN, copiarImagen, copiarTexto, stickerSrc,
+  type AlbumItem, type Catalogo, type DetalleSticker, type ResultadoCopiaImagen, type StickerInfo,
 } from "./clubTipos";
+
+// Silueta de misterio: la imagen real pintada como pura sombra (brightness 0).
+// Si el asset no existe (404), no deja el icono de imagen rota: se esconde y
+// la casilla queda solo con su número. El chequeo de naturalWidth cubre las
+// imágenes que fallaron ANTES de que React colgara el onError (caché rota).
+function Silueta({ src, className }: { src: string; className: string }) {
+  const [rota, setRota] = useState(false);
+  const ref = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    setRota(false);
+    const el = ref.current;
+    if (el && el.complete && el.naturalWidth === 0) setRota(true);
+  }, [src]);
+  if (rota) return <div className={className} aria-hidden="true" />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- asset del admin
+    <img ref={ref} src={src} alt="" className={className} style={{ filter: "brightness(0)" }}
+      loading="lazy" draggable={false} aria-hidden="true" onError={() => setRota(true)} />
+  );
+}
 
 export default function PlanillaClub({
   token, origen = ADMIN_ORIGIN, catalogo, album, detalles = {}, obtenidos, pendientes,
@@ -33,6 +56,7 @@ export default function PlanillaClub({
   onCambio: () => void;   // refresca la tarjeta (tras reclamar un regalo)
 }) {
   const [detalle, setDetalle] = useState<StickerInfo | null>(null);
+  const [copia, setCopia] = useState<"idle" | "copiando" | ResultadoCopiaImagen>("idle");
   const [regalo, setRegalo] = useState<{ sticker: StickerInfo; codigo?: string; error?: string; cargando: boolean } | null>(null);
   const [codigoCopiado, setCodigoCopiado] = useState(false);
   const [canjeAbierto, setCanjeAbierto] = useState(false);
@@ -85,6 +109,12 @@ export default function PlanillaClub({
   const infoDetalle = detalle ? detalles[detalle.id] : undefined;
   const especial = (r: StickerInfo["rareza"]) => r !== "comun";
 
+  // Abrir la ficha resetea el estado del botón "Copiar sticker".
+  function abrirFicha(s: StickerInfo) {
+    setCopia("idle");
+    setDetalle(s);
+  }
+
   return (
     <div role="dialog" aria-modal="true" aria-label="Mi planilla Papela"
       className="fixed inset-0 z-[100002] bg-[var(--color-bg)] overflow-y-auto">
@@ -105,8 +135,13 @@ export default function PlanillaClub({
         }
       `}</style>
 
+      {/* Logo — como en la tarjeta, presenta la planilla */}
+      <div className="pt-6 flex justify-center">
+        <Image src="/images/Logo-papela-verde.svg" alt="Papela Atelier" width={80} height={80} className="h-20 w-20" />
+      </div>
+
       {/* Header — flecha atrás + título centrado */}
-      <div className="sticky top-0 z-10 bg-[var(--color-bg)]/95 backdrop-blur-sm px-5 pt-5 pb-4">
+      <div className="sticky top-0 z-10 bg-[var(--color-bg)]/95 backdrop-blur-sm px-5 pt-4 pb-4">
         <div className="max-w-lg mx-auto relative text-center">
           <button onClick={onCerrar} aria-label="Volver a mi tarjeta"
             className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-[0_2px_10px_rgba(18,83,92,.12)] flex items-center justify-center text-[var(--color-text)] hover:text-[var(--color-verde)] transition">
@@ -136,7 +171,7 @@ export default function PlanillaClub({
 
             if (sticker && mio) {
               const tile = (
-                <button onClick={() => setDetalle(sticker)}
+                <button onClick={() => abrirFicha(sticker)}
                   className="relative w-full h-full rounded-2xl bg-white p-2 pt-3 text-center shadow-[0_2px_8px_rgba(18,83,92,.07)] hover:shadow-[0_4px_14px_rgba(18,83,92,.14)] transition">
                   {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
                   <img src={stickerSrc(origen, sticker)} alt={sticker.nombre}
@@ -157,15 +192,14 @@ export default function PlanillaClub({
               );
             }
 
-            if (sticker) {
-              // Definido pero no obtenido: fantasma (la imagen real, tenue).
+            if (sticker && sticker.imagen_url) {
+              // Definido pero no obtenido: SILUETA (solo la forma, en sombra —
+              // la imagen no se revela; el misterio invita a conseguirlo).
               return (
-                <button key={orden} onClick={() => setDetalle(sticker)}
+                <button key={orden} onClick={() => abrirFicha(sticker)}
                   className="rounded-2xl border-[1.5px] border-dashed border-[var(--color-border)] bg-white/60 p-2 pt-3 text-center hover:border-[var(--color-verde)]/40 transition">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
-                  <img src={stickerSrc(origen, sticker)} alt=""
-                    className="w-full aspect-square object-contain opacity-[0.18]"
-                    loading="lazy" draggable={false} aria-hidden="true" />
+                  <Silueta src={stickerSrc(origen, sticker)}
+                    className="w-full aspect-square object-contain opacity-[0.26]" />
                   <p className="text-[10px] font-semibold text-[var(--color-muted)] mt-1 mb-0.5">N.º {orden}</p>
                 </button>
               );
@@ -254,6 +288,30 @@ export default function PlanillaClub({
                   {infoDetalle?.historia || "Su historia se escribirá muy pronto… ✍️"}
                 </p>
 
+                {/* Copiar la imagen — para usarla de sticker en redes/chats */}
+                <button
+                  onClick={async () => {
+                    if (copia === "copiando") return;
+                    setCopia("copiando");
+                    setCopia(await copiarImagen(stickerSrc(origen, detalle), detalle.slug || detalle.nombre));
+                  }}
+                  disabled={copia === "copiando"}
+                  className="mt-4 px-5 py-2.5 rounded-full border-2 border-[var(--color-verde)] text-xs font-semibold text-[var(--color-verde)] hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition disabled:opacity-50">
+                  {copia === "copiando" ? "Copiando…" : copia === "copiado" ? "✓ Copiado" : "Copiar sticker"}
+                </button>
+                {copia === "copiado" && (
+                  <p className="text-xs text-[var(--color-muted)] mt-2">Pégalo donde quieras — chats, redes, notas ✨</p>
+                )}
+                {copia === "descargado" && (
+                  <p className="text-xs text-[var(--color-muted)] mt-2">Se descargó la imagen — revisa tus descargas 📥</p>
+                )}
+                {copia === "abierto" && (
+                  <p className="text-xs text-[var(--color-muted)] mt-2">Se abrió en otra pestaña — guárdala desde ahí</p>
+                )}
+                {copia === false && (
+                  <p className="text-xs text-[var(--color-terracota)] mt-2">No se pudo copiar — intenta de nuevo</p>
+                )}
+
                 {infoDetalle?.premio && (
                   <div className="mt-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-cremita-3)] p-4 space-y-2">
                     <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)]">
@@ -280,10 +338,8 @@ export default function PlanillaClub({
             ) : (
               <>
                 <div className="relative w-40 aspect-square mx-auto">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
-                  <img src={stickerSrc(origen, detalle)} alt=""
-                    className="w-full h-full object-contain opacity-[0.16]" draggable={false} aria-hidden="true" />
-                  <span className="absolute inset-0 flex items-center justify-center text-4xl text-[var(--color-muted)]/50" aria-hidden="true">?</span>
+                  <Silueta src={stickerSrc(origen, detalle)}
+                    className="w-full h-full object-contain opacity-[0.28]" />
                 </div>
                 <h3 className="font-serif italic text-2xl text-[var(--color-text)] mt-3">N.º {detalle.orden}</h3>
                 <p className="text-sm text-[var(--color-muted)] mt-2">

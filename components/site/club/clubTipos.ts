@@ -48,6 +48,60 @@ export function stickerSrc(origen: string, s: StickerInfo) {
   return s.imagen_url.startsWith("http") ? s.imagen_url : `${origen}${s.imagen_url}`;
 }
 
+// Copiar una IMAGEN al portapapeles (para pegarla como sticker en redes).
+// Safari exige crear el ClipboardItem con una Promise DENTRO del gesto del
+// usuario, y el portapapeles solo acepta image/png — se convierte por canvas
+// si el asset viene en otro formato. Respaldos en orden: descargar el archivo
+// y, si el fetch está bloqueado (CORS), abrir la imagen para guardarla a mano.
+export type ResultadoCopiaImagen = "copiado" | "descargado" | "abierto" | false;
+
+export async function copiarImagen(src: string, nombre: string): Promise<ResultadoCopiaImagen> {
+  const aPng = async (blob: Blob): Promise<Blob> => {
+    if (blob.type === "image/png") return blob;
+    const bmp = await createImageBitmap(blob);
+    const canvas = document.createElement("canvas");
+    canvas.width = bmp.width;
+    canvas.height = bmp.height;
+    canvas.getContext("2d")!.drawImage(bmp, 0, 0);
+    return new Promise((res, rej) =>
+      canvas.toBlob((b) => (b ? res(b) : rej(new Error("toBlob falló"))), "image/png"),
+    );
+  };
+  const traer = () =>
+    fetch(src).then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.blob();
+    });
+
+  try {
+    if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": traer().then(aPng) })]);
+      return "copiado";
+    }
+  } catch { /* sin permiso o sin soporte → respaldo */ }
+
+  try {
+    const blob = await traer();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${nombre.toLowerCase().replace(/\s+/g, "-")}.${blob.type === "image/png" ? "png" : blob.type.split("/")[1] || "png"}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return "descargado";
+  } catch { /* fetch bloqueado → que la guarde a mano */ }
+
+  // OJO: con la feature "noopener", window.open devuelve null AUNQUE la
+  // pestaña abra — se abre normal y se corta el opener a mano para poder
+  // distinguir éxito (referencia) de popup bloqueado (null).
+  const w = window.open(src, "_blank");
+  if (!w) return false;
+  w.opener = null;
+  return "abierto";
+}
+
 // Copiar al portapapeles con respaldo: el Clipboard API falla silencioso en
 // Safari/webviews o sin permiso; si falla, cae a textarea + execCommand.
 // Devuelve si realmente se copió (para mostrar el "✓" solo cuando sí).

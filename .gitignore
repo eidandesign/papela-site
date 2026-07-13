@@ -25,6 +25,9 @@ yarn-error.log*
 *.pem
 tsconfig.tsbuildinfo
 
+# referencias de diseño (los fondos optimizados viven en public/images/club/)
+public/images/fondos tarjetas/
+
 # claude code local skills
 .claude/skills/
 skills-lock.json

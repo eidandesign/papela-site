@@ -3,21 +3,25 @@
 // Tarjeta de lealtad del Club Creativo Papela — /club/[token].
 // Los DATOS viven en el admin (admin.papela-atelier.com); esta vista los lee
 // de su API pública y solo los presenta. Pase VERTICAL estilo wallet en una
-// sola tarjeta: header, sellos tipo sticker, miembro y talón con nº de socio
-// + QR. El miembro puede PERSONALIZAR su tarjeta (fondo, textura, holo y
-// "cositas"); la elección se guarda vía PATCH al mismo endpoint.
+// sola tarjeta: header (título + nº de socio), álbum de stickers con contador
+// y acceso a la planilla, y nombre + fecha de miembro. El miembro puede
+// PERSONALIZAR su tarjeta (fondo, textura, holo y "cositas"); la elección se
+// guarda vía PATCH al mismo endpoint.
 //
-// FONDOS en dos grupos: colores de marca (tinta blanca) y acabados —
-// holográficos pastel y papeles con grano (tinta oscura). Cada fondo define
-// su tinta (`ink`) y toda la tipografía/bordes del pase la heredan vía la
-// variable CSS --ink (clases .club-ink-* con color-mix), para que el texto
-// siempre contraste. Los gradientes/texturas son DECORATIVOS (material del
-// pase); la estructura de la página usa los tokens del sitio.
+// FONDOS: imágenes reales (public/images/club/fondos) — auras con grano,
+// gises pastel, holográficos y glitter. Cada fondo define su tinta (`ink`):
+// oscura sobre fondos claros/pastel y clara sobre los saturados/oscuros, y
+// toda la tipografía/bordes del pase la heredan vía la variable CSS --ink
+// (clases .club-ink-* con color-mix), para que el texto siempre contraste.
+// El fondo es DECORATIVO (material del pase); la estructura de la página usa
+// los tokens del sitio.
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
+import { TZ } from "@/lib/fecha";
 import PlanillaClub from "./club/PlanillaClub";
 import RascaSticker from "./club/RascaSticker";
 import {
@@ -30,129 +34,123 @@ const PREVIEW_SLOTS = 6;
 
 // ── Personalización (whitelist — debe coincidir con el API del admin) ──
 
-type TemaId =
-  | "verde" | "rosa" | "terra" | "lavanda" | "cielo" | "noche"
-  | "limon" | "petalo" | "atardecer" | "algodon" | "menta"
-  | "holo" | "aurora" | "prisma" | "papel" | "kraft";
+// "color" es el tema LIBRE: el miembro elige 1–2 colores con un picker y el
+// fondo es un degradado vivo (animado). Los demás son fondos de imagen fija.
+type TemaImagenId =
+  | "atardecer" | "aura" | "bruma" | "horizonte"
+  | "arcoiris" | "sol" | "vitral"
+  | "seda" | "perla" | "opalo" | "destellos" | "tul" | "cuarzo" | "remolino";
+type TemaId = TemaImagenId | "color";
 type TexturaId = "ninguna" | "puntos" | "rayas" | "cuadricula" | "rombos" | "confeti" | "grano";
 // Cosita decorativa: emoji + posición (%) sobre el cuerpo del pase. Sin x/y
 // usa la esquina default de su índice; el miembro la acomoda arrastrándola.
 type Charm = { e: string; x?: number; y?: number };
-type Estilo = { tema: TemaId; textura: TexturaId; holo: boolean; charms: Charm[] };
+// Colores del tema "color": 3 que se mezclan en el degradado (repetir un
+// color reduce la mezcla; los 3 iguales = sólido).
+type Colores = [string, string, string];
+type Estilo = {
+  tema: TemaId;
+  textura: TexturaId;
+  holo: boolean;
+  charms: Charm[];
+  colores: Colores;
+};
 
-const ESTILO_DEFAULT: Estilo = { tema: "verde", textura: "ninguna", holo: true, charms: [] };
-
-// Grano de papel: ruido SVG desaturado y tenue (data URI, sin assets externos).
-const PAPEL_URI =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23p)' opacity='0.16'/%3E%3C/svg%3E\")";
+const COLORES_DEFAULT: Colores = ["#f9c5d8", "#9ec5f7", "#fff3b0"];
+const ESTILO_DEFAULT: Estilo = { tema: "atardecer", textura: "ninguna", holo: true, charms: [], colores: COLORES_DEFAULT };
 
 type Tema = {
   nombre: string;
-  grad: string; // background shorthand (puede llevar varias capas)
   ink: string;  // tinta del texto/bordes sobre este fondo
   claro: boolean; // fondo claro → ajusta el blend del acabado holográfico
-  grupo: "color" | "aura" | "acabado";
+  grupo: "aura" | "arte" | "brillo";
+  color: string; // color dominante — se ve mientras carga la imagen
 };
 
-const TEMAS: Record<TemaId, Tema> = {
-  // ── Colores de marca (tinta blanca) ──
-  verde:   { nombre: "Verde Papela", grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #0d3f47 0%, #12535C 45%, #1a6a75 100%)" },
-  rosa:    { nombre: "Rosa",         grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #8f1d4e 0%, #c2255c 45%, #e0578d 100%)" },
-  terra:   { nombre: "Terra",        grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #8a4629 0%, #C4704A 45%, #d98d63 100%)" },
-  lavanda: { nombre: "Lavanda",      grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #4a3d80 0%, #6f5bb5 45%, #9b8ad6 100%)" },
-  cielo:   { nombre: "Cielo",        grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #1d4e79 0%, #2e6ea3 45%, #5ba0cf 100%)" },
-  noche:   { nombre: "Noche",        grupo: "color", ink: "#ffffff", claro: false, grad: "linear-gradient(165deg, #17181c 0%, #2a2c33 45%, #3d4049 100%)" },
+// Los fondos son FOTOS (public/images/club/fondos/<id>.jpg) elegidas por
+// Papela: auras con grano, holográficos, glitter. `<id>-thumb.jpg` es la
+// miniatura del editor (~3KB) para no cargar los 14 fondos completos.
+function fondoSrc(id: TemaImagenId, thumb = false) {
+  return `/images/club/fondos/${id}${thumb ? "-thumb" : ""}.jpg`;
+}
 
-  // ── Auras (tinta oscura) — manchas de color difusas y vivas, estilo aura
-  // pastel (referencia ubu gohan): grandes radiales que se funden entre sí.
-  limon: {
-    nombre: "Limón", grupo: "aura", ink: "#403c3c", claro: true,
-    grad:
-      "radial-gradient(120% 90% at 18% 12%, rgba(255,232,90,.95), transparent 60%), " +
-      "radial-gradient(110% 90% at 88% 35%, rgba(126,224,138,.9), transparent 60%), " +
-      "radial-gradient(130% 110% at 55% 95%, rgba(91,182,232,.9), transparent 60%), " +
-      "linear-gradient(160deg, #fff3b8 0%, #d6f0e2 100%)",
-  },
-  petalo: {
-    nombre: "Pétalo", grupo: "aura", ink: "#403c3c", claro: true,
-    grad:
-      "radial-gradient(120% 90% at 20% 18%, rgba(255,105,180,.85), transparent 60%), " +
-      "radial-gradient(100% 80% at 75% 15%, rgba(255,190,235,.9), transparent 55%), " +
-      "radial-gradient(120% 100% at 85% 80%, rgba(150,160,255,.85), transparent 60%), " +
-      "linear-gradient(160deg, #ffc9e5 0%, #d9d4ff 100%)",
-  },
-  atardecer: {
-    nombre: "Atardecer", grupo: "aura", ink: "#403c3c", claro: true,
-    grad:
-      "radial-gradient(120% 90% at 22% 20%, rgba(255,150,64,.9), transparent 60%), " +
-      "radial-gradient(120% 90% at 80% 45%, rgba(255,99,146,.85), transparent 60%), " +
-      "radial-gradient(130% 110% at 60% 95%, rgba(96,150,235,.85), transparent 60%), " +
-      "linear-gradient(160deg, #ffd9a8 0%, #cfe0ff 100%)",
-  },
-  algodon: {
-    nombre: "Algodón", grupo: "aura", ink: "#403c3c", claro: true,
-    grad:
-      "radial-gradient(110% 90% at 18% 22%, rgba(150,196,255,.8), transparent 60%), " +
-      "radial-gradient(110% 90% at 84% 24%, rgba(255,182,220,.85), transparent 60%), " +
-      "radial-gradient(120% 110% at 55% 92%, rgba(255,236,150,.85), transparent 60%), " +
-      "linear-gradient(160deg, #e4ecff 0%, #ffeeda 100%)",
-  },
-  menta: {
-    nombre: "Menta", grupo: "aura", ink: "#403c3c", claro: true,
-    grad:
-      "radial-gradient(120% 90% at 20% 18%, rgba(110,226,180,.9), transparent 60%), " +
-      "radial-gradient(120% 100% at 85% 30%, rgba(255,240,120,.85), transparent 58%), " +
-      "radial-gradient(130% 110% at 60% 95%, rgba(88,196,235,.85), transparent 60%), " +
-      "linear-gradient(160deg, #dff7e8 0%, #d2f0fa 100%)",
-  },
+const TEMAS: Record<TemaImagenId, Tema> = {
+  // ── Auras (degradados difusos con grano) ──
+  atardecer: { nombre: "Atardecer", grupo: "aura", ink: "#ffffff", claro: false, color: "#e0637a" },
+  aura:      { nombre: "Aura",      grupo: "aura", ink: "#403c3c", claro: true,  color: "#ef7fa0" },
+  bruma:     { nombre: "Bruma",     grupo: "aura", ink: "#403c3c", claro: true,  color: "#9aa7d8" },
+  horizonte: { nombre: "Horizonte", grupo: "aura", ink: "#ffffff", claro: false, color: "#5d7fa8" },
 
-  // ── Acabados (tinta oscura) ──
-  // Seda holográfica: manchas pastel iridiscentes que se funden entre sí.
-  holo: {
-    nombre: "Holograma", grupo: "acabado", ink: "#403c3c", claro: true,
-    grad:
-      "radial-gradient(120% 90% at 15% 20%, rgba(255,170,214,.85), transparent 55%), " +
-      "radial-gradient(110% 85% at 85% 12%, rgba(150,214,255,.85), transparent 55%), " +
-      "radial-gradient(130% 100% at 82% 85%, rgba(255,214,160,.8), transparent 55%), " +
-      "radial-gradient(110% 95% at 18% 82%, rgba(186,170,255,.85), transparent 55%), " +
-      "linear-gradient(160deg, #ffdcee 0%, #dcecff 45%, #ffedd2 100%)",
-  },
-  // Remolino pastel con brillitos (dos capas de destellos + giro cónico suave).
-  aurora: {
-    nombre: "Aurora", grupo: "acabado", ink: "#403c3c", claro: true,
-    grad:
-      "radial-gradient(rgba(255,255,255,.9) 1px, transparent 1.6px) 8px 12px / 90px 70px, " +
-      "radial-gradient(rgba(255,255,255,.75) 1.3px, transparent 2px) 48px 44px / 110px 90px, " +
-      "radial-gradient(90% 70% at 50% 45%, rgba(255,255,255,.35), transparent 70%), " +
-      "conic-gradient(from 220deg at 55% 40%, #ffd3e4, #ffe4cf 18%, #d9f2e4 36%, #cfe3ff 55%, #e6d7ff 75%, #ffd3e4 100%)",
-  },
-  // Facetas prismáticas: dos abanicos cónicos pastel que se cruzan.
-  prisma: {
-    nombre: "Prisma", grupo: "acabado", ink: "#403c3c", claro: true,
-    grad:
-      "repeating-conic-gradient(from 25deg at 28% 32%, rgba(255,214,235,.75) 0 11%, rgba(214,232,255,.75) 11% 20%, rgba(255,242,214,.75) 20% 32%, rgba(219,246,232,.75) 32% 43%, rgba(233,221,255,.75) 43% 54%), " +
-      "repeating-conic-gradient(from 190deg at 72% 70%, #ffe9f4 0 14%, #e7f0ff 14% 26%, #fff6e3 26% 40%, #eaf8f0 40% 52%, #f0e8ff 52% 64%)",
-  },
-  // Papeles con grano (textura tradicional de papelería).
-  papel: {
-    nombre: "Papel", grupo: "acabado", ink: "#664917", claro: true,
-    grad: `${PAPEL_URI}, linear-gradient(170deg, #f7eeda 0%, #f0e3c6 100%)`,
-  },
-  kraft: {
-    nombre: "Kraft", grupo: "acabado", ink: "#3f2d14", claro: true,
-    grad: `${PAPEL_URI}, linear-gradient(170deg, #cba576 0%, #b98f5c 100%)`,
-  },
+  // ── Arte (rayos y vitral — hechos a mano) ──
+  arcoiris: { nombre: "Arcoíris", grupo: "arte", ink: "#403c3c", claro: true, color: "#f2a86e" },
+  sol:      { nombre: "Sol",      grupo: "arte", ink: "#403c3c", claro: true, color: "#f2b7c9" },
+  vitral:   { nombre: "Vitral",   grupo: "arte", ink: "#403c3c", claro: true, color: "#f2917c" },
+
+  // ── Brillos (holográficos y glitter) ──
+  seda:      { nombre: "Seda",      grupo: "brillo", ink: "#403c3c", claro: true, color: "#cfd8f2" },
+  perla:     { nombre: "Perla",     grupo: "brillo", ink: "#403c3c", claro: true, color: "#b8cdf0" },
+  opalo:     { nombre: "Ópalo",     grupo: "brillo", ink: "#403c3c", claro: true, color: "#cbd5ee" },
+  destellos: { nombre: "Destellos", grupo: "brillo", ink: "#403c3c", claro: true, color: "#e8c7e0" },
+  tul:       { nombre: "Tul",       grupo: "brillo", ink: "#403c3c", claro: true, color: "#e9c2d8" },
+  cuarzo:    { nombre: "Cuarzo",    grupo: "brillo", ink: "#403c3c", claro: true, color: "#d998b8" },
+  remolino:  { nombre: "Remolino",  grupo: "brillo", ink: "#403c3c", claro: true, color: "#bcd0e6" },
 };
+
+// Un tema guardado con un id viejo (o basura) cae al default sin romper.
+function temaValido(t: unknown): TemaId {
+  return t === "color" || (typeof t === "string" && t in TEMAS) ? (t as TemaId) : ESTILO_DEFAULT.tema;
+}
+
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+// Acepta lo guardado con 1, 2 o 3 colores y siempre regresa 3 (rellena
+// repitiendo el último para que el degradado no cambie de carácter).
+function coloresValidos(v: unknown): Colores {
+  const hex = (Array.isArray(v) ? v : []).filter((c): c is string => typeof c === "string" && HEX_RE.test(c));
+  const c1 = hex[0] ?? COLORES_DEFAULT[0];
+  const c2 = hex[1] ?? hex[0] ?? COLORES_DEFAULT[1];
+  return [c1, c2, hex[2] ?? c2];
+}
+
+// Luminancia relativa (WCAG) — decide la tinta sobre el color elegido:
+// oscura en fondos claros, blanca en fondos oscuros (regla de la tarjeta).
+function luminancia(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * f(((n >> 16) & 255) / 255) + 0.7152 * f(((n >> 8) & 255) / 255) + 0.0722 * f((n & 255) / 255);
+}
+
+// Tema efectivo del tema LIBRE: tinta y blend según qué tan claros son los
+// colores elegidos (el degradado en sí se pinta en la capa de fondo).
+function temaColor(colores: Colores): Tema {
+  const claro = colores.reduce((s, c) => s + luminancia(c), 0) / colores.length > 0.4;
+  return { nombre: "Tu color", grupo: "aura", ink: claro ? "#403c3c" : "#ffffff", claro, color: colores[0] };
+}
+
+// Degradado base con los primeros 2 colores (manchas difusas estilo aura).
+// El TERCER color no vive aquí: es una mancha en su propia capa que ORBITA
+// la tarjeta (ver .club-orbita), paseándose por las esquinas.
+function gradienteColores([c1, c2]: Colores) {
+  return (
+    `radial-gradient(120% 90% at 18% 12%, ${c1}, transparent 60%), ` +
+    `radial-gradient(110% 90% at 88% 30%, ${c2}, transparent 60%), ` +
+    `linear-gradient(160deg, ${c1} 0%, ${c2} 100%)`
+  );
+}
 
 const GRUPOS_TEMA: { titulo: string; grupo: Tema["grupo"] }[] = [
-  { titulo: "Color", grupo: "color" },
   { titulo: "Auras", grupo: "aura" },
-  { titulo: "Acabados", grupo: "acabado" },
+  { titulo: "Arte", grupo: "arte" },
+  { titulo: "Brillos", grupo: "brillo" },
 ];
 
 // Ruido SVG para la textura "grano" (con color, se mezcla en overlay).
 const GRANO_URI =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E\")";
+
+// Ruido DENSO para el tema de color (las fotos ya traen su propio grano):
+// desaturado y con más octavas — imita la arenilla de los pósters riso.
+const GRANO_COLOR_URI =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)' opacity='0.8'/%3E%3C/svg%3E\")";
 
 // Patrones dibujados con currentColor (la capa hereda --ink), así se ven
 // tanto en fondos oscuros como claros. `opacidad` calibra cada patrón.
@@ -241,7 +239,8 @@ type Tarjeta = {
 function fechaLarga(iso: string) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+  // club_desde es timestamp UTC; sin forzar la zona, Vercel/UTC resta un día.
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric", timeZone: TZ });
 }
 
 // prefers-reduced-motion como store externo (evita setState dentro del efecto).
@@ -259,15 +258,12 @@ function useReducedMotion() {
 }
 
 // Capas decorativas del pase: textura + acabado holográfico.
-function DecorBloque({ estilo, reducida, animada }: { estilo: Estilo; reducida: boolean; animada?: boolean }) {
+function DecorBloque({ estilo, claro, reducida, animada }: { estilo: Estilo; claro: boolean; reducida: boolean; animada?: boolean }) {
   const textura = TEXTURAS[estilo.textura];
-  const claro = TEMAS[estilo.tema].claro;
   return (
     <>
-      {/* Grano fino SIEMPRE presente sobre el fondo (acabado de impresión
-          tipo póster riso/grainy gradient, ref. Baugasm/MANS). */}
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
-        style={{ backgroundImage: GRANO_URI, mixBlendMode: "overlay", opacity: 0.45 }} />
+      {/* Sin grano extra encima: las fotos de fondo ya traen su propia
+          textura y taparlas baja la resolución percibida. */}
       {textura.style && (
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none"
           style={{
@@ -300,7 +296,6 @@ export default function TarjetaClub() {
   const [tarjeta, setTarjeta] = useState<Tarjeta | null>(null);
   const [estado, setEstado] = useState<"cargando" | "ok" | "error">("cargando");
   const [estilo, setEstilo] = useState<Estilo>(ESTILO_DEFAULT);
-  const [qr, setQr] = useState<string | null>(null);
   const reducida = useReducedMotion();
 
   // Álbum de coleccionables: catálogo público (cacheado en CDN) + overlays.
@@ -372,7 +367,13 @@ export default function TarjetaClub() {
         }
         setEstilo(
           json.estilo
-            ? { ...ESTILO_DEFAULT, ...json.estilo, charms: normalizaCharms(json.estilo.charms) }
+            ? {
+                ...ESTILO_DEFAULT,
+                ...json.estilo,
+                tema: temaValido(json.estilo.tema),
+                colores: coloresValidos(json.estilo.colores),
+                charms: normalizaCharms(json.estilo.charms),
+              }
             : ESTILO_DEFAULT,
         );
         setEstado("ok");
@@ -389,21 +390,6 @@ export default function TarjetaClub() {
       .then((json) => { if (json?.stickers) setCatalogo(json); })
       .catch(() => {});
   }, []);
-
-  // QR con el link privado del pase (client-side, sin backend).
-  useEffect(() => {
-    if (estado !== "ok") return;
-    import("qrcode")
-      .then((q) =>
-        q.toDataURL(window.location.href, {
-          margin: 0,
-          width: 200,
-          color: { dark: "#403c3c", light: "#00000000" },
-        }),
-      )
-      .then(setQr)
-      .catch(() => {});
-  }, [estado]);
 
   function onMove(e: React.PointerEvent<HTMLDivElement>) {
     // Sin tilt mientras se arrastra una cosita (mueve el plano bajo el cursor).
@@ -515,7 +501,7 @@ export default function TarjetaClub() {
   }
   // El pase se pinta con el DRAFT mientras el editor está abierto (preview en vivo).
   const vista = editor ? draft : estilo;
-  const tema = TEMAS[vista.tema];
+  const tema = vista.tema === "color" ? temaColor(vista.colores) : TEMAS[vista.tema];
 
   // Compartir la tarjeta (elección del miembro): share nativo o copiar link.
   async function compartir() {
@@ -536,9 +522,9 @@ export default function TarjetaClub() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        /* Deriva ambiental del fondo: TODOS los fondos se mueven (aura viva).
-           Recorrido amplio en 3 puntos + giro y zoom para que el color viaje
-           visiblemente por el pase. */
+        /* Los fondos de FOTO van fijos (sin deriva ni zoom) para conservar su
+           resolución. El tema "Tu color" es CSS puro, ahí sí: el degradado
+           deriva por el pase (aura viva), además del brillo holográfico. */
         @keyframes club-fondo-drift {
           0%   { transform: translate(-6%, -4%) rotate(-3deg) scale(1.06); }
           33%  { transform: translate(5%, -2%) rotate(2.5deg) scale(1.14); }
@@ -547,38 +533,65 @@ export default function TarjetaClub() {
         }
         .club-fondo-anim { animation: club-fondo-drift 9s ease-in-out infinite; }
         .club-holo-idle { animation: club-holo-drift 7s ease-in-out infinite; }
+        /* La mancha del TERCER color deambula por la tarjeta: X y Y van en
+           animaciones SEPARADAS con duraciones que no son múltiplos (31s/23s),
+           así el recorrido combinado tarda ~12 min en repetirse — se siente
+           aleatorio, lento y orgánico. Puntos irregulares a propósito. */
+        @keyframes club-orbita-x {
+          0%   { transform: translateX(-28%); }
+          30%  { transform: translateX(12%); }
+          55%  { transform: translateX(30%); }
+          80%  { transform: translateX(-10%); }
+          100% { transform: translateX(-28%); }
+        }
+        @keyframes club-orbita-y {
+          0%   { transform: translateY(-26%) scale(1); }
+          25%  { transform: translateY(8%) scale(1.16); }
+          50%  { transform: translateY(28%) scale(0.9); }
+          70%  { transform: translateY(-6%) scale(1.1); }
+          100% { transform: translateY(-26%) scale(1); }
+        }
+        .club-orbita-x { animation: club-orbita-x 31s ease-in-out infinite; }
+        .club-orbita-y { animation: club-orbita-y 23s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
           .club-holo-idle { animation: none; }
           .club-fondo-anim { animation: none; }
+          .club-orbita-x { animation: none; }
+          .club-orbita-y { animation: none; }
         }
-        /* Texto FOIL: el glifo se pinta con un gradiente metálico derivado de
-           --ink (bandas iridiscentes rosa/blanco/cian). El reflejo es VIVO y
-           CONSTANTE: el ángulo del gradiente gira 360° en loop (via @property)
-           y la posición recorre el texto, como si la tarjeta se inclinara y la
-           letra reflejara la luz desde direcciones cambiantes. */
-        @property --foilA {
-          syntax: "<angle>";
-          inherits: false;
-          initial-value: 105deg;
+        /* Color pickers del editor: círculos limpios (sin el marco nativo). */
+        .club-picker {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 44px;
+          height: 44px;
+          border-radius: 9999px;
+          border: 1px solid rgba(0,0,0,.12);
+          padding: 0;
+          background: transparent;
+          cursor: pointer;
         }
+        .club-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .club-picker::-webkit-color-swatch { border-radius: 9999px; border: none; }
+        .club-picker::-moz-color-swatch { border-radius: 9999px; border: none; }
+        /* Texto FOIL: gradiente metálico derivado de --ink con UN destello
+           suave. El brillo solo BARRE el texto de izquierda a derecha (ángulo
+           fijo, sin giros), con pausa entre pasadas — sutil, como inclinar la
+           tarjeta ante la luz. */
         @keyframes club-foil-vivo {
-          0%   { --foilA: 80deg;  background-position: 0% 50%; }
-          25%  { --foilA: 170deg; background-position: 65% 10%; }
-          50%  { --foilA: 260deg; background-position: 100% 65%; }
-          75%  { --foilA: 350deg; background-position: 35% 100%; }
-          100% { --foilA: 440deg; background-position: 0% 50%; }
+          0%   { background-position: 150% 0; }
+          100% { background-position: -50% 0; }
         }
         .club-foil {
-          background-image: linear-gradient(var(--foilA),
+          background-image: linear-gradient(100deg,
             var(--ink) 0%,
-            color-mix(in srgb, var(--ink) 45%, #ffb6d9) 16%,
-            color-mix(in srgb, var(--ink) 8%, #ffffff) 30%,
-            color-mix(in srgb, var(--ink) 45%, #a8e6ff) 44%,
-            var(--ink) 58%,
-            color-mix(in srgb, var(--ink) 55%, #d9c8ff) 74%,
-            var(--ink) 88%,
+            var(--ink) 38%,
+            color-mix(in srgb, var(--ink) 45%, #ffb6d9) 45%,
+            color-mix(in srgb, var(--ink) 10%, #ffffff) 50%,
+            color-mix(in srgb, var(--ink) 45%, #a8e6ff) 55%,
+            var(--ink) 62%,
             var(--ink) 100%);
-          background-size: 240% 240%;
+          background-size: 220% 100%;
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
@@ -588,7 +601,7 @@ export default function TarjetaClub() {
           .club-foil { background: none; color: var(--ink); animation: none; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .club-foil { animation: none; background-position: 50% 50%; }
+          .club-foil { animation: none; background-position: 50% 0; }
         }
 
         /* Tinta adaptativa del pase: cada fondo define --ink y todo hereda. */
@@ -598,11 +611,7 @@ export default function TarjetaClub() {
         .club-ink-60 { color: color-mix(in srgb, var(--ink) 60%, transparent); }
         .club-ink-50 { color: color-mix(in srgb, var(--ink) 50%, transparent); }
         .club-ink-40 { color: color-mix(in srgb, var(--ink) 45%, transparent); }
-        .club-chip {
-          background: color-mix(in srgb, var(--ink) 13%, transparent);
-          border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
-        }
-        .club-dash { border-color: color-mix(in srgb, var(--ink) 38%, transparent); }
+        .club-borde { border-color: color-mix(in srgb, var(--ink) 85%, transparent); }
       `}</style>
 
       {/* Header: logo centrado + campana de notificaciones a la derecha */}
@@ -689,73 +698,111 @@ export default function TarjetaClub() {
                 className="relative overflow-hidden"
                 style={{ "--ink": tema.ink } as React.CSSProperties}
               >
-                {/* Fondo en capa propia, más grande que el pase, con deriva viva */}
-                <div
-                  aria-hidden="true"
-                  className={`absolute -inset-[25%] pointer-events-none ${reducida ? "" : "club-fondo-anim"}`}
-                  style={{ background: tema.grad }}
-                />
-                <DecorBloque estilo={vista} reducida={reducida} animada />
+                {/* Fondo: foto FIJA (sin zoom ni deriva, conserva su resolución)
+                    o, en "Tu color", degradado CSS con deriva viva. */}
+                {vista.tema === "color" ? (
+                  <>
+                    <div
+                      aria-hidden="true"
+                      className={`absolute -inset-[25%] pointer-events-none ${reducida ? "" : "club-fondo-anim"}`}
+                      style={{ background: gradienteColores(vista.colores) }}
+                    />
+                    {/* Tercer color: mancha difusa GRANDE que deambula por la
+                        tarjeta (X y Y desacoplados = camino casi aleatorio) */}
+                    <div
+                      aria-hidden="true"
+                      className={`absolute -inset-[25%] pointer-events-none ${reducida ? "" : "club-orbita-x"}`}
+                    >
+                      <div
+                        className={`absolute inset-0 ${reducida ? "" : "club-orbita-y"}`}
+                        style={{ background: `radial-gradient(62% 52% at 50% 50%, ${vista.colores[2]}, transparent 72%)` }}
+                      />
+                    </div>
+                    {/* Grano en dos capas: overlay marca el contraste y la capa
+                        normal (tenue) garantiza arenilla visible sobre
+                        cualquier color, claro u oscuro. */}
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ backgroundImage: GRANO_COLOR_URI, mixBlendMode: "overlay", opacity: 0.75 }}
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ backgroundImage: GRANO_COLOR_URI, opacity: 0.16 }}
+                    />
+                  </>
+                ) : (
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundColor: tema.color,
+                      backgroundImage: `url(${fondoSrc(vista.tema)})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                )}
+                <DecorBloque estilo={vista} claro={tema.claro} reducida={reducida} animada />
 
-                {/* Header — título editorial en una línea + pill translúcida */}
-                <div className="relative flex items-center justify-between gap-3 p-5 pb-2">
+                {/* Header — título editorial + nº de socio */}
+                <div className="relative flex items-start justify-between gap-3 p-6 pb-4">
                   <p className="club-foil font-serif italic text-[28px] leading-tight whitespace-nowrap">
                     Club Creativo
                   </p>
-                  <span className="club-ink club-chip rounded-full px-3.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] whitespace-nowrap flex-shrink-0 backdrop-blur-sm">
-                    Miembro
-                  </span>
+                  <div className="text-right flex-shrink-0">
+                    <p className="club-ink-75 text-[9px] font-bold uppercase tracking-[0.22em]">N.º de socio</p>
+                    <p className="club-ink font-mono text-lg tracking-[0.14em] mt-0.5">{tarjeta.numero}</p>
+                  </div>
                 </div>
 
                 {/* Álbum de stickers — preview de los primeros espacios */}
-                <div className="relative px-5 pt-4 pb-5">
-                  <div className="flex items-center justify-between mb-4 px-1">
-                    <p className="club-ink-75 text-[10px] font-bold uppercase tracking-[0.22em]">Mis stickers</p>
-                    <span className="club-ink club-chip text-[11px] font-semibold rounded-full px-3 py-0.5 backdrop-blur-sm">
-                      {misStickers.obtenidos} / {albumTotal}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-y-4 justify-items-center"
+                <div className="relative px-6 pt-4">
+                  <div className="grid grid-cols-3 gap-y-6 justify-items-center"
                     role="img" aria-label={`${misStickers.obtenidos} de ${albumTotal} stickers`}>
                     {Array.from({ length: PREVIEW_SLOTS }, (_, i) => {
                       const orden = i + 1;
                       const sticker = catalogo?.stickers.find((s) => s.orden === orden);
                       const mio = sticker && misStickers.album.find((a) => a.id === sticker.id);
-                      const hito = catalogo?.hitos.find((h) => h.en === orden);
                       if (sticker && mio) {
                         return (
-                          <span key={orden}
-                            className="flex items-center justify-center w-[74px] h-[74px] rounded-full bg-white/90 p-1.5"
-                            style={{ boxShadow: "0 3px 8px rgba(0,0,0,.22), 0 0 0 2px color-mix(in srgb, var(--ink) 30%, transparent)" }}>
+                          <span key={orden} className="flex items-center justify-center w-[86px] h-[104px]">
                             {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
                             <img src={stickerSrc(ADMIN_ORIGIN, sticker)} alt={sticker.nombre}
-                              className="w-full h-full object-contain" draggable={false} />
+                              className="w-[76px] h-[76px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.25)]"
+                              draggable={false} />
                           </span>
                         );
                       }
                       return (
                         <span key={orden}
-                          className="club-dash club-ink-40 flex flex-col items-center justify-center w-[74px] h-[74px] rounded-full border-[1.5px] border-dashed text-center leading-tight"
+                          className="club-borde club-ink-75 flex items-center justify-center w-[86px] h-[104px] rounded-[50%] border"
                           aria-hidden="true">
-                          <span className="text-xs font-semibold">{orden}</span>
-                          {hito && <span className="text-[8.5px] font-medium px-2">Gana un {hito.premio.replace(" de descuento", "")}</span>}
+                          <span className="text-xs font-medium">{orden}</span>
                         </span>
                       );
                     })}
                   </div>
 
+                  {/* Contador + planilla, centrados */}
+                  <p className="club-ink relative text-center text-sm font-semibold mt-7">
+                    {misStickers.obtenidos} / {albumTotal}
+                  </p>
                   <button onClick={() => setPlanilla(true)}
-                    className="club-ink-85 block mx-auto mt-4 text-xs font-semibold underline underline-offset-2">
+                    className="club-ink relative mx-auto mt-3 flex items-center gap-2.5 text-xs font-medium">
                     Ver mi planilla completa
+                    <span className="club-borde w-8 h-8 rounded-full border flex items-center justify-center">
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </span>
                   </button>
                 </div>
 
                 {/* Miembro */}
-                <div className="relative p-5 pt-1 flex items-end justify-between gap-3">
-                  <p className="club-foil font-serif text-2xl leading-snug break-words min-w-0">{tarjeta.nombre}</p>
+                <div className="relative p-6 pt-12 flex items-end justify-between gap-3">
+                  <p className="club-foil font-serif text-[26px] leading-snug break-words min-w-0">{tarjeta.nombre}</p>
                   <div className="text-right flex-shrink-0">
-                    <p className="club-ink-60 text-[9px] font-bold uppercase tracking-[0.2em]">Miembro desde</p>
+                    <p className="club-ink-75 text-[9px] font-bold uppercase tracking-[0.22em]">Miembro desde</p>
                     <p className="club-ink-85 text-xs mt-0.5">{fechaLarga(tarjeta.desde)}</p>
                   </div>
                 </div>
@@ -782,19 +829,6 @@ export default function TarjetaClub() {
                   );
                 })}
 
-              </div>
-
-              {/* Talón — número de socio + QR (misma tarjeta, corte punteado) */}
-              <div className="relative bg-[var(--color-bg)] border-t-2 border-dashed border-[var(--color-border)] p-5 flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--color-muted)]">N.º de socio</p>
-                  <p className="font-mono text-lg text-[var(--color-text)] tracking-[0.14em] mt-0.5">{tarjeta.numero}</p>
-                  <p className="text-[10px] text-[var(--color-muted)] mt-1.5">papela-atelier.com</p>
-                </div>
-                {qr && (
-                  // eslint-disable-next-line @next/next/no-img-element -- data URI generado en el cliente
-                  <img src={qr} alt="Código QR de tu tarjeta" className="w-[76px] h-[76px] flex-shrink-0" />
-                )}
               </div>
             </div>
           </div>
@@ -906,12 +940,40 @@ export default function TarjetaClub() {
                 </div>
 
                 <div className="px-5 py-4 space-y-5">
-                  {/* Fondo: colores de marca + acabados */}
+                  {/* Tu color: 1–2 colores libres → degradado vivo (animado) */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-1">Tu color</p>
+                    <p className="text-xs text-[var(--color-muted)] mb-2">
+                      Mezcla hasta tres colores — el degradado se mueve suavecito por tu tarjeta.
+                    </p>
+                    <div className="flex items-center gap-2.5">
+                      <button onClick={() => setDraft(d => ({ ...d, tema: "color" }))}
+                        aria-label="Usar mi combinación de colores" aria-pressed={draft.tema === "color"} title="Tu color"
+                        className={`w-11 h-11 rounded-full border border-black/10 transition ${
+                          draft.tema === "color" ? "ring-2 ring-[var(--color-verde)] ring-offset-2 scale-105" : "hover:scale-105"
+                        }`}
+                        style={{ background: `linear-gradient(135deg, ${draft.colores[0]}, ${draft.colores[1]}, ${draft.colores[2]})` }} />
+                      <span className="text-[var(--color-border)]" aria-hidden="true">│</span>
+                      {([0, 1, 2] as const).map((i) => (
+                        <input key={i} type="color" className="club-picker" aria-label={`Color ${i + 1}`}
+                          value={draft.colores[i]}
+                          onChange={(e) =>
+                            setDraft(d => ({
+                              ...d,
+                              tema: "color",
+                              colores: d.colores.map((c, j) => (j === i ? e.target.value : c)) as Colores,
+                            }))
+                          } />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Fondos de imagen, por grupo */}
                   {GRUPOS_TEMA.map(({ titulo, grupo }) => (
                     <div key={grupo}>
                       <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-2">{titulo}</p>
                       <div className="flex flex-wrap gap-2.5">
-                        {(Object.keys(TEMAS) as TemaId[])
+                        {(Object.keys(TEMAS) as TemaImagenId[])
                           .filter((t) => TEMAS[t].grupo === grupo)
                           .map((t) => (
                             <button key={t} onClick={() => setDraft(d => ({ ...d, tema: t }))}
@@ -919,7 +981,12 @@ export default function TarjetaClub() {
                               className={`w-11 h-11 rounded-full border border-black/10 transition ${
                                 draft.tema === t ? "ring-2 ring-[var(--color-verde)] ring-offset-2 scale-105" : "hover:scale-105"
                               }`}
-                              style={{ background: TEMAS[t].grad }} />
+                              style={{
+                                backgroundColor: TEMAS[t].color,
+                                backgroundImage: `url(${fondoSrc(t, true)})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                              }} />
                           ))}
                       </div>
                     </div>
