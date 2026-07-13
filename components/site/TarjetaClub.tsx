@@ -481,6 +481,21 @@ export default function TarjetaClub() {
   const misStickers = tarjeta?.stickers ?? { obtenidos: 0, pendientes: 0, album: [] };
   const albumTotal = catalogo?.total ?? 100;
 
+  // Preview de la portada: los stickers CON PREMIO van primero (para que el
+  // miembro los vea de inmediato al abrir su tarjeta), luego el resto de sus
+  // stickers obtenidos por orden de catálogo. Los espacios que sobran se
+  // llenan con los siguientes números aún no conseguidos (como antes).
+  const propiosOrdenados = (catalogo?.stickers ?? [])
+    .filter((s) => misStickers.album.some((a) => a.id === s.id))
+    .sort((a, b) => a.orden - b.orden);
+  const previewStickers = [
+    ...propiosOrdenados.filter((s) => misStickers.detalles?.[s.id]?.premio),
+    ...propiosOrdenados.filter((s) => !misStickers.detalles?.[s.id]?.premio),
+  ].slice(0, PREVIEW_SLOTS);
+  const bloqueados = (catalogo?.stickers ?? [])
+    .filter((s) => !misStickers.album.some((a) => a.id === s.id))
+    .sort((a, b) => a.orden - b.orden);
+
   // Pill de aviso: se oculta al descartarla y REAPARECE solo si llegan MÁS
   // pendientes que cuando se descartó (rascar la baja, no la revive). La
   // memoria se resetea al llegar a 0 (en cargarTarjeta). La campana siempre
@@ -762,24 +777,30 @@ export default function TarjetaClub() {
                   <div className="grid grid-cols-3 gap-y-6 justify-items-center"
                     role="img" aria-label={`${misStickers.obtenidos} de ${albumTotal} stickers`}>
                     {Array.from({ length: PREVIEW_SLOTS }, (_, i) => {
-                      const orden = i + 1;
-                      const sticker = catalogo?.stickers.find((s) => s.orden === orden);
-                      const mio = sticker && misStickers.album.find((a) => a.id === sticker.id);
-                      if (sticker && mio) {
+                      const sticker = previewStickers[i];
+                      if (sticker) {
+                        const conPremio = !!misStickers.detalles?.[sticker.id]?.premio;
                         return (
-                          <span key={orden} className="flex items-center justify-center w-[86px] h-[104px]">
+                          <span key={sticker.id} className="relative flex items-center justify-center w-[86px] h-[104px]">
                             {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
                             <img src={stickerSrc(ADMIN_ORIGIN, sticker)} alt={sticker.nombre}
                               className="w-[76px] h-[76px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.25)]"
                               draggable={false} />
+                            {conPremio && (
+                              <span aria-label="Trae premio" title="Trae premio"
+                                className="absolute top-0 right-1 text-base drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
+                                🎁
+                              </span>
+                            )}
                           </span>
                         );
                       }
+                      const bloqueado = bloqueados[i - previewStickers.length];
                       return (
-                        <span key={orden}
+                        <span key={bloqueado?.id ?? `vacio-${i}`}
                           className="club-borde club-ink-75 flex items-center justify-center w-[86px] h-[104px] rounded-[50%] border"
                           aria-hidden="true">
-                          <span className="text-xs font-medium">{orden}</span>
+                          <span className="text-xs font-medium">{bloqueado?.orden ?? ""}</span>
                         </span>
                       );
                     })}
