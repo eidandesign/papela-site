@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPinIcon } from "@heroicons/react/24/solid";
 import { getClasesConHorarios } from "@/lib/clases";
-import { getActividades, getPublico } from "@/lib/clases-actividades";
+import { getPublico } from "@/lib/clases-actividades";
+import { getTiposClase } from "@/lib/clases-tipos";
 import HeroSection from "@/components/site/HeroSection";
 import ReservaButton from "@/components/site/ReservaButton";
 
@@ -23,7 +24,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ClasesPage() {
-  const maestras = await getClasesConHorarios();
+  const [maestras, tiposClase] = await Promise.all([
+    getClasesConHorarios(),
+    getTiposClase(),
+  ]);
 
   return (
     <>
@@ -63,7 +67,7 @@ export default async function ClasesPage() {
           <div className="flex flex-col gap-5 md:gap-6">
             {maestras.map((maestra) => {
               const publico = getPublico(maestra.slug);
-              const actividades = getActividades(maestra.slug).map((a) => a.titulo);
+              const tipos = tiposClase.filter((t) => t.claseId === maestra.id);
               return (
                 <article
                   key={maestra.id}
@@ -115,7 +119,7 @@ export default async function ClasesPage() {
                         horarios={maestra.horarios}
                         claseNombre={maestra.nombre}
                         whatsapp={maestra.whatsapp}
-                        actividades={actividades}
+                        tipos={tipos}
                         label="Reservar Clase"
                         size="sm"
                         showArrow={false}

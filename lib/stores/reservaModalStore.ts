@@ -1,12 +1,13 @@
 "use client";
 import { create } from "zustand";
 import type { Horario } from "@/lib/clases";
+import type { TipoClasePublico } from "@/lib/clases-tipos";
 
 interface ReservaPayload {
   horarios: Horario[];
   claseNombre: string;
   whatsapp: string | null;
-  actividades: string[];
+  tipos: TipoClasePublico[];
 }
 
 interface ReservaModalStore {

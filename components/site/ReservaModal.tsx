@@ -29,14 +29,17 @@ export default function ReservaModal() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
-  // Al abrir (o cambiar de maestra) preselecciona la primera clase.
+  // Al abrir (o cambiar de maestra) resetea a "Todas las clases" — así nunca
+  // se oculta un horario existente que aún no tiene tipo asignado en el admin.
   // Ajuste de estado en render (recomendado por React) en vez de useEffect:
   // evita un render extra y el flash de la selección anterior.
   const claseKey = data?.claseNombre ?? null;
   if (claseKey !== prevClase) {
     setPrevClase(claseKey);
-    setSelected(data?.actividades[0] ?? null);
+    setSelected(null);
   }
+
+  const tipoSeleccionado = data?.tipos.find((t) => t.id === selected) ?? null;
 
   useEffect(() => {
     if (!data) return;
@@ -53,8 +56,8 @@ export default function ReservaModal() {
 
   const numero = data?.whatsapp || WHATSAPP_FALLBACK;
   const waText = encodeURIComponent(
-    selected
-      ? `Hola Papela 🌿 me interesa reservar la clase de "${selected}" con ${data?.claseNombre}.`
+    tipoSeleccionado
+      ? `Hola Papela 🌿 me interesa reservar la clase de "${tipoSeleccionado.nombre}" con ${data?.claseNombre}.`
       : `Hola Papela 🌿 me interesa reservar una clase con ${data?.claseNombre}.`
   );
   const waHref = `https://wa.me/${numero}?text=${waText}`;
@@ -109,7 +112,7 @@ export default function ReservaModal() {
         </div>
 
         {/* Selector de tipo de clase (dropdown del DS) */}
-        {data.actividades.length > 0 && (
+        {data.tipos.length > 0 && (
           <div className="mb-6 max-w-sm mx-auto flex flex-col gap-1.5">
             <label
               htmlFor="reserva-actividad"
@@ -120,11 +123,12 @@ export default function ReservaModal() {
             <Select
               id="reserva-actividad"
               value={selected ?? ""}
-              onChange={(e) => setSelected(e.target.value)}
+              onChange={(e) => setSelected(e.target.value || null)}
             >
-              {data.actividades.map((a) => (
-                <option key={a} value={a}>
-                  {a}
+              <option value="">Todas las clases</option>
+              {data.tipos.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nombre} — ${t.precio.toLocaleString()} MXN
                 </option>
               ))}
             </Select>
@@ -133,9 +137,11 @@ export default function ReservaModal() {
 
         {data.horarios.length > 0 ? (
           <ClaseCalendar
+            key={selected ?? "todas"}
             horarios={data.horarios}
             claseNombre={data.claseNombre}
-            actividad={selected ?? undefined}
+            tipoClaseId={selected ?? undefined}
+            tipoClaseNombre={tipoSeleccionado?.nombre}
           />
         ) : (
           <div className="bg-[#f2f0e9] rounded-xl px-5 py-8 text-center">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClaseBySlug, getClases, getHorariosSemanales } from "@/lib/clases";
 import { getActividades } from "@/lib/clases-actividades";
+import { getTiposClase } from "@/lib/clases-tipos";
 import { SITE_URL } from "@/lib/site";
 import ReservaButton from "@/components/site/ReservaButton";
 import ActividadCard from "@/components/site/ActividadCard";
@@ -50,11 +51,15 @@ export async function generateMetadata({
 
 export default async function ClaseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const maestra = await getClaseBySlug(slug);
+  const [maestra, tiposClase] = await Promise.all([
+    getClaseBySlug(slug),
+    getTiposClase(),
+  ]);
 
   if (!maestra) notFound();
 
   const actividades = getActividades(maestra.slug);
+  const tipos = tiposClase.filter((t) => t.claseId === maestra.id);
   const horariosSemanales = getHorariosSemanales(maestra.horarios);
 
   const jsonLd = {
@@ -153,7 +158,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
                 horarios={maestra.horarios}
                 claseNombre={maestra.nombre}
                 whatsapp={maestra.whatsapp}
-                actividades={actividades.map((a) => a.titulo)}
+                tipos={tipos}
                 label="Reservar Clase"
               />
             </div>
@@ -179,7 +184,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
                 horarios={maestra.horarios}
                 claseNombre={maestra.nombre}
                 whatsapp={maestra.whatsapp}
-                actividades={actividades.map((a) => a.titulo)}
+                tipos={tipos}
                 label="Reservar Clase"
               />
             </div>

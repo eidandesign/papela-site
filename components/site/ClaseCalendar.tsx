@@ -35,14 +35,21 @@ function semanaDelMes(key: string) {
 }
 
 export default function ClaseCalendar({
-  horarios,
+  horarios: todosLosHorarios,
   claseNombre,
-  actividad,
+  tipoClaseId,
+  tipoClaseNombre,
 }: {
   horarios: Horario[];
   claseNombre: string;
-  actividad?: string;
+  tipoClaseId?: string;
+  tipoClaseNombre?: string;
 }) {
+  // Sin tipo elegido ("Todas las clases") se muestran todos los horarios —
+  // incluye los que aún no tienen tipo asignado en el admin (legacy).
+  const horarios = tipoClaseId
+    ? todosLosHorarios.filter((h) => h.tipo_clase_id === tipoClaseId)
+    : todosLosHorarios;
   // Arranca en la semana del primer horario disponible (no en la semana actual
   // si ésta ya no tiene fechas) para no mostrar una semana vacía al abrir.
   const [weekStart, setWeekStart] = useState(() => {
@@ -83,7 +90,7 @@ export default function ClaseCalendar({
         body: JSON.stringify({
           horarioId: h.id,
           claseNombre,
-          actividad,
+          actividad: tipoClaseNombre,
           fechaHora,
           precio: h.precio,
           duracion: h.duracion_minutos,
