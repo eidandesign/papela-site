@@ -84,6 +84,7 @@ export default function SiteFooter() {
       <div className="w-[90%] mx-auto border-t border-[var(--color-border)] py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[var(--color-muted)]">
         <span>© {new Date().getFullYear()} Papela Atelier. Todos los derechos reservados.</span>
         <div className="flex gap-6">
+          <Link href="/back-to-school" className="hover:text-[var(--color-verde)] transition-colors">Back to School</Link>
           <Link href="/privacidad" className="hover:text-[var(--color-verde)] transition-colors">Aviso de privacidad</Link>
           <Link href="/terminos" className="hover:text-[var(--color-verde)] transition-colors">Términos</Link>
           <BackToTop />
