@@ -8,7 +8,6 @@ export type Horario = {
   cupo_disponible: number;
   precio: number;
   duracion_minutos: number;
-  tipo_clase_id: string | null;
 };
 
 export type Maestra = {
@@ -72,7 +71,7 @@ export async function getClasesConHorarios(): Promise<MaestraConHorarios[]> {
 
   const { data: horarios, error: horariosError } = await supabase
     .from("clases_horarios")
-    .select("id, clase_id, fecha_hora, cupo_disponible, precio, duracion_minutos, tipo_clase_id")
+    .select("id, clase_id, fecha_hora, cupo_disponible, precio, duracion_minutos")
     .in("clase_id", maestras.map((m) => m.id))
     .eq("estado", "disponible")
     .gt("fecha_hora", twoHoursFromNow)
@@ -144,7 +143,7 @@ export async function getClaseBySlug(slug: string): Promise<MaestraConHorarios |
 
   const { data: horarios, error: horariosError } = await supabase
     .from("clases_horarios")
-    .select("id, fecha_hora, cupo_disponible, precio, duracion_minutos, tipo_clase_id")
+    .select("id, fecha_hora, cupo_disponible, precio, duracion_minutos")
     .eq("clase_id", maestra.id)
     .eq("estado", "disponible")
     .gt("fecha_hora", twoHoursFromNow)

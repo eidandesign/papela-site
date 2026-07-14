@@ -140,8 +140,7 @@ export default function ReservaModal() {
             key={selected ?? "todas"}
             horarios={data.horarios}
             claseNombre={data.claseNombre}
-            tipoClaseId={selected ?? undefined}
-            tipoClaseNombre={tipoSeleccionado?.nombre}
+            tipo={tipoSeleccionado ?? undefined}
           />
         ) : (
           <div className="bg-[#f2f0e9] rounded-xl px-5 py-8 text-center">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Horario } from "@/lib/clases";
+import type { TipoClasePublico } from "@/lib/clases-tipos";
 import {
   TZ,
   diaMexico,
@@ -34,22 +35,34 @@ function semanaDelMes(key: string) {
   return Math.floor((d - primerLunes) / 7) + (diff === 0 ? 1 : 2);
 }
 
+// Los horarios no guardan a qué tipo pertenecen (el admin los agenda sueltos,
+// el precio real vive en tipos_clase — ver nota en lib/clases-tipos.ts). Se
+// empatan por duración + día de la semana. Si dos tipos comparten ambos, un
+// horario puede calzar en más de uno — se muestra bajo cada filtro que aplique.
+function calzaConTipo(h: Horario, tipo: TipoClasePublico): boolean {
+  if (h.duracion_minutos !== tipo.duracion) return false;
+  if (tipo.dias.length === 0) return true;
+  // diaSemanaLunes0: 0=Lun…6=Dom. tipo.dias usa la convención del admin (0=Dom…6=Sáb).
+  const diaDomingo0 = (diaSemanaLunes0(diaMexico(new Date(h.fecha_hora))) + 1) % 7;
+  return tipo.dias.includes(diaDomingo0);
+}
+
 export default function ClaseCalendar({
   horarios: todosLosHorarios,
   claseNombre,
-  tipoClaseId,
-  tipoClaseNombre,
+  tipo,
 }: {
   horarios: Horario[];
   claseNombre: string;
-  tipoClaseId?: string;
-  tipoClaseNombre?: string;
+  tipo?: TipoClasePublico;
 }) {
-  // Sin tipo elegido ("Todas las clases") se muestran todos los horarios —
-  // incluye los que aún no tienen tipo asignado en el admin (legacy).
-  const horarios = tipoClaseId
-    ? todosLosHorarios.filter((h) => h.tipo_clase_id === tipoClaseId)
+  // Sin tipo elegido ("Todas las clases") se muestran todos los horarios.
+  const horarios = tipo
+    ? todosLosHorarios.filter((h) => calzaConTipo(h, tipo))
     : todosLosHorarios;
+  // Con un tipo elegido, el precio mostrado/cobrado sale del tipo (fuente de
+  // verdad real, ver 545c948 en papela-admin) — no del horario.
+  const precioDeSlot = (h: Horario) => (tipo ? tipo.precio : h.precio);
   // Arranca en la semana del primer horario disponible (no en la semana actual
   // si ésta ya no tiene fechas) para no mostrar una semana vacía al abrir.
   const [weekStart, setWeekStart] = useState(() => {
@@ -90,9 +103,9 @@ export default function ClaseCalendar({
         body: JSON.stringify({
           horarioId: h.id,
           claseNombre,
-          actividad: tipoClaseNombre,
+          actividad: tipo?.nombre,
+          tipoClaseId: tipo?.id,
           fechaHora,
-          precio: h.precio,
           duracion: h.duracion_minutos,
         }),
       });
@@ -189,7 +202,7 @@ export default function ClaseCalendar({
                   {h.duracion_minutos} min · {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
                 </p>
                 <p className="font-sans font-semibold text-[var(--color-text)] text-sm mt-1">
-                  ${h.precio.toLocaleString()} MXN
+                  ${precioDeSlot(h).toLocaleString()} MXN
                 </p>
               </div>
 
@@ -227,7 +240,7 @@ export default function ClaseCalendar({
                   <div key={h.id} className="flex flex-col items-center gap-2 bg-[#e7d6cf] rounded-xl p-3 text-center w-full">
                     <span className="font-sans font-medium text-sm text-[var(--color-verde)]">{hora}</span>
                     <span className="font-sans text-xs text-[var(--color-muted)]">{h.duracion_minutos}m</span>
-                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">${h.precio.toLocaleString()}</span>
+                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">${precioDeSlot(h).toLocaleString()}</span>
                     <span className="font-sans text-xs text-[var(--color-muted)]">
                       {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
                     </span>
