@@ -21,7 +21,13 @@ export const metadata: Metadata = {
     title: "Back to School — Etiquetas escolares personalizadas | Papela Atelier",
     description:
       "Todo lo que necesitas en un solo lugar. Etiquetas bonitas, resistentes y hechas a la medida. Paquetes desde $220.",
-    images: [{ url: "/images/back-to-school/hero-ninos.png", alt: "Etiquetas escolares personalizadas Papela Atelier" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Back to School — Etiquetas escolares personalizadas | Papela Atelier",
+    description:
+      "Todo lo que necesitas en un solo lugar. Etiquetas bonitas, resistentes y hechas a la medida. Paquetes desde $220.",
   },
 };
 
