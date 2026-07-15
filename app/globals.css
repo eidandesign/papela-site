@@ -159,12 +159,30 @@ body {
   will-change: opacity, transform;
 }
 
+/* Back to School — avioneta de gis que cruza volando el fondo verde del hero.
+   Solo anima la posición; el recorte del video a "solo tiza visible" corre en
+   BackToSchoolPlane.tsx (canvas + chroma-key por luminancia). Entra por la
+   derecha (fuera de cuadro) y sale por la izquierda; el reset 100%→0% ocurre
+   fuera de pantalla, sin teletransporte visible. */
+@keyframes bts-plane-fly {
+  0%   { transform: translate(104vw, 1vh) rotate(-2deg); }
+  50%  { transform: translate(28vw, -2.5vh) rotate(-1deg); }
+  100% { transform: translate(-44vw, 3vh) rotate(-3deg); }
+}
+.bts-plane {
+  animation: bts-plane-fly 22s linear infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ocasiones-marquee-track,
   .ocasiones-float {
     animation: none !important;
   }
   .page-enter {
+    animation: none !important;
+  }
+  .bts-plane {
     animation: none !important;
   }
 }

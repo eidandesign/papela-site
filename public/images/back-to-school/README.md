@@ -1,18 +1,31 @@
 # Imágenes — Back to School
 
-La página `/back-to-school` referencia estas imágenes como placeholders. Mientras no existan,
-cada contenedor muestra un bloque de color pastel (no se rompe el layout). Suelta aquí los
-exports (mismo nombre) para que aparezcan:
+Assets extraídos del archivo de Figma (Website 2025, nodo 367-336) vía el MCP de Figma Dev Mode.
+Son PNG (con extensión `.jpg` en la mayoría; Next/Image detecta el formato por contenido).
 
-| Archivo         | Uso                                    | Relación de aspecto sugerida |
-|-----------------|----------------------------------------|------------------------------|
-| `hero.jpg`      | Imagen social (Open Graph)             | 1200 × 630                   |
-| `intro.jpg`     | Sección "Todo marcado, todo más fácil" | 4:3                          |
-| `estilos.jpg`   | Sección "Diseños tan únicos"           | 4:3                          |
-| `libretas.jpg`  | Galería — etiquetas en libretas        | 1:1                          |
-| `lapices.jpg`   | Galería — etiquetas en lápices         | 1:1                          |
-| `termo.jpg`     | Galería — etiquetas en termo/lonchera  | 1:1                          |
-| `planillas.jpg` | Galería — planillas por tamaño         | 1:1                          |
+| Archivo | Uso |
+|---|---|
+| `hero-ninos.png` | Hero — los dos niños (PNG con transparencia) |
+| `paquete-basico.jpg` | Tarjeta paquete Básico |
+| `paquete-bts.jpg` | Tarjeta paquete Back to School |
+| `acabado-holografico.jpg` | Acabado Holográfico |
+| `acabado-vinil.jpg` | Acabado Vinil contra agua |
+| `acabado-arena.jpg` | Acabado Arena |
+| `acabado-estrellas.jpg` | Acabado Estrellas |
+| `acabado-corazon.jpg` | Acabado Corazón |
+| `acabado-lluvia.jpg` | Acabado Lluvia holográfica |
+| `planilla-lapices.jpg` | Planilla lápices |
+| `planilla-libros.jpg` | Planilla libros y cuadernos |
+| `planilla-minis.jpg` | Planilla minis |
+| `planilla-siluetas.jpg` | Planilla grandes de siluetas |
+| `planilla-circulares.jpg` | Planilla circulares |
+| `planilla-multiusos.jpg` | Planilla multiusos |
+| `planilla-dtf-agua.jpg` | Planilla DTF contra agua |
+| `planilla-dtf-textil.jpg` | Planilla DTF textil |
+| `bordado-nombre.jpg` | Bordados — sudadera con nombre |
+| `bordado-corazon.jpg` | Bordados — prenda con corazón |
+| `estilos.jpg` | Sección "Diseños tan únicos" (collage de etiquetas) |
+| `pizarron.jpg` | Textura de pizarrón del hero — en escala de grises vía CSS (`grayscale`) + overlay soft-light sobre el verde base `#263834` del hero |
 
-Los prompts de generación (Magnific/similar) están en el brief original
-`prompt_back_to_school_papela.md`.
+Para actualizar una imagen: reemplaza el archivo con el mismo nombre. La avioneta del hero es un
+video de Cloudinary (ver `components/site/BackToSchoolPlane.tsx`), no un archivo local.
