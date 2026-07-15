@@ -12,7 +12,6 @@ interface Paquete {
   tint: string;
   destacado: boolean;
   contenido: string[];
-  msg: string;
 }
 
 interface BackToSchoolPaquetesTabsProps {
@@ -110,7 +109,10 @@ function PaqueteCard({ paquete }: { paquete: Paquete }) {
         <span className="ml-1 font-sans text-[12px] text-[var(--color-muted)]">MXN</span>
       </p>
 
-      <CtaMeInteresa msg={paquete.msg} variant={dark ? "solid" : "outline"} />
+      <CtaMeInteresa
+        paquete={{ nombre: paquete.nombre, precio: paquete.precio }}
+        variant={dark ? "solid" : "outline"}
+      />
     </article>
   );
 }

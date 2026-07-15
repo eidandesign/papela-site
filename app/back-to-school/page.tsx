@@ -6,7 +6,9 @@ import ScrollReveal from "@/components/site/ScrollReveal";
 import BackToSchoolPlane from "@/components/site/BackToSchoolPlane";
 import HeroNinosParallax from "@/components/site/HeroNinosParallax";
 import BackToSchoolPaquetesTabs from "@/components/site/BackToSchoolPaquetesTabs";
+import BackToSchoolAcabadosModal from "@/components/site/BackToSchoolAcabadosModal";
 import { CtaMeInteresa, Foto } from "@/components/site/BackToSchoolUI";
+import { ACABADOS, BORDADOS } from "@/lib/back-to-school-data";
 
 export const revalidate = 60;
 
@@ -23,14 +25,14 @@ export const metadata: Metadata = {
   },
 };
 
-const MSG_HERO =
-  "Hola Papela, me interesan las etiquetas escolares Back to School. ¿Me pueden ayudar con más información?";
 const MSG_ARMA =
   "Hola Papela, quiero armar mi propio paquete de etiquetas escolares Back to School. ¿Me ayudan a cotizar?";
 const MSG_FINAL =
   "Hola Papela, me interesan las etiquetas escolares Back to School. ¿Me pueden ayudar a elegir un paquete?";
 const MSG_FORMATOS =
   "Hola Papela, me interesan formatos personalizados de etiquetas escolares Back to School. ¿Me ayudan con las medidas que necesito?";
+const MSG_LISTA_UTILES =
+  "Hola Papela, me interesa que me ayuden a surtir la lista de útiles escolares completa. ¿Me pueden compartir más información?";
 
 // ── Datos ──────────────────────────────────────────────────────────────────
 
@@ -72,7 +74,6 @@ const PAQUETES = [
       "12 etiquetas multiusos · 6 × 4 cm",
       "15 etiquetas redondas · 5 cm",
     ],
-    msg: "Hola Papela, me interesa el Paquete Básico ($220) de etiquetas escolares Back to School. ¿Me pueden compartir más información?",
   },
   {
     nombre: "Back to School",
@@ -88,18 +89,7 @@ const PAQUETES = [
       "12 etiquetas multiusos · 6 × 4 cm",
       "15 etiquetas redondas · 5 cm",
     ],
-    msg: "Hola Papela, me interesa el Paquete Back to School ($360) de etiquetas escolares. ¿Me pueden compartir más información?",
   },
-];
-
-// "Elige el acabado" — 6 tarjetas con imagen.
-const ACABADOS = [
-  { nombre: "Holográfico", texto: "Cambia de color con el reflejo de la luz.", precio: 80, imagen: "/images/back-to-school/acabado-holografico.jpg" },
-  { nombre: "Vinil contra agua", texto: "Resiste más al agua.", precio: 100, imagen: "/images/back-to-school/acabado-vinil.jpg" },
-  { nombre: "Acabados Arena", texto: "Agrega un poco de textura y brillo en el acabado.", precio: 200, imagen: "/images/back-to-school/acabado-arena.jpg" },
-  { nombre: "Estrellas", texto: "Estrellas holográficas que cambian con la luz.", precio: 80, imagen: "/images/back-to-school/acabado-estrellas.jpg" },
-  { nombre: "Corazón", texto: "Cambia de color con el reflejo de la luz.", precio: 80, imagen: "/images/back-to-school/acabado-corazon.jpg" },
-  { nombre: "Lluvia holográfica", texto: "Cambia de color con el reflejo de la luz.", precio: 80, imagen: "/images/back-to-school/acabado-lluvia.jpg" },
 ];
 
 const PASOS = [
@@ -119,12 +109,6 @@ const PLANILLAS = [
   { nombre: "Multiusos", medida: "Todo lo que quepa en una hoja A4", cantidad: "Planilla", precio: 50, imagen: "/images/back-to-school/planilla-multiusos.jpg", tint: "#F0D9CC" },
   { nombre: "DTF contra agua", medida: "Termos, toppers, estucheras", cantidad: "Planilla 20 × 30 cm", precio: 60, imagen: "/images/back-to-school/planilla-dtf-agua.jpg", tint: "#CED8D9" },
   { nombre: "DTF textil", medida: "Para ropa", cantidad: "Planilla 20 × 30 cm", precio: 100, imagen: "/images/back-to-school/planilla-dtf-textil.jpg", tint: "#C9D3C0" },
-];
-
-const BORDADOS = [
-  { nombre: "Nombre bordado", precio: 50 },
-  { nombre: "Escudo escolar", precio: 60 },
-  { nombre: "Bordado de la mochila", precio: 50 },
 ];
 
 const ESTILOS = [
@@ -208,8 +192,23 @@ export default function BackToSchoolPage() {
           <p className="font-sans text-[var(--color-cremita)]/90 text-[17px] leading-[26px] text-center max-w-md mx-auto mb-8">
             Este regreso a clases te ayudamos con todo lo que necesitas: desde tu material escolar y etiquetas, hasta personalizar todo lo que se te ocurra.
           </p>
-          <div className="flex justify-center">
-            <CtaMeInteresa msg={MSG_HERO} light />
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <a
+              href="#etiquetas"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-cremita)] px-7 py-3.5 font-sans text-[15px] font-semibold text-[var(--color-verde)] transition-opacity hover:opacity-90"
+            >
+              Paquetes Etiquetas
+              <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+            </a>
+            <a
+              href="#lista-utiles"
+              className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full border border-[var(--color-cremita)] px-6 py-3 font-sans text-[15px] font-semibold text-[var(--color-cremita)] transition-colors duration-500 hover:text-[var(--color-verde)]"
+              style={{ isolation: "isolate" }}
+            >
+              <span className="absolute inset-0 -z-10 origin-left scale-x-0 bg-[var(--color-cremita)] transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:scale-x-100" />
+              Lista de Útiles
+              <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+            </a>
           </div>
         </div>
 
@@ -223,7 +222,7 @@ export default function BackToSchoolPage() {
       </HeroSection>
 
       {/* 2 · Etiquetas — incluye + paquetes */}
-      <section className="w-[90%] mx-auto pt-20 md:pt-24 pb-8">
+      <section id="etiquetas" className="w-[90%] mx-auto pt-20 md:pt-24 pb-8">
         <ScrollReveal>
           <div className="text-center max-w-2xl mx-auto mb-14">
             <p className="label text-[var(--color-terracota)] mb-4">Etiquetas</p>
@@ -321,9 +320,9 @@ export default function BackToSchoolPage() {
                   </p>
 
                   {dark ? (
-                    <CtaMeInteresa msg={paq.msg} />
+                    <CtaMeInteresa paquete={{ nombre: paq.nombre, precio: paq.precio }} />
                   ) : (
-                    <CtaMeInteresa msg={paq.msg} variant="outline" />
+                    <CtaMeInteresa paquete={{ nombre: paq.nombre, precio: paq.precio }} variant="outline" />
                   )}
                 </article>
               </ScrollReveal>
@@ -344,11 +343,58 @@ export default function BackToSchoolPage() {
         </div>
       </section>
 
+      {/* 2.5 · Lista de útiles — servicio de compra y armado de la lista escolar */}
+      <section id="lista-utiles" className="w-[90%] mx-auto py-16 md:py-20">
+        <ScrollReveal>
+          <div className="rounded-[32px] bg-[#CED8D9] px-8 py-12 md:px-12 md:py-14 lg:px-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 lg:items-center">
+              <div className="text-center lg:text-left">
+                <p className="label text-[var(--color-terracota)] mb-4">Lista de útiles</p>
+                <h2 className="font-serif italic text-[#403C3C] text-[clamp(1.8rem,3.6vw,2.6rem)] leading-[1.15]">
+                  También surtimos tu lista de útiles escolares completa
+                </h2>
+              </div>
+
+              {/* Mobile: imagen justo debajo del título. Desktop: se oculta aquí y se usa la de la columna derecha. */}
+              <Foto
+                src="/images/back-to-school/lista-utiles-ninos.jpg"
+                alt="Niños regresando a clases con sus mochilas"
+                tint="#E3C3B8"
+                className="aspect-[4/3] w-full rounded-[28px] lg:hidden"
+                sizes="90vw"
+              />
+
+              <div className="text-center lg:text-left">
+                <p className="font-sans text-[17px] leading-[26px] text-[var(--color-muted)] mb-5">
+                  Mándanos la lista que pide tu colegio y nosotros compramos y armamos todo por ti: cuadernos, libretas, colores y demás materiales, listos para recoger en Papela.
+                </p>
+                <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-verde)]/10 px-4 py-2 mb-8">
+                  <span className="font-sans text-[14px] font-semibold text-[var(--color-verde)]">
+                    🎁 De regalo: una planilla de stickers personalizados totalmente gratis
+                  </span>
+                </div>
+                <div className="flex justify-center lg:justify-start">
+                  <CtaMeInteresa msg={MSG_LISTA_UTILES} label="Enviar lista de útiles" />
+                </div>
+              </div>
+
+              <Foto
+                src="/images/back-to-school/lista-utiles-ninos.jpg"
+                alt="Niños regresando a clases con sus mochilas"
+                tint="#E3C3B8"
+                className="hidden lg:block aspect-[4/3] w-full rounded-[28px] lg:row-span-2 lg:col-start-2 lg:row-start-1"
+                sizes="(max-width: 1024px) 90vw, 45vw"
+              />
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
       {/* 3 · Elige el acabado */}
       <section className="w-[90%] mx-auto py-16 md:py-20">
         <ScrollReveal>
           <h2 className="text-center font-serif font-extralight text-[#403C3C] text-[clamp(2rem,4vw,3rem)] leading-tight mb-12">
-            Elige el acabado
+            Nuestros Acabados
           </h2>
         </ScrollReveal>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -368,7 +414,7 @@ export default function BackToSchoolPage() {
                 <h3 className="font-serif italic text-[17px] text-[#1e2d36] mb-1">{ac.nombre}</h3>
                 <p className="font-sans text-[12px] leading-[18px] text-[#4a5b62] mb-3 flex-1">{ac.texto}</p>
                 <p className="font-sans text-[12px] font-semibold uppercase tracking-widest text-[var(--color-verde)]">
-                  Agrégalo por ${ac.precio}
+                  +${ac.precio}
                 </p>
               </div>
             </ScrollReveal>
@@ -556,6 +602,8 @@ export default function BackToSchoolPage() {
           </div>
         </div>
       </section>
+
+      <BackToSchoolAcabadosModal />
     </>
   );
 }

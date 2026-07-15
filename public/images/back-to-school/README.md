@@ -26,6 +26,7 @@ Son PNG (con extensión `.jpg` en la mayoría; Next/Image detecta el formato por
 | `bordado-corazon.jpg` | Bordados — prenda con corazón |
 | `estilos.jpg` | Sección "Diseños tan únicos" (collage de etiquetas) |
 | `pizarron.jpg` | Textura de pizarrón del hero — en escala de grises vía CSS (`grayscale`) + overlay soft-light sobre el verde base `#263834` del hero |
+| `lista-utiles-ninos.jpg` | Sección "Lista de útiles" — niños regresando a clases (generada con IA, no es foto del set de figuras) |
 
 Para actualizar una imagen: reemplaza el archivo con el mismo nombre. La avioneta del hero es un
 video de Cloudinary (ver `components/site/BackToSchoolPlane.tsx`), no un archivo local.
