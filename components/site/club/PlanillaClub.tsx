@@ -27,11 +27,12 @@ import {
 function Silueta({ src, className }: { src: string; className: string }) {
   const [rota, setRota] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
+  // El padre monta esta pieza con key={src}, así que un cambio de src
+  // remonta el componente con `rota` limpio en vez de resetearlo aquí.
   useEffect(() => {
-    setRota(false);
     const el = ref.current;
     if (el && el.complete && el.naturalWidth === 0) setRota(true);
-  }, [src]);
+  }, []);
   if (rota) return <div className={className} aria-hidden="true" />;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- asset del admin
@@ -198,7 +199,7 @@ export default function PlanillaClub({
               return (
                 <button key={orden} onClick={() => abrirFicha(sticker)}
                   className="rounded-2xl border-[1.5px] border-dashed border-[var(--color-border)] bg-white/60 p-2 pt-3 text-center hover:border-[var(--color-verde)]/40 transition">
-                  <Silueta src={stickerSrc(origen, sticker)}
+                  <Silueta key={stickerSrc(origen, sticker)} src={stickerSrc(origen, sticker)}
                     className="w-full aspect-square object-contain opacity-[0.26]" />
                   <p className="text-[10px] font-semibold text-[var(--color-muted)] mt-1 mb-0.5">N.º {orden}</p>
                 </button>
@@ -338,7 +339,7 @@ export default function PlanillaClub({
             ) : (
               <>
                 <div className="relative w-40 aspect-square mx-auto">
-                  <Silueta src={stickerSrc(origen, detalle)}
+                  <Silueta key={stickerSrc(origen, detalle)} src={stickerSrc(origen, detalle)}
                     className="w-full h-full object-contain opacity-[0.28]" />
                 </div>
                 <h3 className="font-serif italic text-2xl text-[var(--color-text)] mt-3">N.º {detalle.orden}</h3>
