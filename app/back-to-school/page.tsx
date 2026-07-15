@@ -7,8 +7,8 @@ import BackToSchoolPlane from "@/components/site/BackToSchoolPlane";
 import HeroNinosParallax from "@/components/site/HeroNinosParallax";
 import BackToSchoolPaquetesTabs from "@/components/site/BackToSchoolPaquetesTabs";
 import BackToSchoolAcabadosModal from "@/components/site/BackToSchoolAcabadosModal";
-import { CtaMeInteresa, Foto } from "@/components/site/BackToSchoolUI";
-import { ACABADOS, BORDADOS } from "@/lib/back-to-school-data";
+import { CtaMeInteresa, Foto, PaqueteCard, FormatosCard } from "@/components/site/BackToSchoolUI";
+import { ACABADOS, BORDADOS, PAQUETES } from "@/lib/back-to-school-data";
 
 export const revalidate = 60;
 
@@ -63,38 +63,6 @@ const INCLUYE = [
     titulo: "Recorte silueta",
     texto:
       "El corte de los stickers es sobre la silueta del diseño, dándole un estilo más lindo y vistoso para todas las aplicaciones.",
-  },
-];
-
-const PAQUETES = [
-  {
-    nombre: "Básico",
-    precio: 220,
-    ideal: "Para marcar lo esencial con muy buena calidad.",
-    imagen: "/images/back-to-school/paquete-basico.jpg",
-    tint: "#F0D9CC",
-    destacado: false,
-    contenido: [
-      "54 etiquetas para lápices · 2.7 × 5 cm",
-      "10 etiquetas para libros y cuadernos · 8 × 4.5 cm",
-      "12 etiquetas multiusos · 6 × 4 cm",
-      "15 etiquetas redondas · 5 cm",
-    ],
-  },
-  {
-    nombre: "Back to School",
-    precio: 360,
-    ideal: "Para dejar todo listo desde el inicio del ciclo escolar.",
-    imagen: "/images/back-to-school/paquete-bts.jpg",
-    tint: "#CED8D9",
-    destacado: true,
-    contenido: [
-      "80 etiquetas para lápices · 2.7 × 5 cm",
-      "20 etiquetas para libros y cuadernos · 8 × 4.5 cm",
-      "6 etiquetas grandes de siluetas · 10 × 5 cm",
-      "12 etiquetas multiusos · 6 × 4 cm",
-      "15 etiquetas redondas · 5 cm",
-    ],
   },
 ];
 
@@ -286,65 +254,15 @@ export default function BackToSchoolPage() {
             apiladas); tablet/desktop: grid normal, sin cambios. */}
         <BackToSchoolPaquetesTabs paquetes={PAQUETES} msgFormatos={MSG_FORMATOS} />
         <div className="hidden sm:grid sm:grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          {PAQUETES.map((paq, i) => {
-            const dark = paq.destacado;
-            return (
-              <ScrollReveal key={paq.nombre} delay={i * 0.08}>
-                <article
-                  className={`relative flex h-full flex-col rounded-[28px] p-6 md:p-7 ${
-                    dark ? "bg-[#EFD9D0] border-2 border-[#e3c3b8]" : "bg-[var(--color-cremita-3)] border-2 border-[var(--color-border)]"
-                  }`}
-                >
-                  {dark && (
-                    <span className="absolute left-1/2 -top-3 -translate-x-1/2 rounded-full bg-[var(--color-verde)] px-4 py-1 font-sans text-[10px] font-bold uppercase tracking-widest text-[var(--color-cremita)] whitespace-nowrap">
-                      Más vendido
-                    </span>
-                  )}
-                  <h3 className="text-center font-serif italic text-[26px] leading-[32px] text-[#403C3C]">{paq.nombre}</h3>
-                  <p className="text-center font-sans text-[13px] leading-[19px] text-[var(--color-muted)] mt-1 mb-5">{paq.ideal}</p>
-
-                  <Foto
-                    src={paq.imagen}
-                    alt={`Paquete ${paq.nombre} de etiquetas escolares`}
-                    tint={paq.tint}
-                    className="aspect-[4/3] w-full rounded-2xl mb-5"
-                    sizes="(max-width: 1024px) 90vw, 30vw"
-                  />
-
-                  <ul className="flex flex-1 flex-col gap-3 mb-6">
-                    {paq.contenido.map((linea) => (
-                      <li key={linea} className="flex items-start gap-2.5 font-sans text-[14px] leading-[21px] text-[#403C3C]">
-                        <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#3a8a6d]" aria-hidden="true" />
-                        {linea}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <p className="text-center mb-5">
-                    <span className="font-serif font-extralight text-[40px] leading-none text-[#403C3C]">${paq.precio}</span>
-                    <span className="ml-1 font-sans text-[12px] text-[var(--color-muted)]">MXN</span>
-                  </p>
-
-                  {dark ? (
-                    <CtaMeInteresa paquete={{ nombre: paq.nombre, precio: paq.precio }} />
-                  ) : (
-                    <CtaMeInteresa paquete={{ nombre: paq.nombre, precio: paq.precio }} variant="outline" />
-                  )}
-                </article>
-              </ScrollReveal>
-            );
-          })}
+          {PAQUETES.map((paq, i) => (
+            <ScrollReveal key={paq.nombre} delay={i * 0.08}>
+              <PaqueteCard paquete={paq} size="full" />
+            </ScrollReveal>
+          ))}
 
           {/* Formatos Personalizados */}
           <ScrollReveal delay={0.16}>
-            <article className="flex h-full flex-col justify-center rounded-[28px] border-2 border-[var(--color-border)] bg-[var(--color-cremita-3)] p-7">
-              <h3 className="font-serif italic text-[24px] leading-[30px] text-[#403C3C]">Formatos Personalizados</h3>
-              <p className="font-sans text-[13px] text-[var(--color-muted)] mt-1 mb-4">Solicita las medidas que necesites.</p>
-              <p className="font-sans text-[14px] leading-[22px] text-[var(--color-muted)] mb-6">
-                Sabemos que puedes tener necesidades diferentes; no te preocupes, nos adaptamos a ti o a los requerimientos de tu colegio.
-              </p>
-              <CtaMeInteresa msg={MSG_FORMATOS} variant="outline" />
-            </article>
+            <FormatosCard msg={MSG_FORMATOS} size="full" />
           </ScrollReveal>
         </div>
       </section>
