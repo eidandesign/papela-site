@@ -1,18 +1,128 @@
 import Link from "next/link";
+import Image from "next/image";
+import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import BackToTop from "./BackToTop";
 
 const WHATSAPP = "522211865590";
+
+const SITEMAP: { title: string; links: { href: string; label: string }[] }[] = [
+  {
+    title: "Explora",
+    links: [
+      { href: "/productos", label: "Catálogo" },
+      { href: "/personaliza", label: "Personalización" },
+      { href: "/servicios", label: "Servicios" },
+    ],
+  },
+  {
+    title: "Aprende",
+    links: [
+      { href: "/talleres", label: "Talleres" },
+      { href: "/clases", label: "Clases" },
+    ],
+  },
+  {
+    title: "Papela",
+    links: [
+      { href: "/nosotros", label: "Nosotros" },
+      { href: "/privacidad", label: "Aviso de privacidad" },
+      { href: "/terminos", label: "Términos" },
+    ],
+  },
+];
 
 export default function SiteFooter() {
   return (
     <footer className="bg-[var(--color-bg)] border-t border-[var(--color-border)]">
 
-      {/* Top section */}
-      <div className="w-[90%] mx-auto pt-16 pb-10 flex flex-col md:flex-row md:justify-between gap-12">
+      {/* Back to School — destacado (mismo fondo e imagen que el hero de la página) */}
+      <div className="w-[90%] mx-auto pt-20 md:pt-24 overflow-x-clip">
+        <Link
+          href="/back-to-school"
+          className="group relative flex flex-col rounded-[24px] px-7 py-7 md:px-10 md:py-9 min-h-[220px] md:min-h-[240px] justify-center"
+        >
+          {/* Fondo + textura + viñeta, recortados a las esquinas redondeadas */}
+          <div className="absolute inset-0 z-0 overflow-hidden rounded-[24px]" style={{ backgroundColor: "#263834" }}>
+            {/* Textura de pizarrón (misma del hero) */}
+            <Image
+              src="/images/back-to-school/pizarron.jpg"
+              alt=""
+              fill
+              aria-hidden="true"
+              sizes="90vw"
+              className="pointer-events-none absolute inset-0 object-cover"
+              style={{ mixBlendMode: "soft-light", opacity: 0.9, filter: "grayscale(1) contrast(1.15) brightness(1.1)" }}
+            />
+            {/* Viñeta sutil (misma del hero) */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(130% 100% at 50% 50%, transparent 45%, rgba(0,0,0,0.22) 100%)",
+              }}
+            />
+          </div>
 
-        {/* Left — social */}
+          {/* Niños del hero — en mobile corridos a la derecha; en desktop la
+              cabeza sobresale del banner (efecto de salir del recuadro) */}
+          <div className="pointer-events-none absolute z-10 bottom-0 -right-6 sm:right-1 md:right-3 w-[190px] sm:w-[270px] md:w-[360px] lg:w-[410px]">
+            <Image
+              src="/images/back-to-school/hero-ninos.png"
+              alt="Niños listos para el regreso a clases"
+              width={600}
+              height={450}
+              className="h-auto w-full object-contain"
+              style={{ filter: "drop-shadow(12px 16px 20px rgba(0,0,0,0.45))" }}
+            />
+          </div>
+
+          {/* Texto */}
+          <div className="relative z-20 max-w-[56%] sm:max-w-[58%] md:max-w-[56%]">
+            <p className="label whitespace-nowrap text-[var(--color-cremita)]/70 mb-2">Temporada escolar</p>
+            <p className="font-serif italic text-[clamp(1.6rem,3.5vw,2.4rem)] leading-[1.05] text-[var(--color-cremita)]">
+              Back to School
+            </p>
+            <p className="font-sans text-sm text-[var(--color-cremita)]/80 mt-2 max-w-md">
+              Etiquetas escolares, lista de útiles y todo lo que necesites para este regreso a clases.
+            </p>
+            <span className="mt-5 inline-flex items-center gap-2 font-sans text-sm font-medium text-[var(--color-cremita)]">
+              Más información
+              <span className="w-9 h-9 rounded-full bg-[var(--color-cremita)] flex items-center justify-center transition-transform group-hover:translate-x-1">
+                <ArrowRightIcon className="w-4 h-4 text-[var(--color-verde)]" />
+              </span>
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Top section — mapa de sitio + contacto */}
+      <div className="w-[90%] mx-auto pt-12 pb-10 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">
+
+        {/* Mapa de sitio */}
+        {SITEMAP.map((col) => (
+          <nav key={col.title} aria-label={col.title}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)] mb-4">
+              {col.title}
+            </p>
+            <ul className="flex flex-col gap-2.5">
+              {col.links.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="font-sans text-[15px] text-[var(--color-text)] hover:text-[var(--color-verde)] transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
+
+        {/* Social */}
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)] mb-5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)] mb-4">
             Síguenos
           </p>
           <div className="flex items-center gap-4">
@@ -52,16 +162,16 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        {/* Right — contact */}
-        <div className="md:text-right">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)] mb-3">
+        {/* Contact */}
+        <div className="col-span-2 md:col-span-1">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)] mb-4">
             Escríbenos
           </p>
           <a
             href={`https://wa.me/${WHATSAPP}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-serif font-extralight text-[clamp(1.4rem,2.5vw,2rem)] text-[var(--color-verde)] hover:opacity-70 transition-opacity"
+            className="font-serif font-extralight text-[clamp(1.3rem,2vw,1.6rem)] text-[var(--color-verde)] hover:opacity-70 transition-opacity"
           >
             +52 221 186 5590
           </a>
@@ -83,12 +193,7 @@ export default function SiteFooter() {
       {/* Bottom bar */}
       <div className="w-[90%] mx-auto border-t border-[var(--color-border)] py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[var(--color-muted)]">
         <span>© {new Date().getFullYear()} Papela Atelier. Todos los derechos reservados.</span>
-        <div className="flex gap-6">
-          <Link href="/back-to-school" className="hover:text-[var(--color-verde)] transition-colors">Back to School</Link>
-          <Link href="/privacidad" className="hover:text-[var(--color-verde)] transition-colors">Aviso de privacidad</Link>
-          <Link href="/terminos" className="hover:text-[var(--color-verde)] transition-colors">Términos</Link>
-          <BackToTop />
-        </div>
+        <BackToTop />
       </div>
 
     </footer>
