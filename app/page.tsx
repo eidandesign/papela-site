@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.papela-atelier.com" },
 };
 
+const IG_POSTS = [
+  { src: "/images/instagram-1.jpg", href: "https://instagram.com/papela.atelier" },
+  { src: "/images/Instagram-2.jpg", href: "https://instagram.com/papela.atelier" },
+  { src: "/images/Instagram-3.jpg", href: "https://www.instagram.com/p/DaoS-NMJyQS/" },
+];
+
 const INFO_CARDS = [
   {
     slug: "talleres",
@@ -238,17 +244,17 @@ export default async function HomePage() {
           style={{ scrollbarWidth: "none", scrollPaddingLeft: "20px" }}
         >
           <div className="flex-shrink-0 w-5" aria-hidden="true" />
-          {["/images/instagram-1.jpg", "/images/Instagram-2.jpg", "/images/Instagram-3.jpg"].map((src, i) => (
+          {IG_POSTS.map((post, i) => (
             <a
               key={i}
-              href="https://instagram.com/papela.atelier"
+              href={post.href}
               target="_blank"
               rel="noopener noreferrer"
               className="group snap-start flex-shrink-0 rounded-xl overflow-hidden bg-[var(--color-cremita-2)]"
               style={{ width: "72vw" }}
             >
               <Image
-                src={src}
+                src={post.src}
                 alt="Post de Instagram de Papela Atelier"
                 width={0}
                 height={0}
@@ -262,21 +268,21 @@ export default async function HomePage() {
 
         {/* Desktop: grid */}
         <div className="hidden md:grid grid-cols-3 gap-4 w-[90%] mx-auto">
-          {["/images/instagram-1.jpg", "/images/Instagram-2.jpg", "/images/Instagram-3.jpg"].map((src, i) => (
+          {IG_POSTS.map((post, i) => (
             <a
               key={i}
-              href="https://instagram.com/papela.atelier"
+              href={post.href}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative rounded-xl overflow-hidden bg-[var(--color-cremita-2)]"
             >
               <Image
-                src={src}
+                src={post.src}
                 alt="Post de Instagram de Papela Atelier"
                 width={0}
                 height={0}
                 sizes="30vw"
-                className="w-full h-auto group-hover:scale-105 transition-transform duration-500"
+                className="w-full aspect-[4/5] object-cover object-bottom group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
             </a>
