@@ -6,9 +6,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useReservaModalStore } from "@/lib/stores/reservaModalStore";
 import ClaseCalendar from "@/components/site/ClaseCalendar";
-import Select from "@/components/site/Select";
 
 const WHATSAPP_FALLBACK = "522211865590";
+
+// Pill del selector de clases (radiogroup visible en lugar de dropdown: las
+// opciones y sus precios se ven de un vistazo, sin abrir nada).
+function pillClase(active: boolean) {
+  return `inline-flex items-center gap-1.5 rounded-full border px-4 py-2 font-sans text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-verde)] ${
+    active
+      ? "bg-[var(--color-verde)] border-[var(--color-verde)] text-[var(--color-cremita)]"
+      : "bg-white border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-verde)]"
+  }`;
+}
 
 function WaIcon({ className }: { className?: string }) {
   return (
@@ -40,6 +49,23 @@ export default function ReservaModal() {
   }
 
   const tipoSeleccionado = data?.tipos.find((t) => t.id === selected) ?? null;
+
+  // Patrón ARIA de radiogroup: las flechas mueven la selección (con wrap) y el
+  // foco la sigue (roving tabindex — solo la pill activa es tabulable).
+  const opciones: (string | null)[] = data ? [null, ...data.tipos.map((t) => t.id)] : [];
+  function moverSeleccion(e: React.KeyboardEvent<HTMLDivElement>) {
+    const delta =
+      e.key === "ArrowRight" || e.key === "ArrowDown" ? 1
+      : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1
+      : 0;
+    if (delta === 0) return;
+    e.preventDefault();
+    const idx = opciones.indexOf(selected);
+    const next = (idx + delta + opciones.length) % opciones.length;
+    setSelected(opciones[next]);
+    const radios = e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]');
+    radios[next]?.focus();
+  }
 
   useEffect(() => {
     if (!data) return;
@@ -111,36 +137,78 @@ export default function ReservaModal() {
           </p>
         </div>
 
-        {/* Selector de tipo de clase (dropdown del DS) */}
+        {/* Selector de tipo de clase: pills visibles con nombre + precio */}
         {data.tipos.length > 0 && (
-          <div className="mb-6 max-w-sm mx-auto flex flex-col gap-1.5">
-            <label
-              htmlFor="reserva-actividad"
+          <div className="mb-6 flex flex-col items-center gap-3">
+            <span
+              id="reserva-actividad-label"
               className="label text-[var(--color-terracota)] text-center"
             >
               ¿Qué clase quieres tomar?
-            </label>
-            <Select
-              id="reserva-actividad"
-              value={selected ?? ""}
-              onChange={(e) => setSelected(e.target.value || null)}
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="reserva-actividad-label"
+              onKeyDown={moverSeleccion}
+              className="flex flex-wrap justify-center gap-2 max-w-xl mx-auto"
             >
-              <option value="">Todas las clases</option>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={selected === null}
+                tabIndex={selected === null ? 0 : -1}
+                onClick={() => setSelected(null)}
+                className={pillClase(selected === null)}
+              >
+                Todas las clases
+              </button>
               {data.tipos.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.nombre} — ${t.precio.toLocaleString()} MXN
-                </option>
+                <button
+                  key={t.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected === t.id}
+                  tabIndex={selected === t.id ? 0 : -1}
+                  onClick={() => setSelected(t.id)}
+                  className={pillClase(selected === t.id)}
+                >
+                  {t.nombre}
+                  <span
+                    className={
+                      selected === t.id
+                        ? "font-normal text-[var(--color-cremita)]/70"
+                        : "font-normal text-[var(--color-muted)]"
+                    }
+                  >
+                    ${t.precio.toLocaleString()}
+                  </span>
+                </button>
               ))}
-            </Select>
+            </div>
+            <p className="font-sans text-sm text-[var(--color-muted)] text-center">
+              {tipoSeleccionado ? (
+                <>
+                  {tipoSeleccionado.duracion > 0 && `${tipoSeleccionado.duracion} min · `}
+                  <span className="font-semibold text-[var(--color-text)]">
+                    ${tipoSeleccionado.precio.toLocaleString()} MXN
+                  </span>
+                  {" "}— estos son sus horarios:
+                </>
+              ) : (
+                "Estás viendo todos los horarios. Elige una clase para ver los suyos con su precio."
+              )}
+            </p>
           </div>
         )}
 
+        {/* Sin `key` por selección: cambiar de clase NO debe remontar el
+            calendario (perdería la semana a la que navegó el usuario). */}
         {data.horarios.length > 0 ? (
           <ClaseCalendar
-            key={selected ?? "todas"}
             horarios={data.horarios}
             claseNombre={data.claseNombre}
             tipo={tipoSeleccionado ?? undefined}
+            tipos={data.tipos}
           />
         ) : (
           <div className="bg-[#f2f0e9] rounded-xl px-5 py-8 text-center">

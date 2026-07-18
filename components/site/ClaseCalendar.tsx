@@ -12,9 +12,34 @@ import {
   diaDelMes,
   mesYAnio,
 } from "@/lib/fecha";
+import {
+  calzaConTipo,
+  tipoDeSlot,
+  precioDeSlot,
+  duracionDeSlot,
+} from "@/lib/clases-matching";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
-const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie"];
+const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+// La grilla siempre muestra Lun–Vie; Sáb/Dom solo aparecen si algún horario
+// cae en fin de semana. Se decide sobre TODOS los horarios (no la semana
+// visible) para que las columnas no aparezcan y desaparezcan al navegar.
+function diasVisibles(horarios: Horario[]) {
+  const dias = new Set(
+    horarios.map((h) => diaSemanaLunes0(diaMexico(new Date(h.fecha_hora))))
+  );
+  if (dias.has(6)) return 7;
+  if (dias.has(5)) return 6;
+  return 5;
+}
+
+// Tailwind necesita las clases completas de forma literal (no interpoladas).
+const GRID_COLS: Record<number, string> = {
+  5: "md:grid-cols-5",
+  6: "md:grid-cols-6",
+  7: "md:grid-cols-7",
+};
 
 // Toda la grilla se razona con claves "YYYY-MM-DD" del día calendario en hora de
 // México. Así el bucketing y las horas mostradas coinciden con el admin, sin que
@@ -35,41 +60,38 @@ function semanaDelMes(key: string) {
   return Math.floor((d - primerLunes) / 7) + (diff === 0 ? 1 : 2);
 }
 
-// Los horarios no guardan a qué tipo pertenecen (el admin los agenda sueltos,
-// el precio real vive en tipos_clase — ver nota en lib/clases-tipos.ts). Se
-// empatan por duración + día de la semana. Si dos tipos comparten ambos, un
-// horario puede calzar en más de uno — se muestra bajo cada filtro que aplique.
-function calzaConTipo(h: Horario, tipo: TipoClasePublico): boolean {
-  if (h.duracion_minutos !== tipo.duracion) return false;
-  if (tipo.dias.length === 0) return true;
-  // diaSemanaLunes0: 0=Lun…6=Dom. tipo.dias usa la convención del admin (0=Dom…6=Sáb).
-  const diaDomingo0 = (diaSemanaLunes0(diaMexico(new Date(h.fecha_hora))) + 1) % 7;
-  return tipo.dias.includes(diaDomingo0);
-}
-
 export default function ClaseCalendar({
   horarios: todosLosHorarios,
   claseNombre,
   tipo,
+  tipos = [],
 }: {
   horarios: Horario[];
   claseNombre: string;
   tipo?: TipoClasePublico;
+  tipos?: TipoClasePublico[];
 }) {
   // Sin tipo elegido ("Todas las clases") se muestran todos los horarios.
   const horarios = tipo
     ? todosLosHorarios.filter((h) => calzaConTipo(h, tipo))
     : todosLosHorarios;
-  // Con un tipo elegido, el precio mostrado/cobrado sale del tipo (fuente de
-  // verdad real, ver 545c948 en papela-admin) — no del horario.
-  const precioDeSlot = (h: Horario) => (tipo ? tipo.precio : h.precio);
+  // Tipo efectivo de un slot: el filtro elegido o, en "Todas las clases", el
+  // que se resuelva sin ambigüedad (lib/clases-matching). Con él mandan precio
+  // y duración del tipo, y el checkout recibe la clase también desde "Todas".
+  const tipoDelSlot = (h: Horario) => tipo ?? tipoDeSlot(h, tipos);
+  const numDias = diasVisibles(horarios);
   // Arranca en la semana del primer horario disponible (no en la semana actual
   // si ésta ya no tiene fechas) para no mostrar una semana vacía al abrir.
+  // Solo cuentan horarios que la grilla puede mostrar: si alguno cayera en un
+  // día sin columna, su semana podría verse vacía al abrir.
   const [weekStart, setWeekStart] = useState(() => {
-    if (horarios.length > 0) {
-      const earliest = horarios.reduce(
+    const visibles = horarios.filter(
+      (h) => diaSemanaLunes0(diaMexico(new Date(h.fecha_hora))) < numDias
+    );
+    if (visibles.length > 0) {
+      const earliest = visibles.reduce(
         (min, h) => (new Date(h.fecha_hora) < new Date(min.fecha_hora) ? h : min),
-        horarios[0]
+        visibles[0]
       );
       return lunesDeLaSemana(diaMexico(new Date(earliest.fecha_hora)));
     }
@@ -78,8 +100,8 @@ export default function ClaseCalendar({
   const [loading, setLoading] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Claves de día (Lun–Vie) de la semana visible.
-  const weekDays = Array.from({ length: 5 }, (_, i) => sumarDiasAClave(weekStart, i));
+  // Claves de día (Lun–Vie, más Sáb/Dom si aplica) de la semana visible.
+  const weekDays = Array.from({ length: numDias }, (_, i) => sumarDiasAClave(weekStart, i));
   const todayKey = diaMexico(new Date());
 
   const slotsByDay = weekDays.map((dayKey) =>
@@ -97,16 +119,17 @@ export default function ClaseCalendar({
         weekday: "long", day: "numeric", month: "long", timeZone: TZ,
       }) + " a las " + horaMexico(date);
 
+      const tipoSlot = tipoDelSlot(h);
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           horarioId: h.id,
           claseNombre,
-          actividad: tipo?.nombre,
-          tipoClaseId: tipo?.id,
+          actividad: tipoSlot?.nombre,
+          tipoClaseId: tipoSlot?.id,
           fechaHora,
-          duracion: h.duracion_minutos,
+          duracion: duracionDeSlot(h, tipoSlot),
         }),
       });
       if (!res.ok) {
@@ -165,7 +188,7 @@ export default function ClaseCalendar({
   return (
     <div className="flex flex-col gap-6">
       {errorMsg && (
-        <p className="text-sm font-sans text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+        <p role="alert" className="text-sm font-sans text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           {errorMsg}
         </p>
       )}
@@ -180,6 +203,8 @@ export default function ClaseCalendar({
         ) : allSlots.map(({ h, dayKey, dayIdx }) => {
           const isToday = dayKey === todayKey;
           const hora = horaMexico(new Date(h.fecha_hora));
+          const tipoSlot = tipoDelSlot(h);
+          const etiqueta = tipo ? null : tipoSlot?.nombre ?? null;
           return (
             <div
               key={h.id}
@@ -197,17 +222,23 @@ export default function ClaseCalendar({
 
               {/* Details */}
               <div className="flex-1 min-w-0">
+                {etiqueta && (
+                  <p className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-1">
+                    {etiqueta}
+                  </p>
+                )}
                 <p className="font-sans font-semibold text-[var(--color-verde)] text-base leading-tight">{hora}</p>
                 <p className="font-sans text-xs text-[var(--color-muted)] mt-0.5">
-                  {h.duracion_minutos} min · {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
+                  {duracionDeSlot(h, tipoSlot)} min · {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
                 </p>
                 <p className="font-sans font-semibold text-[var(--color-text)] text-sm mt-1">
-                  ${precioDeSlot(h).toLocaleString()} MXN
+                  ${precioDeSlot(h, tipoSlot).toLocaleString()} MXN
                 </p>
               </div>
 
               {/* CTA */}
               <button
+                type="button"
                 onClick={() => handleReservar(h)}
                 disabled={loading === h.id}
                 className="flex-shrink-0 bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-sm font-semibold px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
@@ -219,13 +250,13 @@ export default function ClaseCalendar({
         })}
       </div>
 
-      {/* ── DESKTOP: 5-column calendar grid ── */}
-      <div className="hidden md:grid grid-cols-5 gap-3">
+      {/* ── DESKTOP: calendar grid (5–7 columnas según fin de semana) ── */}
+      <div className={`hidden md:grid ${GRID_COLS[numDias]} gap-3`}>
         {weekDays.map((dayKey, i) => {
           const slots = slotsByDay[i];
           const isToday = dayKey === todayKey;
           return (
-            <div key={i} className="flex flex-col gap-3">
+            <div key={dayKey} className="flex flex-col gap-3">
               <div className={`flex flex-col items-center py-3 rounded-xl ${isToday ? "bg-[var(--color-verde)]" : "bg-[#f2f0e9]"}`}>
                 <span className={`font-sans text-xs uppercase tracking-widest ${isToday ? "text-[var(--color-cremita)]" : "text-[var(--color-muted)]"}`}>
                   {DAYS[i]}
@@ -236,15 +267,23 @@ export default function ClaseCalendar({
               </div>
               {slots.map((h) => {
                 const hora = horaMexico(new Date(h.fecha_hora));
+                const tipoSlot = tipoDelSlot(h);
+                const etiqueta = tipo ? null : tipoSlot?.nombre ?? null;
                 return (
                   <div key={h.id} className="flex flex-col items-center gap-2 bg-[#e7d6cf] rounded-xl p-3 text-center w-full">
+                    {etiqueta && (
+                      <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] leading-snug">
+                        {etiqueta}
+                      </span>
+                    )}
                     <span className="font-sans font-medium text-sm text-[var(--color-verde)]">{hora}</span>
-                    <span className="font-sans text-xs text-[var(--color-muted)]">{h.duracion_minutos}m</span>
-                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">${precioDeSlot(h).toLocaleString()}</span>
+                    <span className="font-sans text-xs text-[var(--color-muted)]">{duracionDeSlot(h, tipoSlot)}m</span>
+                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">${precioDeSlot(h, tipoSlot).toLocaleString()}</span>
                     <span className="font-sans text-xs text-[var(--color-muted)]">
                       {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
                     </span>
                     <button
+                      type="button"
                       onClick={() => handleReservar(h)}
                       disabled={loading === h.id}
                       className="w-full mt-1 bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-xs py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"

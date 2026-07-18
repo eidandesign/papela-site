@@ -11,11 +11,12 @@ import { logger } from "./logger";
 // debe llegar al cliente. Por eso esto usa `createAdminClient()` (service
 // role, bypassa RLS) y solo copia los campos seguros a `TipoClasePublico`.
 //
-// Los horarios (`clases_horarios`) no guardan a qué tipo pertenecen — el
-// admin los agenda sueltos (ver 545c948 en papela-admin: "el precio real
-// siempre sale de tipos_clase"). `ClaseCalendar` empata horario↔tipo por
-// duración + día de la semana (heurística: si dos tipos comparten duración y
-// días, un horario puede calzar en más de uno — se muestra en ambos filtros).
+// Los horarios (`clases_horarios`) no guardan a qué tipo pertenecen — son la
+// disponibilidad de la maestra y el admin los agenda sueltos (ver 545c948 en
+// papela-admin: "el precio real siempre sale de tipos_clase"). `ClaseCalendar`
+// empata horario↔tipo solo por los "días disponibles" del tipo (la duración
+// no se compara: una clase de 90 min puede darse en un bloque de 120). Un
+// horario puede calzar en varios tipos — aparece bajo cada filtro que aplique.
 export type TipoClasePublico = {
   claseId: string;
   id: string;
