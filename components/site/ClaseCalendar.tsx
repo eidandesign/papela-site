@@ -79,6 +79,29 @@ export default function ClaseCalendar({
   // que se resuelva sin ambigüedad (lib/clases-matching). Con él mandan precio
   // y duración del tipo, y el checkout recibe la clase también desde "Todas".
   const tipoDelSlot = (h: Horario) => tipo ?? tipoDeSlot(h, tipos);
+  // REGLA DE NEGOCIO: el precio SIEMPRE sale de la clase (niños y adultos
+  // pagan distinto). El precio crudo del horario solo se usa si la maestra no
+  // tiene tipos configurados (legado). Slot ambiguo → "Desde $mín" y el CTA
+  // pide elegir clase en vez de cobrar un precio que no corresponde a ninguna.
+  const precioTexto = (h: Horario, tipoSlot: TipoClasePublico | null) => {
+    if (tipoSlot) return `$${precioDeSlot(h, tipoSlot).toLocaleString()}`;
+    const posibles = tipos.filter((t) => calzaConTipo(h, t) && t.precio > 0);
+    if (posibles.length > 0) {
+      const min = Math.min(...posibles.map((t) => t.precio));
+      return `Desde $${min.toLocaleString()}`;
+    }
+    return `$${h.precio.toLocaleString()}`;
+  };
+  // Un slot es reservable directo solo con clase definida (o sin tipos: legado).
+  const necesitaElegirClase = (h: Horario) =>
+    tipos.length > 0 && tipoDelSlot(h) === null;
+  // Slot ambiguo: llevar al usuario al selector de clases del modal.
+  function pedirClase() {
+    setErrorMsg("Elige primero qué clase quieres tomar — el precio depende de la clase.");
+    document
+      .getElementById("reserva-actividad-label")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
   const numDias = diasVisibles(horarios);
   // Arranca en la semana del primer horario disponible (no en la semana actual
   // si ésta ya no tiene fechas) para no mostrar una semana vacía al abrir.
@@ -99,6 +122,13 @@ export default function ClaseCalendar({
   });
   const [loading, setLoading] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Al cambiar de clase se limpia el aviso (p. ej. "elige primero tu clase"):
+  // ya no aplica. Ajuste de estado en render, mismo patrón que ReservaModal.
+  const [prevTipoId, setPrevTipoId] = useState<string | null>(tipo?.id ?? null);
+  if ((tipo?.id ?? null) !== prevTipoId) {
+    setPrevTipoId(tipo?.id ?? null);
+    setErrorMsg(null);
+  }
 
   // Claves de día (Lun–Vie, más Sáb/Dom si aplica) de la semana visible.
   const weekDays = Array.from({ length: numDias }, (_, i) => sumarDiasAClave(weekStart, i));
@@ -111,6 +141,10 @@ export default function ClaseCalendar({
   const hasAnySlot = slotsByDay.some((s) => s.length > 0);
 
   async function handleReservar(h: Horario) {
+    if (necesitaElegirClase(h)) {
+      pedirClase();
+      return;
+    }
     setLoading(h.id);
     setErrorMsg(null);
     try {
@@ -232,7 +266,7 @@ export default function ClaseCalendar({
                   {duracionDeSlot(h, tipoSlot)} min · {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
                 </p>
                 <p className="font-sans font-semibold text-[var(--color-text)] text-sm mt-1">
-                  ${precioDeSlot(h, tipoSlot).toLocaleString()} MXN
+                  {precioTexto(h, tipoSlot)} MXN
                 </p>
               </div>
 
@@ -243,7 +277,7 @@ export default function ClaseCalendar({
                 disabled={loading === h.id}
                 className="flex-shrink-0 bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-sm font-semibold px-4 py-2.5 rounded-full hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {loading === h.id ? "..." : "Reservar"}
+                {loading === h.id ? "..." : necesitaElegirClase(h) ? "Elegir clase" : "Reservar"}
               </button>
             </div>
           );
@@ -278,7 +312,7 @@ export default function ClaseCalendar({
                     )}
                     <span className="font-sans font-medium text-sm text-[var(--color-verde)]">{hora}</span>
                     <span className="font-sans text-xs text-[var(--color-muted)]">{duracionDeSlot(h, tipoSlot)}m</span>
-                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">${precioDeSlot(h, tipoSlot).toLocaleString()}</span>
+                    <span className="font-sans font-semibold text-sm text-[var(--color-text)]">{precioTexto(h, tipoSlot)}</span>
                     <span className="font-sans text-xs text-[var(--color-muted)]">
                       {h.cupo_disponible} lugar{h.cupo_disponible !== 1 ? "es" : ""}
                     </span>
@@ -288,7 +322,7 @@ export default function ClaseCalendar({
                       disabled={loading === h.id}
                       className="w-full mt-1 bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-xs py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {loading === h.id ? "Cargando..." : "Reservar"}
+                      {loading === h.id ? "Cargando..." : necesitaElegirClase(h) ? "Elegir clase" : "Reservar"}
                     </button>
                   </div>
                 );

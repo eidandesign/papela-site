@@ -10,9 +10,11 @@ import ClaseCalendar from "@/components/site/ClaseCalendar";
 const WHATSAPP_FALLBACK = "522211865590";
 
 // Pill del selector de clases (radiogroup visible en lugar de dropdown: las
-// opciones y sus precios se ven de un vistazo, sin abrir nada).
+// opciones y sus precios se ven de un vistazo, sin abrir nada). En mobile las
+// pills van en una fila con scroll horizontal (apiladas empujaban el
+// calendario fuera del fold), por eso no se encogen ni parten línea.
 function pillClase(active: boolean) {
-  return `inline-flex items-center gap-1.5 rounded-full border px-4 py-2 font-sans text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-verde)] ${
+  return `inline-flex flex-shrink-0 snap-start items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 font-sans text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-verde)] ${
     active
       ? "bg-[var(--color-verde)] border-[var(--color-verde)] text-[var(--color-cremita)]"
       : "bg-white border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-verde)]"
@@ -146,12 +148,18 @@ export default function ReservaModal() {
             >
               ¿Qué clase quieres tomar?
             </span>
+            {/* Mobile: fila con scroll horizontal (patrón del DS: spacers en los
+                extremos en vez de padding — el padding se recorta en overflow).
+                El -mx-5 sangra el scroller a todo el ancho del card (px-5).
+                Desktop (sm+): wrap centrado, sin scroll. */}
             <div
               role="radiogroup"
               aria-labelledby="reserva-actividad-label"
               onKeyDown={moverSeleccion}
-              className="flex flex-wrap justify-center gap-2 max-w-xl mx-auto"
+              className="flex gap-2 overflow-x-auto snap-x snap-mandatory -mx-5 w-[calc(100%+2.5rem)] sm:mx-auto sm:w-auto sm:max-w-xl sm:flex-wrap sm:justify-center sm:overflow-visible"
+              style={{ scrollbarWidth: "none", scrollPaddingLeft: "20px" }}
             >
+              <div className="w-5 flex-shrink-0 sm:hidden" aria-hidden="true" />
               <button
                 type="button"
                 role="radio"
@@ -184,6 +192,7 @@ export default function ReservaModal() {
                   </span>
                 </button>
               ))}
+              <div className="w-5 flex-shrink-0 sm:hidden" aria-hidden="true" />
             </div>
             <p className="font-sans text-sm text-[var(--color-muted)] text-center">
               {tipoSeleccionado ? (
