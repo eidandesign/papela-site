@@ -75,14 +75,14 @@ const PASOS = [
 
 // "Arma tu paquete" — planillas sueltas con imagen.
 const PLANILLAS = [
-  { nombre: "Etiquetas para lápices", medida: "2.7 × 5 cm", cantidad: "Planilla de 27", precio: 50, imagen: "/images/back-to-school/planilla-lapices.jpg", tint: "#F0E6D0" },
-  { nombre: "Libros y cuadernos", medida: "8 × 4.5 cm", cantidad: "Planilla de 10", precio: 50, imagen: "/images/back-to-school/planilla-libros.jpg", tint: "#F0D9CC" },
-  { nombre: "Etiquetas minis", medida: "2.4 × 2.1 cm", cantidad: "Planilla de 66", precio: 50, imagen: "/images/back-to-school/planilla-minis.jpg", tint: "#CED8D9" },
-  { nombre: "Grandes de siluetas", medida: "10 × 5 cm", cantidad: "Planilla de 6", precio: 50, imagen: "/images/back-to-school/planilla-siluetas.jpg", tint: "#C9D3C0" },
-  { nombre: "Circulares", medida: "5 cm", cantidad: "Planilla de 15", precio: 50, imagen: "/images/back-to-school/planilla-circulares.jpg", tint: "#F0E6D0" },
-  { nombre: "Multiusos", medida: "Todo lo que quepa en una hoja A4", cantidad: "Planilla", precio: 50, imagen: "/images/back-to-school/planilla-multiusos.jpg", tint: "#F0D9CC" },
-  { nombre: "DTF contra agua", medida: "Termos, toppers, estucheras", cantidad: "Planilla 20 × 30 cm", precio: 60, imagen: "/images/back-to-school/planilla-dtf-agua.jpg", tint: "#CED8D9" },
-  { nombre: "DTF textil", medida: "Para ropa", cantidad: "Planilla 20 × 30 cm", precio: 100, imagen: "/images/back-to-school/planilla-dtf-textil.jpg", tint: "#C9D3C0" },
+  { nombre: "Etiquetas para lápices", medida: "2.7 × 5 cm", cantidad: "Planilla de 27", precio: 50, imagen: "/images/back-to-school/planilla-lapices.webp", tint: "#F0E6D0" },
+  { nombre: "Libros y cuadernos", medida: "8 × 4.5 cm", cantidad: "Planilla de 10", precio: 50, imagen: "/images/back-to-school/planilla-libros.webp", tint: "#F0D9CC" },
+  { nombre: "Etiquetas minis", medida: "2.4 × 2.1 cm", cantidad: "Planilla de 66", precio: 50, imagen: "/images/back-to-school/planilla-minis.webp", tint: "#CED8D9" },
+  { nombre: "Grandes de siluetas", medida: "10 × 5 cm", cantidad: "Planilla de 6", precio: 50, imagen: "/images/back-to-school/planilla-siluetas.webp", tint: "#C9D3C0" },
+  { nombre: "Circulares", medida: "5 cm", cantidad: "Planilla de 15", precio: 50, imagen: "/images/back-to-school/planilla-circulares.webp", tint: "#F0E6D0" },
+  { nombre: "Multiusos", medida: "Todo lo que quepa en una hoja A4", cantidad: "Planilla", precio: 50, imagen: "/images/back-to-school/planilla-multiusos.webp", tint: "#F0D9CC" },
+  { nombre: "DTF contra agua", medida: "Termos, toppers, estucheras", cantidad: "Planilla 20 × 30 cm", precio: 60, imagen: "/images/back-to-school/planilla-dtf-agua.webp", tint: "#CED8D9" },
+  { nombre: "DTF textil", medida: "Para ropa", cantidad: "Planilla 20 × 30 cm", precio: 100, imagen: "/images/back-to-school/planilla-dtf-textil.webp", tint: "#C9D3C0" },
 ];
 
 const ESTILOS = [
@@ -136,7 +136,7 @@ export default function BackToSchoolPage() {
       <HeroSection bgColor="#263834">
         {/* Textura de pizarrón (imagen) sobre el verde base — soft-light conserva el verde del video */}
         <Image
-          src="/images/back-to-school/pizarron.jpg"
+          src="/images/back-to-school/pizarron.webp"
           alt=""
           fill
           priority
@@ -281,7 +281,7 @@ export default function BackToSchoolPage() {
 
               {/* Mobile: imagen justo debajo del título. Desktop: se oculta aquí y se usa la de la columna derecha. */}
               <Foto
-                src="/images/back-to-school/lista-utiles-ninos.jpg"
+                src="/images/back-to-school/lista-utiles-ninos.webp"
                 alt="Niños regresando a clases con sus mochilas"
                 tint="#E3C3B8"
                 className="aspect-[4/3] w-full rounded-[28px] lg:hidden"
@@ -303,7 +303,7 @@ export default function BackToSchoolPage() {
               </div>
 
               <Foto
-                src="/images/back-to-school/lista-utiles-ninos.jpg"
+                src="/images/back-to-school/lista-utiles-ninos.webp"
                 alt="Niños regresando a clases con sus mochilas"
                 tint="#E3C3B8"
                 className="hidden lg:block aspect-[4/3] w-full rounded-[28px] lg:row-span-2 lg:col-start-2 lg:row-start-1"
@@ -424,14 +424,14 @@ export default function BackToSchoolPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Foto
-                src="/images/back-to-school/bordado-nombre.jpg"
+                src="/images/back-to-school/bordado-nombre.webp"
                 alt="Sudadera con nombre bordado"
                 tint="#cfdac4"
                 className="aspect-[3/4] w-full rounded-xl"
                 sizes="(max-width: 768px) 45vw, 22vw"
               />
               <Foto
-                src="/images/back-to-school/bordado-corazon.jpg"
+                src="/images/back-to-school/bordado-corazon.webp"
                 alt="Prenda con bordado de corazón"
                 tint="#cfdac4"
                 className="aspect-[3/4] w-full rounded-xl"
@@ -476,7 +476,7 @@ export default function BackToSchoolPage() {
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
             <Foto
-              src="/images/back-to-school/estilos.jpg"
+              src="/images/back-to-school/estilos.webp"
               alt="Estilos de etiquetas escolares personalizadas"
               tint="#C9D3C0"
               className="aspect-[4/3] w-full rounded-[28px]"

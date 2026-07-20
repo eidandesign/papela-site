@@ -45,7 +45,7 @@ export default function SiteFooter() {
           <div className="absolute inset-0 z-0 overflow-hidden rounded-[24px]" style={{ backgroundColor: "#263834" }}>
             {/* Textura de pizarrón (misma del hero) */}
             <Image
-              src="/images/back-to-school/pizarron.jpg"
+              src="/images/back-to-school/pizarron.webp"
               alt=""
               fill
               aria-hidden="true"
