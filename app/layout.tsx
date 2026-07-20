@@ -43,7 +43,7 @@ export const metadata: Metadata = {
       "Talleres de arte, materiales y papelería creativa en Puebla. Aprende, crea y llévate algo hecho por ti.",
     images: [
       {
-        url: "/images/og-papela.jpg",
+        url: "/images/og-papela.jpg?v=2",
         width: 1200,
         height: 630,
         alt: "Papela Atelier — Papelería y talleres de arte en Puebla",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     title: "Papela Atelier — Papelería y talleres de arte en Puebla",
     description:
       "Talleres de arte, materiales y papelería creativa en Puebla. Aprende y crea.",
-    images: ["/images/og-papela.jpg"],
+    images: ["/images/og-papela.jpg?v=2"],
   },
   robots: {
     index: true,
