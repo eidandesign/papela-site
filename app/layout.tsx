@@ -98,6 +98,7 @@ const jsonLd = {
       sameAs: [
         "https://instagram.com/papela.atelier",
         "https://tiktok.com/@papela.atelier",
+        "https://www.facebook.com/profile.php?id=61584104486366",
         `https://wa.me/522211865590`,
       ],
       hasOfferCatalog: {

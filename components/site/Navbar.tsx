@@ -85,7 +85,7 @@ function WaIcon() {
 
 const SOCIALS = [
   { href: "https://instagram.com/papela.atelier", label: "Instagram", Icon: IgIcon },
-  { href: "https://facebook.com/papela.atelier", label: "Facebook", Icon: FbIcon },
+  { href: "https://www.facebook.com/profile.php?id=61584104486366", label: "Facebook", Icon: FbIcon },
   { href: "https://tiktok.com/@papela.atelier", label: "TikTok", Icon: TkIcon },
   { href: "https://wa.me/522211865590", label: "WhatsApp", Icon: WaIcon },
 ];
