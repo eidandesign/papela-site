@@ -138,7 +138,7 @@ export default function SiteFooter() {
               </svg>
             </a>
             <a
-              href="https://www.facebook.com/profile.php?id=61584104486366"
+              href="https://www.facebook.com/papelaatelier/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook de Papela Atelier"
