@@ -52,6 +52,7 @@
   --color-cremita-2: #F0E6D0;
   --color-cremita-3: #F7F3EC;
   --color-terracota: #8C482A;
+  --color-durazno: #F0D9CC;
   --color-text: rgb(64, 60, 60);
   --color-muted: rgb(110, 100, 95);
   --color-border: rgb(232, 220, 200);
@@ -66,6 +67,7 @@
   --color-cremita-2: var(--color-cremita-2);
   --color-cremita-3: var(--color-cremita-3);
   --color-terracota: var(--color-terracota);
+  --color-durazno: var(--color-durazno);
   --color-text: var(--color-text);
   --color-muted: var(--color-muted);
   --color-border: var(--color-border);
@@ -185,4 +187,78 @@ body {
   .bts-plane {
     animation: none !important;
   }
+}
+
+/* ── Cotización (/cotizacion/[token]) — estilos de impresión ──────────────────
+   "Descargar PDF" usa window.print(): la portada es la página 1 (break-after),
+   los colores de marca se preservan (print-color-adjust) y el botón flotante
+   no se imprime. Todo scoped a .cotizacion-doc para no tocar el resto del
+   sitio. */
+@media print {
+  @page {
+    size: letter;
+    margin: 12mm;
+  }
+  body:has(.cotizacion-doc) {
+    background: #fff !important;
+  }
+  .cotizacion-doc {
+    background: #fff !important;
+  }
+  .cotizacion-doc .no-print,
+  .cotizacion-doc.no-print {
+    display: none !important;
+  }
+  .cotizacion-doc,
+  .cotizacion-doc * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .cotizacion-doc .portada {
+    break-after: page;
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .cotizacion-doc section {
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+  /* En papel/PDF nada debe quedar a media animación: textos visibles y
+     ribbon completamente dibujado. */
+  .cotizacion-doc .cot-rise {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .cotizacion-doc .cot-ribbon path {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/* ── Cotización — animaciones de entrada (pantalla) ──
+   Textos de la portada y tarjetas suben en cascada; el ribbon (mismo path del
+   hero del home) se dibuja solo con el truco pathLength=1 + dashoffset. */
+@keyframes cot-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes cot-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+.cot-rise {
+  opacity: 0;
+  animation: cot-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.cot-ribbon path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: cot-draw 1.9s ease-out 0.45s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cot-rise { animation: none !important; opacity: 1 !important; }
+  .cot-ribbon path { animation: none !important; stroke-dashoffset: 0 !important; }
 }

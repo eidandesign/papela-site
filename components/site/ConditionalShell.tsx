@@ -6,7 +6,8 @@ import SiteFooter from "./Footer";
 import ProductDrawer from "./ProductDrawer";
 
 // /club = tarjeta de lealtad del Club Creativo (link privado, solo logo + tarjeta)
-const STANDALONE_ROUTES = ["/links", "/satisfaccion-clases", "/satisfaccion-talleres", "/club"];
+// /cotizacion = cotización de proyecto (link privado, documento imprimible)
+const STANDALONE_ROUTES = ["/links", "/satisfaccion-clases", "/satisfaccion-talleres", "/club", "/cotizacion"];
 
 export default function ConditionalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
