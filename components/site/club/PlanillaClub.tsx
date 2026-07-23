@@ -318,14 +318,26 @@ export default function PlanillaClub({
                     <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)]">
                       🎁 Este sticker trae premio
                     </p>
+                    {infoDetalle.premio.imagen && (
+                      // eslint-disable-next-line @next/next/no-img-element -- asset del admin, sin optimizador
+                      <img src={infoDetalle.premio.imagen} alt={infoDetalle.premio.titulo}
+                        className="w-full max-w-[220px] mx-auto aspect-square object-cover rounded-xl border border-[var(--color-border)]" />
+                    )}
                     <p className="text-sm font-semibold text-[var(--color-text)]">{infoDetalle.premio.titulo}</p>
                     {infoDetalle.premio.descripcion && (
                       <p className="text-xs text-[var(--color-muted)]">{infoDetalle.premio.descripcion}</p>
                     )}
-                    <a href={infoDetalle.premio.url} target="_blank" rel="noopener noreferrer"
-                      className="inline-block mt-1 px-5 py-2.5 rounded-full bg-[var(--color-verde)] text-xs font-semibold text-[var(--color-cremita)] hover:opacity-90 transition">
-                      Descargar
-                    </a>
+                    {/* Físico = no hay nada que descargar: se recoge en la tienda */}
+                    {infoDetalle.premio.tipo === "fisico" ? (
+                      <p className="inline-block mt-1 px-4 py-2 rounded-full border border-[var(--color-verde)] text-xs font-semibold text-[var(--color-verde)]">
+                        Recógelo en Papela Atelier ✨
+                      </p>
+                    ) : infoDetalle.premio.url ? (
+                      <a href={infoDetalle.premio.url} target="_blank" rel="noopener noreferrer"
+                        className="inline-block mt-1 px-5 py-2.5 rounded-full bg-[var(--color-verde)] text-xs font-semibold text-[var(--color-cremita)] hover:opacity-90 transition">
+                        Descargar
+                      </a>
+                    ) : null}
                   </div>
                 )}
 

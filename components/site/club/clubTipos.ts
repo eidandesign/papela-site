@@ -26,7 +26,17 @@ export type Catalogo = {
 // historia y el premio SOLO de los stickers ya revelados (el catálogo
 // público no los expone).
 export type AlbumItem = { id: number; cantidad: number; transferible: boolean };
-export type PremioSticker = { titulo: string; url: string; descripcion: string | null };
+// El premio es de dos naturalezas: un ARCHIVO que el miembro descarga e
+// imprime, o un PRODUCTO físico que recoge en la tienda (por eso `url` puede
+// venir vacía). `tipo`/`imagen` son opcionales: una tarjeta abierta contra un
+// admin aún sin desplegar sigue leyendo el premio como descargable.
+export type PremioSticker = {
+  titulo: string;
+  url: string | null;
+  descripcion: string | null;
+  tipo?: "descargable" | "fisico";
+  imagen?: string | null;
+};
 export type DetalleSticker = { historia: string | null; premio: PremioSticker | null };
 export type MisStickers = {
   obtenidos: number;
