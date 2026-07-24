@@ -23,7 +23,9 @@ const ADMIN_API =
 const TZ = "America/Mexico_City";
 const WHATSAPP = "522211865590";
 
-type Item = { label: string; unitPrice: number; qty: number };
+// `pendiente` = renglón "Por cotizar": el admin aún no le pone precio.
+// Se muestra sin precio y NO está incluido en `total` (viaja así desde el admin).
+type Item = { label: string; unitPrice: number; qty: number; pendiente?: boolean };
 type Cotizacion = {
   folio: string;
   proyecto: string;
@@ -375,12 +377,22 @@ export default function CotizacionDoc() {
                 <p className="text-sm text-[var(--color-muted)] sm:text-center print:text-center tabular-nums">
                   <span className="sm:hidden print:hidden">Cantidad: </span>{item.qty}
                 </p>
-                <p className="text-sm text-[var(--color-muted)] sm:text-right print:text-right tabular-nums">
-                  <span className="sm:hidden print:hidden">Precio unitario: </span>{fmt(item.unitPrice)}
-                </p>
-                <p className="text-[15px] font-medium text-[var(--color-text)] sm:text-right print:text-right tabular-nums">
-                  {fmt(item.unitPrice * item.qty)}
-                </p>
+                {item.pendiente ? (
+                  <p className="sm:col-span-2 print:col-span-2 sm:text-right print:text-right">
+                    <span className="inline-block text-xs font-semibold text-[var(--color-verde)] bg-[var(--color-cremita)] px-2.5 py-0.5 rounded-full">
+                      Por cotizar
+                    </span>
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-[var(--color-muted)] sm:text-right print:text-right tabular-nums">
+                      <span className="sm:hidden print:hidden">Precio unitario: </span>{fmt(item.unitPrice)}
+                    </p>
+                    <p className="text-[15px] font-medium text-[var(--color-text)] sm:text-right print:text-right tabular-nums">
+                      {fmt(item.unitPrice * item.qty)}
+                    </p>
+                  </>
+                )}
               </div>
             ))}
 
@@ -420,6 +432,12 @@ export default function CotizacionDoc() {
             )}
           </div>
 
+          {cot.items.some((i) => i.pendiente) && (
+            <p className="mt-6 text-xs text-[var(--color-muted)]">
+              Los conceptos marcados &quot;Por cotizar&quot; aún no tienen precio; te confirmaremos su
+              costo por separado y no están incluidos en el total.
+            </p>
+          )}
           <p className="mt-6 text-xs text-[var(--color-muted)]">
             Precios en pesos mexicanos (MXN). Cotización válida por 15 días a partir de su emisión.
           </p>
