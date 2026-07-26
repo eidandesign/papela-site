@@ -25,7 +25,9 @@ const WHATSAPP = "522211865590";
 
 // `pendiente` = renglón "Por cotizar": el admin aún no le pone precio.
 // Se muestra sin precio y NO está incluido en `total` (viaja así desde el admin).
-type Item = { label: string; unitPrice: number; qty: number; pendiente?: boolean };
+// `nota` = aclaración del staff sobre ese renglón (ej. "no hay marca Norma, se
+// surtió Scribe"): se muestra bajo el concepto, en tono secundario.
+type Item = { label: string; unitPrice: number; qty: number; pendiente?: boolean; nota?: string };
 type Cotizacion = {
   folio: string;
   proyecto: string;
@@ -372,7 +374,14 @@ export default function CotizacionDoc() {
                 key={i}
                 className="py-3.5 sm:grid print:grid grid-cols-[1fr_70px_110px_110px] gap-3 items-baseline"
               >
-                <p className="text-[15px] text-[var(--color-text)] leading-snug">{item.label}</p>
+                <p className="text-[15px] text-[var(--color-text)] leading-snug">
+                  {item.label}
+                  {item.nota?.trim() && (
+                    <span className="block text-[13px] text-[var(--color-muted)] italic mt-0.5">
+                      {item.nota.trim()}
+                    </span>
+                  )}
+                </p>
                 {/* Mobile: metadata en una línea; desktop/print: columnas */}
                 <p className="text-sm text-[var(--color-muted)] sm:text-center print:text-center tabular-nums">
                   <span className="sm:hidden print:hidden">Cantidad: </span>{item.qty}
