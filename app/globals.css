@@ -286,3 +286,52 @@ body {
   .cot-zoom-overlay,
   .cot-zoom-card { animation: none !important; }
 }
+
+/* ── Club Creativo — piezas compartidas por la tarjeta, la planilla, la ficha
+   de un coleccionable y el selector de portada. Vivían duplicadas en cada
+   componente; aquí se definen una sola vez. ── */
+
+/* Marco holográfico de raros/legendarios: gradiente pastel girando. */
+@keyframes club-marco-holo {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.club-marco-holo {
+  background: linear-gradient(120deg, #ffb6d9, #a8e6ff, #fff3b0, #d9c8ff, #ffb6d9);
+  background-size: 300% 300%;
+  animation: club-marco-holo 4s ease-in-out infinite;
+}
+
+/* Entrada/salida de los bottom sheets del Club.
+   Mobile: sube desde abajo. Desktop (sm+): fade + escala mínima al centro.
+   La salida dura menos que la entrada — cerrar debe sentirse inmediato.
+   Si cambias la duración de salida, actualiza SALIDA_MS en clubTipos.ts. */
+@keyframes club-hoja-in  { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes club-hoja-out { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes club-hoja-in-sm {
+  from { opacity: 0; transform: translateY(14px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes club-hoja-out-sm {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(10px) scale(.98); }
+}
+@keyframes club-velo-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes club-velo-out { from { opacity: 1; } to { opacity: 0; } }
+
+.club-hoja        { animation: club-hoja-in .34s cubic-bezier(.22,1,.36,1) both; }
+.club-hoja--sale  { animation: club-hoja-out .24s cubic-bezier(.4,0,1,1) both; }
+.club-velo        { animation: club-velo-in .3s ease-out both; }
+.club-velo--sale  { animation: club-velo-out .24s ease-in both; }
+
+@media (min-width: 640px) {
+  .club-hoja       { animation-name: club-hoja-in-sm; animation-duration: .28s; }
+  .club-hoja--sale { animation-name: club-hoja-out-sm; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .club-marco-holo,
+  .club-hoja, .club-hoja--sale,
+  .club-velo, .club-velo--sale { animation: none; }
+}

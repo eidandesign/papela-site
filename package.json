@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "build:preview": "NEXT_PUBLIC_VERCEL_ENV=preview next build",
+    "start:preview": "NEXT_PUBLIC_VERCEL_ENV=preview next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit"
   },

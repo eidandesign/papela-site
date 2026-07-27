@@ -4,6 +4,20 @@
 export const ADMIN_ORIGIN = "https://admin.papela-atelier.com";
 export const CLUB_API = `${ADMIN_ORIGIN}/api/public/club`;
 
+// ── Tarjeta de PRUEBA: /club/demo ──
+// Sirve la misma API (`/api/public/club/*`) pero desde el propio sitio, con
+// datos en memoria (lib/club-demo.ts), para poder ver y probar la tarjeta sin
+// un token real del admin. Solo existe en dev local y en previews de Vercel;
+// en producción `CLUB_DEMO_ON` es false y las rutas responden 404.
+export const CLUB_DEMO_TOKEN = "demo";
+export const CLUB_DEMO_ON =
+  process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_VERCEL_ENV === "preview";
+
+export const esClubDemo = (token?: string) => CLUB_DEMO_ON && token === CLUB_DEMO_TOKEN;
+// Origen de la API del Club: el admin, o "" (rutas propias) para la demo.
+export const clubOrigen = (token?: string) => (esClubDemo(token) ? "" : ADMIN_ORIGIN);
+export const clubApi = (token?: string) => `${clubOrigen(token)}/api/public/club`;
+
 export type Rareza = "comun" | "raro" | "legendario";
 
 export type StickerInfo = {
@@ -47,6 +61,15 @@ export type MisStickers = {
 
 // Mensajes del negocio (campana de la tarjeta).
 export type MensajeClub = { id: string; titulo: string; cuerpo: string; created_at: string };
+
+// Los bottom sheets del Club se desmontan desde su padre: para animar la
+// SALIDA se pinta `club-hoja--sale` y se avisa al padre cuando termina.
+// Debe coincidir con la duración de .club-hoja--sale en globals.css.
+export const SALIDA_MS = 240;
+
+// Espacios de la portada (los óvalos de la tarjeta): el miembro elige qué
+// coleccionables suyos van ahí. Se guardan en `estilo.portada` (ids).
+export const PORTADA_SLOTS = 6;
 
 export const RAREZA_LABEL: Record<Rareza, string> = {
   comun: "Común",

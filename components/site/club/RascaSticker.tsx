@@ -52,6 +52,15 @@ export default function RascaSticker({ token, origen = ADMIN_ORIGIN, onCerrar, o
       });
   }, [token, origen]);
 
+  // Escape cierra (el sticker ya es del miembro: cerrar nunca pierde nada).
+  // Mientras carga no hay nada que cerrar todavía.
+  useEffect(() => {
+    if (fase === "cargando") return;
+    const alTeclear = (e: KeyboardEvent) => { if (e.key === "Escape") onCerrar(); };
+    window.addEventListener("keydown", alTeclear);
+    return () => window.removeEventListener("keydown", alTeclear);
+  }, [fase, onCerrar]);
+
   // Capa rascable: relleno plateado con rayitas + "RASCA AQUÍ".
   const initCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
     if (!canvas || canvasRef.current === canvas) return; // pinta una sola vez
@@ -180,14 +189,19 @@ export default function RascaSticker({ token, origen = ADMIN_ORIGIN, onCerrar, o
                     Ver en mi planilla
                   </button>
                   {(rev?.pendientes ?? 0) > 0 && (
-                    <span className="text-xs text-[var(--color-cremita)]/80">te quedan {rev?.pendientes} 🎁</span>
+                    <span className="text-sm font-medium text-[var(--color-cremita)]">te quedan {rev?.pendientes} 🎁</span>
                   )}
                 </div>
               </div>
             )}
 
             {fase === "rascar" && (
-              <button onClick={onCerrar} className="text-xs text-[var(--color-cremita)]/70 underline">
+              // Salida secundaria — pero tiene que LEERSE: el fondo detrás es
+              // la tarjeta del miembro (cualquier color), así que el botón trae
+              // su propio fondo oscuro en vez de confiar en el velo. Tinta al
+              // 100% y alto de 44px (área táctil mínima).
+              <button onClick={onCerrar}
+                className="mx-auto flex min-h-[44px] items-center justify-center rounded-full border border-[var(--color-cremita)]/50 bg-black/45 px-5 text-sm font-semibold text-[var(--color-cremita)] backdrop-blur-sm hover:bg-black/60 transition">
                 Rascar después (ya es tuyo)
               </button>
             )}

@@ -20,17 +20,18 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRightIcon } from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRightIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { TZ } from "@/lib/fecha";
 import PlanillaClub from "./club/PlanillaClub";
 import RascaSticker from "./club/RascaSticker";
+import FichaSticker from "./club/FichaSticker";
+import SelectorPortada from "./club/SelectorPortada";
+import MenuClub from "./club/MenuClub";
 import {
-  ADMIN_ORIGIN, CLUB_API as ADMIN_API, copiarTexto, stickerSrc,
-  type Catalogo, type MensajeClub, type MisStickers,
+  PORTADA_SLOTS, clubApi, clubOrigen, copiarTexto, stickerSrc,
+  type Catalogo, type MensajeClub, type MisStickers, type StickerInfo,
 } from "./club/clubTipos";
-
-// Espacios del preview en la tarjeta (la planilla completa muestra los 100).
-const PREVIEW_SLOTS = 6;
 
 // ── Personalización (whitelist — debe coincidir con el API del admin) ──
 
@@ -54,10 +55,13 @@ type Estilo = {
   holo: boolean;
   charms: Charm[];
   colores: Colores;
+  // Ids de los coleccionables que el miembro puso en los óvalos de la portada.
+  // Vacío = todavía no elige; la tarjeta los rellena sola (ver portadaEfectiva).
+  portada: number[];
 };
 
 const COLORES_DEFAULT: Colores = ["#f9c5d8", "#9ec5f7", "#fff3b0"];
-const ESTILO_DEFAULT: Estilo = { tema: "atardecer", textura: "ninguna", holo: true, charms: [], colores: COLORES_DEFAULT };
+const ESTILO_DEFAULT: Estilo = { tema: "atardecer", textura: "ninguna", holo: true, charms: [], colores: COLORES_DEFAULT, portada: [] };
 
 type Tema = {
   nombre: string;
@@ -228,6 +232,25 @@ function normalizaCharms(v: unknown): Charm[] {
     .slice(0, MAX_CHARMS);
 }
 
+// Ids de la portada: enteros positivos, sin repetidos, máximo PORTADA_SLOTS.
+function portadaValida(v: unknown): number[] {
+  if (!Array.isArray(v)) return [];
+  const ids = v.filter((n): n is number => Number.isInteger(n) && (n as number) > 0);
+  return [...new Set(ids)].slice(0, PORTADA_SLOTS);
+}
+
+// Respaldo local de la portada: el admin sanea el estilo con whitelist, así
+// que hasta que despliegue el campo `portada` la elección se guarda aquí para
+// que no se pierda al recargar. Cuando el servidor la devuelva, manda él.
+const CLAVE_PORTADA = (token: string) => `papela_club_portada_${token}`;
+function portadaLocal(token: string): number[] {
+  try { return portadaValida(JSON.parse(localStorage.getItem(CLAVE_PORTADA(token)) ?? "[]")); }
+  catch { return []; }
+}
+function guardaPortadaLocal(token: string, ids: number[]) {
+  try { localStorage.setItem(CLAVE_PORTADA(token), JSON.stringify(ids)); } catch { /* storage bloqueado */ }
+}
+
 type Tarjeta = {
   nombre: string;
   desde: string;
@@ -293,6 +316,9 @@ function DecorBloque({ estilo, claro, reducida, animada }: { estilo: Estilo; cla
 
 export default function TarjetaClub() {
   const { token } = useParams<{ token: string }>();
+  // El admin, salvo /club/demo (tarjeta de prueba servida por el propio sitio).
+  const origen = clubOrigen(token);
+  const ADMIN_API = clubApi(token);
   const [tarjeta, setTarjeta] = useState<Tarjeta | null>(null);
   const [estado, setEstado] = useState<"cargando" | "ok" | "error">("cargando");
   const [estilo, setEstilo] = useState<Estilo>(ESTILO_DEFAULT);
@@ -301,36 +327,46 @@ export default function TarjetaClub() {
   // Álbum de coleccionables: catálogo público (cacheado en CDN) + overlays.
   const [catalogo, setCatalogo] = useState<Catalogo | null>(null);
   const [planilla, setPlanilla] = useState(false);
+  // Ficha abierta desde el preview de la tarjeta (misma que la de la planilla).
+  const [ficha, setFicha] = useState<StickerInfo | null>(null);
+  // Selector de portada (se abre desde un óvalo libre).
+  const [selector, setSelector] = useState(false);
+  // Menú de la tarjeta (pastilla glass del header).
+  const [menu, setMenu] = useState(false);
   const [rascando, setRascando] = useState(false);
   const [compartido, setCompartido] = useState(false);
 
   // Campana de notificaciones: mensajes del negocio + aviso de pendientes.
-  // Los descartes viven en localStorage por token ("quitar y ver más adelante":
-  // la pill se oculta pero todo sigue disponible en la campana).
+  // Qué mensajes ya vio vive en localStorage por token (si el storage está
+  // bloqueado, la campana funciona igual, solo sin memoria).
   const [mensajes, setMensajes] = useState<MensajeClub[]>([]);
   const [campana, setCampana] = useState(false);
-  // Inicialización perezosa desde localStorage (los descartes sobreviven
-  // recargas; si el storage está bloqueado, la campana funciona sin memoria).
-  const [notifs, setNotifs] = useState<{ pillEn: number | null; leidos: string[] }>(() => {
-    if (typeof window === "undefined" || !token) return { pillEn: null, leidos: [] };
+  const [leidos, setLeidos] = useState<string[]>(() => {
+    if (typeof window === "undefined" || !token) return [];
     try {
-      const raw = localStorage.getItem(`papela_club_notifs_${token}`);
-      if (raw) return { pillEn: null, leidos: [], ...JSON.parse(raw) };
-    } catch { /* storage bloqueado */ }
-    return { pillEn: null, leidos: [] };
+      const raw = JSON.parse(localStorage.getItem(`papela_club_notifs_${token}`) ?? "{}");
+      return Array.isArray(raw.leidos) ? raw.leidos : [];
+    } catch { return []; }
   });
 
-  function guardaNotifs(n: { pillEn: number | null; leidos: string[] }) {
-    setNotifs(n);
-    try { localStorage.setItem(`papela_club_notifs_${token}`, JSON.stringify(n)); } catch { /* idem */ }
+  function guardaLeidos(ids: string[]) {
+    setLeidos(ids);
+    try { localStorage.setItem(`papela_club_notifs_${token}`, JSON.stringify({ leidos: ids })); } catch { /* idem */ }
   }
+
+  // Aviso de sorpresas por rascar: aparece SOBRE la tarjeta y se va solo a los
+  // 3 s. `avisoOcultoEn` guarda con cuántos pendientes se fue, para que vuelva
+  // a salir si llega otro (o si rasca uno). Se congela mientras el puntero o el
+  // teclado están encima, para que nadie lo pierda a media intención.
+  const [avisoOcultoEn, setAvisoOcultoEn] = useState<number | null>(null);
+  const [avisoRetenido, setAvisoRetenido] = useState(false);
 
   useEffect(() => {
     fetch(`${ADMIN_API}/mensajes`)
       .then((res) => res.json())
       .then((json) => { if (Array.isArray(json?.mensajes)) setMensajes(json.mensajes); })
       .catch(() => {});
-  }, []);
+  }, [ADMIN_API]);
 
   // Editor de personalización (bottom sheet)
   const [editor, setEditor] = useState(false);
@@ -355,16 +391,6 @@ export default function TarjetaClub() {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error);
         setTarjeta(json);
-        // Sin pendientes, la pill descartada vuelve a estar "armada" para el
-        // siguiente sticker que llegue.
-        if ((json.stickers?.pendientes ?? 0) === 0) {
-          setNotifs((n) => {
-            if (n.pillEn === null) return n;
-            const limpio = { ...n, pillEn: null };
-            try { localStorage.setItem(`papela_club_notifs_${token}`, JSON.stringify(limpio)); } catch { /* sin memoria */ }
-            return limpio;
-          });
-        }
         setEstilo(
           json.estilo
             ? {
@@ -373,13 +399,16 @@ export default function TarjetaClub() {
                 tema: temaValido(json.estilo.tema),
                 colores: coloresValidos(json.estilo.colores),
                 charms: normalizaCharms(json.estilo.charms),
+                // El admin todavía puede no conocer `portada` (sanea con
+                // whitelist): mientras tanto vale el respaldo local.
+                portada: portadaValida(json.estilo.portada ?? portadaLocal(token)),
               }
             : ESTILO_DEFAULT,
         );
         setEstado("ok");
       })
       .catch(() => setEstado("error"));
-  }, [token]);
+  }, [token, ADMIN_API]);
 
   useEffect(() => { cargarTarjeta(); }, [cargarTarjeta]);
 
@@ -389,7 +418,7 @@ export default function TarjetaClub() {
       .then((res) => res.json())
       .then((json) => { if (json?.stickers) setCatalogo(json); })
       .catch(() => {});
-  }, []);
+  }, [ADMIN_API]);
 
   function onMove(e: React.PointerEvent<HTMLDivElement>) {
     // Sin tilt mientras se arrastra una cosita (mueve el plano bajo el cursor).
@@ -481,38 +510,76 @@ export default function TarjetaClub() {
   const misStickers = tarjeta?.stickers ?? { obtenidos: 0, pendientes: 0, album: [] };
   const albumTotal = catalogo?.total ?? 100;
 
-  // Preview de la portada: los stickers CON PREMIO van primero (para que el
-  // miembro los vea de inmediato al abrir su tarjeta), luego el resto de sus
-  // stickers obtenidos por orden de catálogo. Los espacios que sobran se
-  // llenan con los siguientes números aún no conseguidos (como antes).
+  // ── Portada: los óvalos de la tarjeta ──
+  // Son los coleccionables que el MIEMBRO elige (hasta PORTADA_SLOTS). Mientras
+  // no elija ninguno se rellenan solos con los suyos —premios primero, para que
+  // los vea al abrir la tarjeta— y así nunca se ve vacía; en cuanto toca un
+  // espacio o quita uno, su elección manda.
   const propiosOrdenados = (catalogo?.stickers ?? [])
     .filter((s) => misStickers.album.some((a) => a.id === s.id))
     .sort((a, b) => a.orden - b.orden);
-  const previewStickers = [
+  const porIdCatalogo = new Map((catalogo?.stickers ?? []).map((s) => [s.id, s]));
+  const autoPortada = [
     ...propiosOrdenados.filter((s) => misStickers.detalles?.[s.id]?.premio),
     ...propiosOrdenados.filter((s) => !misStickers.detalles?.[s.id]?.premio),
-  ].slice(0, PREVIEW_SLOTS);
-  const bloqueados = (catalogo?.stickers ?? [])
-    .filter((s) => !misStickers.album.some((a) => a.id === s.id))
-    .sort((a, b) => a.orden - b.orden);
+  ].slice(0, PORTADA_SLOTS);
+  // Un id elegido que ya no esté en el álbum (regalado) simplemente se cae.
+  const elegidos = estilo.portada
+    .map((id) => porIdCatalogo.get(id))
+    .filter((s): s is StickerInfo => !!s && misStickers.album.some((a) => a.id === s.id));
+  const portadaStickers = elegidos.length > 0 ? elegidos : autoPortada;
+  // Lo que se puede poner en un espacio libre: lo suyo que no está ya arriba.
+  const disponiblesPortada = propiosOrdenados.filter(
+    (s) => !portadaStickers.some((p) => p.id === s.id),
+  );
 
-  // Pill de aviso: se oculta al descartarla y REAPARECE solo si llegan MÁS
-  // pendientes que cuando se descartó (rascar la baja, no la revive). La
-  // memoria se resetea al llegar a 0 (en cargarTarjeta). La campana siempre
-  // lista el aviso aunque la pill esté oculta.
-  const pillVisible =
-    misStickers.pendientes > 0 &&
-    (notifs.pillEn === null || misStickers.pendientes > notifs.pillEn);
+  // Escribe la portada (optimista) y la persiste. El respaldo local cubre el
+  // caso de que el admin aún no acepte el campo.
+  function guardarPortada(ids: number[]) {
+    const nuevo = { ...estilo, portada: ids };
+    setEstilo(nuevo);
+    guardaPortadaLocal(token, ids);
+    patchEstilo(nuevo);
+  }
+
+  // Poner/quitar un sticker de la portada. La primera edición materializa el
+  // relleno automático para que no se reacomode solo después.
+  function alternarPortada(id: number) {
+    const base = portadaStickers.map((s) => s.id);
+    guardarPortada(base.includes(id) ? base.filter((x) => x !== id) : [...base, id].slice(0, PORTADA_SLOTS));
+  }
+
+  // Acción de portada para la ficha de un sticker (solo si ya es suyo).
+  const accionPortada = (id: number) =>
+    misStickers.album.some((a) => a.id === id)
+      ? {
+          dentro: portadaStickers.some((s) => s.id === id),
+          llena: portadaStickers.length >= PORTADA_SLOTS,
+          alternar: () => alternarPortada(id),
+        }
+      : undefined;
+
+  // El aviso vive 3 s y se va; después queda en la campana, que lo lista
+  // mientras haya pendientes.
+  const avisoVisible = misStickers.pendientes > 0 && avisoOcultoEn !== misStickers.pendientes;
   const noLeidos =
-    mensajes.filter((m) => !notifs.leidos.includes(m.id)).length +
+    mensajes.filter((m) => !leidos.includes(m.id)).length +
     (misStickers.pendientes > 0 ? 1 : 0);
+
+  // El reloj de los 3 s: se reinicia si cambian los pendientes y se pausa
+  // mientras el aviso está retenido (puntero encima o foco dentro).
+  useEffect(() => {
+    if (!avisoVisible || avisoRetenido) return;
+    const t = setTimeout(() => setAvisoOcultoEn(misStickers.pendientes), 3000);
+    return () => clearTimeout(t);
+  }, [avisoVisible, avisoRetenido, misStickers.pendientes]);
 
   function abrirCampana() {
     setCampana(true);
     // Abrir la campana marca los mensajes como leídos (el aviso de pendientes
     // no se "lee": sigue contando hasta que se rasquen).
-    const leidos = [...new Set([...notifs.leidos, ...mensajes.map((m) => m.id)])];
-    if (leidos.length !== notifs.leidos.length) guardaNotifs({ ...notifs, leidos });
+    const vistos = [...new Set([...leidos, ...mensajes.map((m) => m.id)])];
+    if (vistos.length !== leidos.length) guardaLeidos(vistos);
   }
   // El pase se pinta con el DRAFT mientras el editor está abierto (preview en vivo).
   const vista = editor ? draft : estilo;
@@ -629,48 +696,24 @@ export default function TarjetaClub() {
         .club-borde { border-color: color-mix(in srgb, var(--ink) 85%, transparent); }
       `}</style>
 
-      {/* Header: logo centrado + campana de notificaciones a la derecha */}
-      <div className="w-full max-w-[420px] relative flex justify-center mb-6">
-        <Link href="/" className="mt-1" aria-label="Ir a Papela Atelier">
-          <Image src="/images/Logo-papela-verde.svg" alt="Papela Atelier" width={80} height={80} className="h-20 w-20" />
+      {/* Header: logo chico a la izquierda + pastilla glass (avisos + menú).
+          Se queda pegado arriba para tener el menú siempre a mano. */}
+      <div className="sticky top-4 z-50 w-full max-w-[420px] flex items-start justify-between mb-6">
+        <Link href="/" aria-label="Ir a Papela Atelier">
+          <Image src="/images/Logo-papela-verde.svg" alt="Papela Atelier" width={56} height={56} className="h-14 w-14" />
         </Link>
         {estado === "ok" && (
-          <button onClick={abrirCampana} aria-label={`Notificaciones${noLeidos > 0 ? ` (${noLeidos} nuevas)` : ""}`}
-            className="absolute right-0 top-3 w-11 h-11 rounded-full bg-white shadow-[0_2px_10px_rgba(18,83,92,.12)] flex items-center justify-center text-[var(--color-verde)] hover:shadow-[0_4px_14px_rgba(18,83,92,.2)] transition">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.7 21a2 2 0 01-3.4 0" />
-            </svg>
-            {noLeidos > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--color-terracota)] text-white text-[10px] font-bold flex items-center justify-center">
-                {noLeidos}
-              </span>
-            )}
-          </button>
+          <MenuClub
+            abierto={menu}
+            noLeidos={noLeidos}
+            onAbrir={setMenu}
+            onCampana={abrirCampana}
+            onPersonalizar={abrirEditor}
+            onCompartir={compartir}
+            onPlanilla={() => setPlanilla(true)}
+          />
         )}
       </div>
-
-      {/* Aviso de sticker sorpresa — descartable; sigue viva en la campana */}
-      {estado === "ok" && pillVisible && (
-        <div className="mb-5 flex items-center gap-2 rounded-full pl-4 pr-1.5 py-1.5"
-          style={{
-            background: "color-mix(in srgb, var(--color-verde) 10%, #ffffff)",
-            border: "1px solid color-mix(in srgb, var(--color-verde) 25%, transparent)",
-          }}>
-          <span className="text-sm font-semibold text-[var(--color-verde)]">
-            🎁 Tienes {misStickers.pendientes} sticker{misStickers.pendientes !== 1 ? "s" : ""} por revelar
-          </span>
-          <button onClick={() => setRascando(true)}
-            className="text-sm font-bold text-[var(--color-verde)] underline underline-offset-2">
-            Rascar
-          </button>
-          <button onClick={() => guardaNotifs({ ...notifs, pillEn: misStickers.pendientes })}
-            aria-label="Descartar aviso (queda en la campana)"
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--color-verde)]/60 hover:text-[var(--color-verde)] hover:bg-white/70 transition text-sm">
-            ✕
-          </button>
-        </div>
-      )}
 
       {estado === "cargando" && (
         <div className="w-full max-w-[380px] rounded-3xl bg-white/60 border border-[var(--color-border)] animate-pulse h-[560px]" />
@@ -689,7 +732,42 @@ export default function TarjetaClub() {
       {estado === "ok" && tarjeta && (
         <>
           {/* ── Pase vertical estilo wallet (UNA sola tarjeta) ── */}
-          <div style={{ perspective: "1100px" }} className="w-full max-w-[380px]">
+          <div style={{ perspective: "1100px" }} className="relative w-full max-w-[380px]">
+            {/* Aviso de sorpresas: aterriza SOBRE la tarjeta y se va solo a los
+                3 s (después sigue en la campana). Fuera del div con el tilt
+                para que no se incline con la tarjeta. */}
+            <AnimatePresence>
+              {avisoVisible && (
+                <motion.div
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
+                  onPointerEnter={() => setAvisoRetenido(true)}
+                  onPointerLeave={() => setAvisoRetenido(false)}
+                  onFocus={() => setAvisoRetenido(true)}
+                  onBlur={() => setAvisoRetenido(false)}
+                  role="status"
+                  className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-full pl-4 pr-2 py-2 whitespace-nowrap"
+                  style={{
+                    background: "rgba(255,255,255,0.92)",
+                    backdropFilter: "blur(12px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(12px) saturate(180%)",
+                    border: "1px solid rgba(255,255,255,0.8)",
+                    boxShadow: "0 10px 30px rgba(18,83,92,0.22)",
+                  }}
+                >
+                  <span className="text-sm font-semibold text-[var(--color-verde)]">
+                    🎁 Tienes {misStickers.pendientes} sticker{misStickers.pendientes !== 1 ? "s" : ""} por revelar
+                  </span>
+                  <button onClick={() => setRascando(true)}
+                    className="px-3 py-1 rounded-full bg-[var(--color-verde)] text-sm font-bold text-[var(--color-cremita)] hover:opacity-90 transition">
+                    Rascar
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div
               ref={cardRef}
               onPointerMove={onMove}
@@ -772,35 +850,60 @@ export default function TarjetaClub() {
                   </div>
                 </div>
 
-                {/* Álbum de stickers — preview de los primeros espacios */}
+                {/* Portada — los coleccionables que el miembro eligió mostrar */}
                 <div className="relative px-6 pt-4">
-                  <div className="grid grid-cols-3 gap-y-6 justify-items-center"
-                    role="img" aria-label={`${misStickers.obtenidos} de ${albumTotal} stickers`}>
-                    {Array.from({ length: PREVIEW_SLOTS }, (_, i) => {
-                      const sticker = previewStickers[i];
+                  {/* Sin role="img": los stickers propios son botones (abren su ficha) */}
+                  <div className="grid grid-cols-3 gap-y-6 justify-items-center">
+                    {Array.from({ length: PORTADA_SLOTS }, (_, i) => {
+                      const sticker = portadaStickers[i];
                       if (sticker) {
                         const conPremio = !!misStickers.detalles?.[sticker.id]?.premio;
                         return (
-                          <span key={sticker.id} className="relative flex items-center justify-center w-[86px] h-[104px]">
+                          // Tocar el sticker abre su ficha (la misma de la planilla).
+                          <button key={sticker.id} onClick={() => setFicha(sticker)}
+                            aria-label={`Ver ${sticker.nombre}${conPremio ? " — ganaste un premio" : ""}`}
+                            className="relative flex items-center justify-center w-[86px] h-[104px] transition hover:scale-[1.07] active:scale-95">
                             {/* eslint-disable-next-line @next/next/no-img-element -- asset del admin */}
-                            <img src={stickerSrc(ADMIN_ORIGIN, sticker)} alt={sticker.nombre}
-                              className="w-[76px] h-[76px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.25)]"
+                            <img src={stickerSrc(origen, sticker)} alt=""
+                              className={`w-[76px] h-[76px] object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.25)] ${
+                                conPremio ? "-translate-y-1.5" : ""
+                              }`}
                               draggable={false} />
+                            {/* Con premio: 🎁 sobre el sticker + la frase con todas
+                                sus letras (el emoji solo no se leía como "hay algo
+                                para ti"). La pill va sin emoji para caber en la
+                                columna sin chocar con la vecina. */}
                             {conPremio && (
-                              <span aria-label="Trae premio" title="Trae premio"
-                                className="absolute top-0 right-1 text-base drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
-                                🎁
-                              </span>
+                              <>
+                                <span aria-hidden="true"
+                                  className="absolute top-0 right-1 text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
+                                  🎁
+                                </span>
+                                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/92 px-1.5 py-[3px] text-[8px] font-bold leading-none text-[var(--color-terracota)] shadow-[0_2px_6px_rgba(0,0,0,0.22)]">
+                                  Ganaste un premio
+                                </span>
+                              </>
                             )}
-                          </span>
+                          </button>
                         );
                       }
-                      const bloqueado = bloqueados[i - previewStickers.length];
+                      // Espacio libre: el miembro elige qué poner. Si no tiene
+                      // nada suelto que poner, el óvalo se queda de adorno (un
+                      // "+" tenue, no interactivo) esperando su próximo sticker.
+                      if (disponiblesPortada.length > 0) {
+                        return (
+                          <button key={`libre-${i}`} onClick={() => setSelector(true)}
+                            aria-label="Elegir un coleccionable para mi portada"
+                            className="club-borde club-ink flex items-center justify-center w-[86px] h-[104px] rounded-[50%] border border-dashed transition hover:scale-[1.06] active:scale-95">
+                            <PlusIcon className="w-6 h-6" aria-hidden="true" />
+                          </button>
+                        );
+                      }
                       return (
-                        <span key={bloqueado?.id ?? `vacio-${i}`}
-                          className="club-borde club-ink-75 flex items-center justify-center w-[86px] h-[104px] rounded-[50%] border"
+                        <span key={`vacio-${i}`}
+                          className="club-borde club-ink-40 flex items-center justify-center w-[86px] h-[104px] rounded-[50%] border border-dashed"
                           aria-hidden="true">
-                          <span className="text-xs font-medium">{bloqueado?.orden ?? ""}</span>
+                          <PlusIcon className="w-5 h-5" />
                         </span>
                       );
                     })}
@@ -854,24 +957,9 @@ export default function TarjetaClub() {
             </div>
           </div>
 
-          {/* Personalizar + compartir */}
-          <div className="mt-5 flex items-center gap-2.5">
-            <button
-              onClick={abrirEditor}
-              className="px-7 py-3 rounded-full bg-[var(--color-verde)] text-sm font-sans font-semibold text-[var(--color-cremita)] hover:opacity-85 transition"
-            >
-              Personalizar tarjeta
-            </button>
-            <button onClick={compartir} aria-label="Compartir mi tarjeta" title="Compartir mi tarjeta"
-              className="w-11 h-11 rounded-full border-2 border-[var(--color-verde)] text-[var(--color-verde)] flex items-center justify-center hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-                <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
-              </svg>
-            </button>
-          </div>
+          {/* Personalizar y compartir viven en el menú del header (MenuClub) */}
 
-          <div className="text-center mt-4 space-y-1 max-w-sm">
+          <div className="text-center mt-5 space-y-1 max-w-sm">
             {compartido && <p className="text-xs text-[var(--color-verde)]">Link copiado ✓</p>}
             {avisoGuardar && <p className="text-xs text-[var(--color-terracota)]">{avisoGuardar}</p>}
           </div>
@@ -926,6 +1014,8 @@ export default function TarjetaClub() {
           {planilla && catalogo && (
             <PlanillaClub
               token={token}
+              origen={origen}
+              accionPortada={accionPortada}
               catalogo={catalogo}
               album={misStickers.album}
               detalles={misStickers.detalles}
@@ -937,10 +1027,35 @@ export default function TarjetaClub() {
             />
           )}
 
+          {/* ── Ficha de un sticker tocado en la tarjeta ── */}
+          {ficha && (
+            <FichaSticker
+              key={ficha.id}
+              token={token}
+              origen={origen}
+              portada={accionPortada(ficha.id)}
+              sticker={ficha}
+              mio={misStickers.album.find((a) => a.id === ficha.id)}
+              info={misStickers.detalles?.[ficha.id]}
+              onCerrar={() => setFicha(null)}
+            />
+          )}
+
+          {/* ── Elegir qué va en un espacio libre de la portada ── */}
+          {selector && (
+            <SelectorPortada
+              origen={origen}
+              disponibles={disponiblesPortada}
+              onElegir={(s) => alternarPortada(s.id)}
+              onCerrar={() => setSelector(false)}
+            />
+          )}
+
           {/* ── Rascado de sticker sorpresa ── */}
           {rascando && (
             <RascaSticker
               token={token}
+              origen={origen}
               onCerrar={() => { setRascando(false); cargarTarjeta(); }}
               onPegado={() => { setRascando(false); cargarTarjeta(); setPlanilla(true); }}
             />
@@ -1085,7 +1200,7 @@ export default function TarjetaClub() {
                 </div>
 
                 <div className="sticky bottom-0 bg-white border-t border-[var(--color-border)] px-5 py-4 flex items-center justify-between gap-3">
-                  <button onClick={() => setDraft(ESTILO_DEFAULT)}
+                  <button onClick={() => setDraft((d) => ({ ...ESTILO_DEFAULT, portada: d.portada }))}
                     className="text-sm font-sans font-semibold text-[var(--color-muted)] hover:text-[var(--color-text)] transition">
                     Restablecer
                   </button>
