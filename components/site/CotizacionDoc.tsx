@@ -8,7 +8,7 @@
 // navegador (window.print) con estilos @media print: la portada es la página 1
 // y el detalle la página 2, con los colores de marca preservados.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -27,7 +27,9 @@ const WHATSAPP = "522211865590";
 // Se muestra sin precio y NO está incluido en `total` (viaja así desde el admin).
 // `nota` = aclaración del staff sobre ese renglón (ej. "no hay marca Norma, se
 // surtió Scribe"): se muestra bajo el concepto, en tono secundario.
-type Item = { label: string; unitPrice: number; qty: number; pendiente?: boolean; nota?: string };
+// `imagen` = foto del renglón (snapshot guardado en el admin: variación →
+// producto → mockup). "" cuando el renglón no tiene foto (servicios, tarifas).
+type Item = { label: string; unitPrice: number; qty: number; pendiente?: boolean; nota?: string; imagen?: string };
 type Cotizacion = {
   folio: string;
   proyecto: string;
@@ -249,6 +251,117 @@ function MenuCotizacion({ waAprobar }: { waAprobar: string }) {
   );
 }
 
+// ── Foto del renglón (miniatura + lightbox) ──
+// La miniatura es un botón (48px — área táctil AA) que abre la imagen ampliada.
+// Accesibilidad: el <img> del thumb es decorativo (alt="" — el concepto ya lo
+// nombra el texto de al lado) y el nombre accesible vive en el aria-label del
+// botón; el lightbox es role="dialog" con foco al abrir, Escape/backdrop para
+// cerrar y foco de regreso al thumb al salir.
+
+function LightboxImagen({ src, label, onClose }: { src: string; label: string; onClose: () => void }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    closeRef.current?.focus();
+    // Escape cierra; Tab queda atrapado en el dialog (aria-modal): el único
+    // focusable es el botón cerrar, así que basta con retener el foco ahí.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Tab") {
+        e.preventDefault();
+        closeRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  // `cotizacion-doc no-print`: el portal vive en <body> (fuera del árbol del
+  // documento), y las reglas de @media print están scoped a .cotizacion-doc —
+  // sin ambas clases el overlay saldría en el PDF (mismo patrón que el menú).
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Imagen de ${label}`}
+      onClick={onClose}
+      className="cotizacion-doc no-print cot-zoom-overlay fixed inset-0 flex items-center justify-center p-5"
+      style={{ zIndex: 100004 }}
+    >
+      <figure className="cot-zoom-card relative max-w-[min(92vw,560px)]" onClick={(e) => e.stopPropagation()}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={label}
+          className="w-full max-h-[72vh] object-contain rounded-[20px] bg-white shadow-2xl"
+        />
+        <figcaption className="mt-3 text-center text-sm text-[var(--color-cremita)]">{label}</figcaption>
+        <button
+          ref={closeRef}
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar imagen"
+          className="absolute -top-3 -right-3 w-10 h-10 rounded-full bg-white text-[var(--color-verde)] shadow-lg flex items-center justify-center hover:scale-105 transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-cremita)]"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+      </figure>
+    </div>,
+    document.body,
+  );
+}
+
+function ItemFoto({ imagen, label, conImagenes }: { imagen?: string; label: string; conImagenes: boolean }) {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  // El documento no tiene fotos en ningún renglón → no se reserva la columna.
+  if (!conImagenes) return null;
+  // Otros renglones sí traen foto: espacio reservado con un guiño de marca
+  // (alineación pareja, sin cuadros rotos). Decorativo → invisible al lector.
+  if (!imagen) {
+    return (
+      <span
+        aria-hidden="true"
+        className="w-12 h-12 rounded-xl bg-[var(--color-cremita)]/45 flex items-center justify-center flex-shrink-0"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-[var(--color-verde)] opacity-30" aria-hidden="true">
+          <path d="M8 0c.4 4.4 3.6 7.6 8 8-4.4.4-7.6 3.6-8 8-.4-4.4-3.6-7.6-8-8 4.4-.4 7.6-3.6 8-8z" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`Ver imagen de ${label}`}
+        className="w-12 h-12 rounded-xl overflow-hidden border border-[var(--color-border)] bg-white flex-shrink-0 cursor-zoom-in transition-transform hover:scale-[1.05] active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-verde)]"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imagen} alt="" loading="lazy" className="w-full h-full object-cover" />
+      </button>
+      {open && (
+        <LightboxImagen
+          src={imagen}
+          label={label}
+          onClose={() => {
+            setOpen(false);
+            btnRef.current?.focus();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
 // ── Documento ──
 
 export default function CotizacionDoc() {
@@ -273,6 +386,9 @@ export default function CotizacionDoc() {
 
   const restante = cot.total - cot.pagado;
   const hayAnticipo = cot.pagado > 0 && restante > 0.005;
+  // ¿Algún renglón trae foto? Solo entonces el detalle reserva la columna de
+  // miniaturas (cotizaciones de puros servicios se ven igual que siempre).
+  const conImagenes = cot.items.some((i) => i.imagen);
 
   const pasos = [
     {
@@ -360,8 +476,16 @@ export default function CotizacionDoc() {
         <section className="cot-rise bg-white rounded-[24px] border border-[var(--color-border)] px-6 sm:px-10 py-8 sm:py-10 print:rounded-none print:border-0" style={{ animationDelay: "0.4s" }}>
           <h2 className="font-serif text-2xl text-[var(--color-verde)] mb-6">Detalle de tu proyecto</h2>
 
-          {/* Encabezados (desktop / print) */}
-          <div className="hidden sm:grid print:grid grid-cols-[1fr_70px_110px_110px] gap-3 pb-3 border-b border-[var(--color-border)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
+          {/* Encabezados (desktop / print). Con fotos, la primera columna es
+              la miniatura (48px) y "Concepto" se recorre con ella. */}
+          <div
+            className={`hidden sm:grid print:grid gap-3 pb-3 border-b border-[var(--color-border)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)] ${
+              conImagenes
+                ? "grid-cols-[48px_1fr_70px_110px_110px]"
+                : "grid-cols-[1fr_70px_110px_110px]"
+            }`}
+          >
+            {conImagenes && <span aria-hidden="true" />}
             <span>Concepto</span>
             <span className="text-center">Cant.</span>
             <span className="text-right">Precio unit.</span>
@@ -372,8 +496,16 @@ export default function CotizacionDoc() {
             {cot.items.map((item, i) => (
               <div
                 key={i}
-                className="py-3.5 sm:grid print:grid grid-cols-[1fr_70px_110px_110px] gap-3 items-baseline"
+                className={`cot-rise py-3.5 gap-3 ${
+                  conImagenes
+                    ? "grid grid-cols-[48px_1fr] sm:grid-cols-[48px_1fr_70px_110px_110px] print:grid-cols-[48px_1fr_70px_110px_110px] gap-y-1 items-center sm:items-center"
+                    : "sm:grid print:grid grid-cols-[1fr_70px_110px_110px] items-baseline"
+                }`}
+                // Cascada sutil por renglón (tope a los 8 primeros para que las
+                // listas largas no tarden en aparecer).
+                style={{ animationDelay: `${0.45 + Math.min(i, 8) * 0.05}s` }}
               >
+                <ItemFoto imagen={item.imagen} label={item.label} conImagenes={conImagenes} />
                 <p className="text-[15px] text-[var(--color-text)] leading-snug">
                   {item.label}
                   {item.nota?.trim() && (
@@ -382,22 +514,23 @@ export default function CotizacionDoc() {
                     </span>
                   )}
                 </p>
-                {/* Mobile: metadata en una línea; desktop/print: columnas */}
-                <p className="text-sm text-[var(--color-muted)] sm:text-center print:text-center tabular-nums">
+                {/* Mobile: metadata en una línea (con foto, alineada bajo el
+                    concepto — col 2); desktop/print: columnas */}
+                <p className={`text-sm text-[var(--color-muted)] sm:text-center print:text-center tabular-nums ${conImagenes ? "col-start-2 sm:col-start-auto print:col-start-auto" : ""}`}>
                   <span className="sm:hidden print:hidden">Cantidad: </span>{item.qty}
                 </p>
                 {item.pendiente ? (
-                  <p className="sm:col-span-2 print:col-span-2 sm:text-right print:text-right">
+                  <p className={`sm:col-span-2 print:col-span-2 sm:text-right print:text-right ${conImagenes ? "col-start-2 sm:col-start-auto print:col-start-auto" : ""}`}>
                     <span className="inline-block text-xs font-semibold text-[var(--color-verde)] bg-[var(--color-cremita)] px-2.5 py-0.5 rounded-full">
                       Por cotizar
                     </span>
                   </p>
                 ) : (
                   <>
-                    <p className="text-sm text-[var(--color-muted)] sm:text-right print:text-right tabular-nums">
+                    <p className={`text-sm text-[var(--color-muted)] sm:text-right print:text-right tabular-nums ${conImagenes ? "col-start-2 sm:col-start-auto print:col-start-auto" : ""}`}>
                       <span className="sm:hidden print:hidden">Precio unitario: </span>{fmt(item.unitPrice)}
                     </p>
-                    <p className="text-[15px] font-medium text-[var(--color-text)] sm:text-right print:text-right tabular-nums">
+                    <p className={`text-[15px] font-medium text-[var(--color-text)] sm:text-right print:text-right tabular-nums ${conImagenes ? "col-start-2 sm:col-start-auto print:col-start-auto" : ""}`}>
                       {fmt(item.unitPrice * item.qty)}
                     </p>
                   </>

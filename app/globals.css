@@ -262,3 +262,27 @@ body {
   .cot-rise { animation: none !important; opacity: 1 !important; }
   .cot-ribbon path { animation: none !important; stroke-dashoffset: 0 !important; }
 }
+
+/* ── Cotización — lightbox de la foto de un renglón ──
+   Overlay verde profundo con blur + tarjeta que entra con un zoom suave. */
+@keyframes cot-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cot-zoom-in {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.cot-zoom-overlay {
+  background: rgba(16, 46, 43, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: cot-fade 0.22s ease;
+}
+.cot-zoom-card {
+  animation: cot-zoom-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cot-zoom-overlay,
+  .cot-zoom-card { animation: none !important; }
+}
