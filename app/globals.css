@@ -335,3 +335,50 @@ body {
   .club-hoja, .club-hoja--sale,
   .club-velo, .club-velo--sale { animation: none; }
 }
+
+/* ── Dopamina (juego del Club Creativo) — burbujas de vidrio flotantes.
+   Animación CSS pura (barata, sin JS por frame); los delays y duraciones se
+   varían inline por burbuja para que el campo se sienta vivo. La variable
+   --burbuja-escala reduce el tamaño de las pompas en pantallas chicas. ── */
+@keyframes dopa-flota {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+.dopa-flota { animation: dopa-flota 5s ease-in-out infinite; }
+
+.dopa-canvas { --burbuja-escala: 0.62; }
+@media (min-width: 768px) {
+  .dopa-canvas { --burbuja-escala: 1; }
+}
+
+/* Puntitos efervescentes: nacen bajo el borde del lienzo y suben hasta salir
+   por arriba, con una deriva lateral leve (--vaiven). Solo transform/opacity
+   (compositor); duración/retraso/vaivén se varían inline por punto. */
+@keyframes dopa-sube {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  8%   { opacity: 0.65; }
+  85%  { opacity: 0.5; }
+  100% { transform: translateY(-108vh) translateX(var(--vaiven, 12px)); opacity: 0; }
+}
+.dopa-punto {
+  position: absolute;
+  bottom: -14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.75);
+  animation: dopa-sube var(--dur, 14s) linear infinite;
+  pointer-events: none;
+}
+
+/* Halo de las burbujas: capa radial detrás del vidrio que "respira"
+   (solo opacity — compositor). El delay se varía inline por burbuja. */
+@keyframes dopa-brilla {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+.dopa-brillo { animation: dopa-brilla 3.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dopa-flota { animation: none; }
+  .dopa-punto { display: none; } /* decorativos: sin movimiento no aportan */
+  .dopa-brillo { animation: none; opacity: 0.7; }
+}

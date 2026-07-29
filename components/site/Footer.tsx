@@ -19,6 +19,7 @@ const SITEMAP: { title: string; links: { href: string; label: string }[] }[] = [
     links: [
       { href: "/talleres", label: "Talleres" },
       { href: "/clases", label: "Clases" },
+      { href: "/club-creativo", label: "Club Creativo" },
     ],
   },
   {
