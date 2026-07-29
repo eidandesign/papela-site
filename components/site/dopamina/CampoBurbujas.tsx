@@ -64,14 +64,30 @@ const MINIS = [
 ];
 const SALIDA_SUAVE = [0.16, 1, 0.3, 1] as const;
 
-// Vidrio líquido barato: brillo superior, reflejo inferior, borde tenue y un
-// resplandor exterior fijo (el pulso lo pone la capa .dopa-brillo).
+// ── Vidrio de la pompa ───────────────────────────────────────────────────
+// Una esfera creíble necesita CUATRO cosas, y aquí cada una es una capa propia
+// (todas gradientes estáticos: se pintan una vez y no cuestan por frame):
+//   1. cuerpo    → radial desplazado al 30/24% (valores del Figma) + sombras
+//                  internas que le dan grosor: sin ellas la bola se ve plana.
+//   2. rim       → el borde NO es parejo: brilla arriba-izquierda y se apaga
+//                  abajo-derecha (degradado enmascarado en un aro de ~1.5px).
+//   3. cáustica  → media luna luminosa pegada al borde inferior interno: es la
+//                  luz que atraviesa la pompa y se concentra al salir.
+//   4. reflejos  → el brillo especular (el "reflejo" de la fuente de luz) y su
+//                  rebote chico abajo-derecha. Van ENCIMA de la palabra para
+//                  que se lea como algo que pasa en la superficie del vidrio.
 const VIDRIO: React.CSSProperties = {
   background:
-    "radial-gradient(circle at 30% 24%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.12) 34%, rgba(255,255,255,0.03) 58%, rgba(255,255,255,0.1) 88%, rgba(255,255,255,0.22) 100%)",
-  boxShadow:
-    "inset 0 -12px 20px rgba(255,255,255,0.16), inset 0 3px 10px rgba(255,255,255,0.38), 0 0 22px rgba(255,255,255,0.28), 0 14px 30px rgba(0,0,0,0.2)",
-  border: "1px solid rgba(255,255,255,0.32)",
+    // Caída rápida desde el núcleo: el centro-derecha queda casi transparente
+    // (se ve el fondo a través) y la pompa deja de leerse como canica opaca.
+    "radial-gradient(83% 83% at 30% 24%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.34) 18%, rgba(255,255,255,0.13) 40%, rgba(255,255,255,0.05) 64%, rgba(255,255,255,0.12) 86%, rgba(255,255,255,0.3) 100%)",
+  boxShadow: [
+    "inset -8px -12px 26px -8px rgba(255,255,255,0.5)", // luz que entra por abajo
+    "inset 6px 8px 20px -6px rgba(255,255,255,0.45)", // brillo interno superior
+    "inset 0 0 26px rgba(0,0,0,0.12)", // grosor del vidrio (neutro: sirve en las 3 rondas)
+    "0 0 22px rgba(255,255,255,0.24)", // resplandor exterior
+    "0 16px 32px rgba(0,0,0,0.2)", // sombra proyectada
+  ].join(", "),
 };
 
 // Halo que respira detrás del vidrio (animación dopa-brilla en globals.css).
@@ -80,14 +96,81 @@ const HALO: React.CSSProperties = {
     "radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.14) 45%, transparent 70%)",
 };
 
+// Borde de vidrio: aro fino con degradado (brillante arriba-izquierda, casi
+// nulo abajo-derecha). `circle closest-side` hace que 100% caiga EXACTO en la
+// orilla de la pompa; el tramo suave evita que el aro se vea dentado.
+const ANILLO_MASK =
+  "radial-gradient(circle closest-side, transparent calc(100% - 2px), #000 calc(100% - 1px))";
+const RIM: React.CSSProperties = {
+  background:
+    "linear-gradient(150deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.55) 28%, rgba(255,255,255,0.14) 60%, rgba(255,255,255,0.4) 100%)",
+  WebkitMask: ANILLO_MASK,
+  mask: ANILLO_MASK,
+};
+
+// Cáustica: aro luminoso recortado a la mitad de abajo → media luna interior.
+const CAUSTICA: React.CSSProperties = {
+  background:
+    "radial-gradient(circle closest-side, transparent 60%, rgba(255,255,255,0.42) 88%, transparent 100%)",
+  WebkitMask: "linear-gradient(to top, #000 0%, transparent 58%)",
+  mask: "linear-gradient(to top, #000 0%, transparent 58%)",
+};
+
 // Rim iridiscente sutil (solo en el borde, centro enmascarado).
+const IRIS_MASK = "radial-gradient(circle closest-side, transparent 62%, #000 92%)";
 const IRIS: React.CSSProperties = {
   background:
     "conic-gradient(from 210deg, rgba(255,182,217,0.5), rgba(168,230,255,0.42), rgba(255,243,176,0.35), rgba(217,200,255,0.45), rgba(255,182,217,0.5))",
-  WebkitMask: "radial-gradient(circle, transparent 58%, black 78%)",
-  mask: "radial-gradient(circle, transparent 58%, black 78%)",
+  WebkitMask: IRIS_MASK,
+  mask: IRIS_MASK,
   opacity: 0.45,
 };
+
+// Reflejo especular: óvalo inclinado arriba-izquierda, con núcleo duro y caída
+// larga (un blur real costaría; el gradiente ya da el difuminado).
+const REFLEJO: React.CSSProperties = {
+  top: "11%",
+  left: "16%",
+  width: "33%",
+  height: "22%",
+  borderRadius: "50%",
+  transform: "rotate(-28deg)",
+  background:
+    "radial-gradient(closest-side, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.72) 26%, rgba(255,255,255,0.16) 62%, transparent 100%)",
+};
+
+// Rebote de luz: el reflejo chico del lado opuesto que delata la curvatura.
+const REFLEJO_BAJO: React.CSSProperties = {
+  bottom: "13%",
+  right: "15%",
+  width: "28%",
+  height: "15%",
+  borderRadius: "50%",
+  transform: "rotate(-18deg)",
+  background:
+    "radial-gradient(closest-side, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.24) 50%, transparent 100%)",
+};
+
+// Capas bajo la palabra (borde, cáustica, iridiscencia).
+function CapasVidrio() {
+  return (
+    <>
+      <span aria-hidden="true" className="absolute inset-0 rounded-full" style={RIM} />
+      <span aria-hidden="true" className="absolute inset-0 rounded-full" style={CAUSTICA} />
+      <span aria-hidden="true" className="absolute inset-0 rounded-full" style={IRIS} />
+    </>
+  );
+}
+
+// Capas sobre la palabra (los reflejos viven en la superficie del vidrio).
+function Reflejos() {
+  return (
+    <>
+      <span aria-hidden="true" className="absolute" style={REFLEJO} />
+      <span aria-hidden="true" className="absolute" style={REFLEJO_BAJO} />
+    </>
+  );
+}
 
 export default function CampoBurbujas({
   rondaKey,
@@ -168,7 +251,7 @@ export default function CampoBurbujas({
                     animate={{ scale: 2.7, opacity: 0 }}
                     transition={{ duration: 0.7, delay: 0.08, ease: SALIDA_SUAVE }}
                   />
-                  {/* 3 · El vidrio se infla y estalla */}
+                  {/* 3 · El vidrio se infla y estalla (con sus mismas capas) */}
                   <motion.span
                     aria-hidden="true"
                     className="absolute inset-0 rounded-full"
@@ -176,7 +259,10 @@ export default function CampoBurbujas({
                     initial={{ scale: 1, opacity: 1 }}
                     animate={{ scale: 1.45, opacity: 0 }}
                     transition={{ duration: 0.35, ease: "easeOut" }}
-                  />
+                  >
+                    <CapasVidrio />
+                    <Reflejos />
+                  </motion.span>
                   {/* 4 · Gotas: tamaños, distancias y tempos variados */}
                   {GOTAS.map((v, j) => (
                     <motion.span
@@ -266,7 +352,7 @@ export default function CampoBurbujas({
                   onClick={() => onToca(b)}
                   disabled={reventadaId !== null}
                   aria-label={`Burbuja misteriosa ${i + 1} de ${burbujas.length}`}
-                  className="dopa-flota block w-full h-full rounded-full select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]"
+                  className="dopa-flota relative block w-full h-full rounded-full select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]"
                   style={{
                     ...VIDRIO,
                     animationDelay: `${-((i * 0.9) % 5)}s`,
@@ -279,7 +365,7 @@ export default function CampoBurbujas({
                   animate={{ opacity: reventadaId ? 0.45 : 1, scale: reventadaId ? 0.93 : 1 }}
                   transition={{ delay: brote ? 0 : 0.05 + i * 0.05, type: "spring", stiffness: 220, damping: 18 }}
                 >
-                  <span aria-hidden="true" className="absolute inset-0 rounded-full" style={IRIS} />
+                  <CapasVidrio />
                   {/* La palabra vive dentro del vidrio pero borrosa: se intuye, no se lee */}
                   <span
                     aria-hidden="true"
@@ -288,6 +374,7 @@ export default function CampoBurbujas({
                   >
                     {b.texto}
                   </span>
+                  <Reflejos />
                   </motion.button>
                 </>
               )}
