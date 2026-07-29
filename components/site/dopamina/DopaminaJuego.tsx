@@ -36,9 +36,18 @@ import { eventoDopa } from "@/lib/dopamina/analitica";
 
 type Fase = "burbujas" | "reto" | "cronometro" | "final";
 
-// Capas de color del lienzo (crossfade por opacity). El rosa del reto es el
-// mismo de la ronda 3, así la transición burbujas→reto es continua.
-const COLORES_LIENZO = [...RONDAS.map((r) => r.fondo), FONDO_VERDE];
+// Mientras eliges el tiempo, el lienzo va derivando por los colores de la
+// marca: entra con el rosa de la ronda 3 (transición continua) y sigue rotando
+// hasta que eliges. Es el mismo crossfade por opacity, solo que en bucle.
+const COLORES_RETO = [FONDO_RETO, "#8C482A", "#483699", "#3E6D94", "#5E7E86"];
+const PASO_COLOR_MS = 4200; // cuánto se queda cada color antes de derivar
+const FUNDIDO_RETO_MS = 2200; // cruce largo: se siente como una deriva, no un corte
+
+// Capas de color del lienzo (crossfade por opacity). Union sin repetidos: el
+// rosa aparece tanto en la ronda 3 como en el reto, y cada capa lleva `key`.
+const COLORES_LIENZO = [
+  ...new Set([...RONDAS.map((r) => r.fondo), FONDO_VERDE, ...COLORES_RETO]),
+];
 
 // Puntitos efervescentes: suben por el lienzo como burbujas de refresco
 // (animación dopa-sube en globals.css). Delays negativos = el campo ya está
@@ -59,6 +68,10 @@ const btnCrema =
   "inline-flex items-center justify-center rounded-full bg-[var(--color-cremita)] text-[var(--color-verde)] font-sans text-[14px] font-semibold px-7 py-3 hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]";
 const btnFantasma =
   "inline-flex items-center justify-center rounded-full border border-[rgba(243,230,207,0.5)] text-[var(--color-cremita)] font-sans text-[13px] font-medium px-6 py-2.5 hover:bg-white/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]";
+// Terciario: link con ícono. Sin caja ni borde — el nivel más bajo de la
+// jerarquía, para acciones que no son el camino principal de la pantalla.
+const btnTerciario =
+  "inline-flex items-center gap-2 font-sans text-[13px] font-medium text-[var(--color-cremita)]/70 hover:text-[var(--color-cremita)] underline underline-offset-[6px] decoration-[rgba(243,230,207,0.35)] hover:decoration-[var(--color-cremita)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)] rounded-sm";
 
 // Slots del reto: tres huecos punteados que se llenan con cada revelación.
 function Slots({ seleccion }: { seleccion: Burbuja[] }) {
@@ -97,6 +110,8 @@ export default function DopaminaJuego() {
   const [reto, setReto] = useState<Reto | null>(null);
   const [duracion, setDuracion] = useState(0);
   const [anuncio, setAnuncio] = useState("");
+  // Índice del color que recorre la pantalla del reto (0 = rosa de entrada).
+  const [pasoColor, setPasoColor] = useState(0);
   // Guard SÍNCRONO contra taps casi simultáneos (multitouch): el estado
   // `reventada` vive en el closure del render y dos toques en el mismo tick
   // lo verían null a la vez, programando dos timeouts de avance de ronda.
@@ -122,6 +137,16 @@ export default function DopaminaJuego() {
     reparte();
   }, []);
 
+  // Deriva de color de la pantalla del reto: avanza un paso cada tanto y el
+  // crossfade de las capas hace el resto. Se apaga con reduced-motion (es una
+  // animación en bucle) y al salir de la fase.
+  useEffect(() => {
+    if (fase !== "reto") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const int = setInterval(() => setPasoColor((p) => p + 1), PASO_COLOR_MS);
+    return () => clearInterval(int);
+  }, [fase]);
+
   // Explota una burbuja: la palabra queda en su lugar y llena su slot; tras
   // una pausa cambia la ronda (y el color del lienzo) o pasa al reto.
   const tocaBurbuja = (b: Burbuja) => {
@@ -139,6 +164,7 @@ export default function DopaminaJuego() {
       const armado = armaReto(nueva);
       setTimeout(() => {
         setReto(armado);
+        setPasoColor(0); // entra con el rosa de la ronda 3 y de ahí deriva
         setFase("reto");
         setAnuncio(`Tu reto: ${armado.frase}`);
       }, 1900);
@@ -165,23 +191,34 @@ export default function DopaminaJuego() {
   };
 
   const cat = RONDAS[Math.min(ronda, RONDAS.length - 1)];
-  const fondo = fase === "burbujas" ? cat.fondo : fase === "reto" ? FONDO_RETO : FONDO_VERDE;
   const enBurbujas = fase === "burbujas";
+  const enReto = fase === "reto";
+  const fondo = enBurbujas
+    ? cat.fondo
+    : enReto
+      ? COLORES_RETO[pasoColor % COLORES_RETO.length]
+      : FONDO_VERDE;
 
   return (
     <MotionConfig reducedMotion="user">
       <main className="min-h-[100dvh] bg-[var(--color-bg)] p-2.5 md:p-4">
+        {/* El fondo base sigue al color activo: a media transición lo que se
+            asoma entre las dos capas es el color destino, no un tercero. */}
         <section
           className="dopa-canvas relative overflow-hidden rounded-[24px] md:rounded-[32px] min-h-[calc(100dvh-20px)] md:min-h-[calc(100dvh-32px)] flex flex-col"
-          style={{ backgroundColor: COLORES_LIENZO[0] }}
+          style={{ backgroundColor: fondo }}
         >
           {/* Fondo: capas sólidas con crossfade por opacity (barato en móvil) */}
           {COLORES_LIENZO.map((color) => (
             <div
               key={color}
               aria-hidden="true"
-              className="absolute inset-0 transition-opacity duration-700 ease-out"
-              style={{ backgroundColor: color, opacity: color === fondo ? 1 : 0 }}
+              className="absolute inset-0 transition-opacity ease-out"
+              style={{
+                backgroundColor: color,
+                opacity: color === fondo ? 1 : 0,
+                transitionDuration: enReto ? `${FUNDIDO_RETO_MS}ms` : "700ms",
+              }}
             />
           ))}
 
@@ -252,7 +289,11 @@ export default function DopaminaJuego() {
                 <Slots seleccion={seleccion} />
               </header>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center px-6 py-24 pointer-events-auto">
+              <div
+                className={`flex-1 flex flex-col items-center justify-center px-6 pointer-events-auto ${
+                  enReto ? "pt-24 pb-14" : "py-24"
+                }`}
+              >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={fase}
@@ -260,12 +301,16 @@ export default function DopaminaJuego() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full flex flex-col items-center text-center"
+                    // En el reto el bloque ocupa todo el alto: el reto se centra
+                    // en el espacio libre (my-auto) y los tiempos caen al fondo.
+                    className={`w-full flex flex-col items-center text-center ${enReto ? "flex-1" : ""}`}
                   >
                     {fase === "reto" && reto && (
                       <>
-                        {/* Coreografía de entrada: label → card → frase palabra
-                            por palabra → pregunta → tiempos → re-repartir. */}
+                        {/* Bloque 1 — el reto, centrado en el espacio libre.
+                            Coreografía de entrada: label → frase palabra por
+                            palabra → "otras burbujas" → pregunta → tiempos. */}
+                        <div className="my-auto flex flex-col items-center w-full">
                         <motion.p
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -275,12 +320,17 @@ export default function DopaminaJuego() {
                           Tu reto
                         </motion.p>
                         <motion.div
-                          initial={{ opacity: 0, scale: 0.94, y: 12 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.12, type: "spring", stiffness: 200, damping: 20 }}
-                          className="w-full max-w-xl rounded-[24px] bg-white/15 px-7 py-10 md:px-10 shadow-[0_18px_44px_rgba(0,0,0,0.12)]"
+                          className="w-full max-w-3xl"
                         >
-                          <p className="font-serif text-[clamp(1.4rem,3.2vw,2rem)] leading-snug text-[var(--color-cremita)]">
+                          {/* Sin caja: la frase es el héroe de la pantalla, con
+                              el mismo tratamiento que los heroes del sitio
+                              (serif italic cremita, leading apretado). El clamp
+                              va por debajo del de los heroes porque aquí no es
+                              un título de 3 palabras, es una oración larga. */}
+                          <p className="font-serif italic text-[clamp(2rem,4.8vw,3.75rem)] leading-[1.05] text-[var(--color-cremita)]">
                             {/* La frase se arma palabra por palabra, como las burbujas */}
                             {reto.frase.split(" ").map((palabra, i) => (
                               <motion.span
@@ -297,50 +347,59 @@ export default function DopaminaJuego() {
                           </p>
                         </motion.div>
 
-                        <motion.div
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.55, duration: 0.4 }}
-                          className="mt-9 w-full max-w-sm"
-                        >
-                          <p className="font-serif italic text-[16px] text-[var(--color-cremita)] mb-4">
-                            ¿Cuánto tiempo te das?
-                          </p>
-                          <div className="grid grid-cols-3 gap-2.5">
-                            {DURACIONES.map((d, i) => (
-                              <motion.button
-                                key={d.seg}
-                                type="button"
-                                onClick={() => eligeTiempo(d.seg)}
-                                initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ delay: 0.62 + i * 0.07, type: "spring", stiffness: 260, damping: 20 }}
-                                whileHover={{ y: -3 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="group flex flex-col items-center gap-0.5 rounded-2xl bg-white/15 hover:bg-[var(--color-cremita)] py-3.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-cremita)]"
-                              >
-                                <span className="font-serif text-[24px] leading-none text-[var(--color-cremita)] group-hover:text-[#7A4343] transition-colors">
-                                  {d.seg / 60}
-                                </span>
-                                <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[var(--color-cremita)]/70 group-hover:text-[#7A4343]/70 transition-colors">
-                                  minutos
-                                </span>
-                              </motion.button>
-                            ))}
-                          </div>
-                        </motion.div>
-
+                        {/* Terciario: descartar el reto es la salida, no la
+                            acción. Va pegado a la frase (es sobre ELLA) y como
+                            link para no competir con los botones de tiempo. */}
                         <motion.button
                           type="button"
                           onClick={reparte}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.9, duration: 0.4 }}
-                          className={`${btnFantasma} mt-10 gap-2`}
+                          className={`${btnTerciario} mt-7`}
                         >
                           <ArrowPathIcon className="w-3.5 h-3.5" />
                           Probar otras burbujas
                         </motion.button>
+                        </div>
+
+                        {/* Bloque 2 — al fondo: el paso que falta para seguir */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.55, duration: 0.4 }}
+                          className="mt-12 w-full max-w-sm md:max-w-xl"
+                        >
+                          <p className="font-serif italic text-[17px] leading-snug text-[var(--color-cremita)] mb-4">
+                            Elige tu tiempo y que comience la creatividad
+                          </p>
+                          {/* 5 opciones: 3 + 2 centradas en mobile, una sola fila
+                              en desktop. Con borde y relieve para que se lean
+                              como botones: son el paso obligatorio para avanzar. */}
+                          <div className="flex flex-wrap justify-center gap-2.5">
+                            {DURACIONES.map((d, i) => (
+                              <motion.button
+                                key={d.seg}
+                                type="button"
+                                onClick={() => eligeTiempo(d.seg)}
+                                aria-label={`Empezar con ${d.valor} ${d.unidad}`}
+                                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.62 + i * 0.07, type: "spring", stiffness: 260, damping: 20 }}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="group basis-[calc(33.333%-7px)] md:basis-[calc(20%-8px)] flex flex-col items-center gap-0.5 rounded-2xl border border-[rgba(243,230,207,0.55)] bg-[rgba(243,230,207,0.14)] hover:bg-[var(--color-cremita)] hover:border-[var(--color-cremita)] shadow-[0_8px_20px_rgba(0,0,0,0.14)] py-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-cremita)]"
+                              >
+                                <span className="font-serif text-[26px] leading-none text-[var(--color-cremita)] group-hover:text-[#403C3C] transition-colors">
+                                  {d.valor}
+                                </span>
+                                <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[var(--color-cremita)]/75 group-hover:text-[#403C3C]/70 transition-colors">
+                                  {d.unidad}
+                                </span>
+                              </motion.button>
+                            ))}
+                          </div>
+                        </motion.div>
                       </>
                     )}
 

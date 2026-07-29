@@ -37,6 +37,12 @@ export const BURBUJAS_POR_RONDA = POSICIONES.length;
 const BURBUJAS_INICIALES = 4;
 const BROTE_MS = 1100;
 
+// Cada cuánto revienta una pompa sola (ventana aleatoria) y cuánto tarda en
+// brotar la que la reemplaza.
+const SOLA_MIN_MS = 5500;
+const SOLA_VAR_MS = 6500;
+const SOLA_REGRESO_MS = 950;
+
 // ── Piezas de la explosión (todas deterministas, calculadas una sola vez) ──
 // Gotas principales: 10 direcciones con jitter, distancia/tamaño/tempo variados.
 const GOTAS = Array.from({ length: 10 }, (_, i) => {
@@ -172,6 +178,114 @@ function Reflejos() {
   );
 }
 
+// El estallido, compartido por los dos casos en que una pompa se rompe: cuando
+// la tocas (revela palabra) y cuando revienta sola. `suave` es la versión de
+// las espontáneas: mismo lenguaje, menos volumen, para que no compita con el
+// pop que sí importa.
+function Estallido({ tam, suave = false }: { tam: string; suave?: boolean }) {
+  const gotas = suave ? GOTAS.filter((_, j) => j % 2 === 0) : GOTAS;
+  const f = suave ? 0.55 : 1; // factor de opacidad de la versión suave
+  return (
+    <>
+      {/* 1 · Destello central: un flash breve que vende el "pop" */}
+      <motion.span
+        aria-hidden="true"
+        className="absolute inset-0 rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 40%, transparent 70%)",
+        }}
+        initial={{ scale: 0.4, opacity: f }}
+        animate={{ scale: 1.6, opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      />
+      {/* 2 · Onda expansiva (doble en el pop real, sencilla en el espontáneo) */}
+      <motion.span
+        aria-hidden="true"
+        className="absolute inset-0 rounded-full border-2 border-[rgba(243,230,207,0.85)]"
+        initial={{ scale: 0.5, opacity: 0.9 * f }}
+        animate={{ scale: 2.1, opacity: 0 }}
+        transition={{ duration: 0.55, ease: SALIDA_SUAVE }}
+      />
+      {!suave && (
+        <motion.span
+          aria-hidden="true"
+          className="absolute inset-0 rounded-full border border-white/60"
+          initial={{ scale: 0.5, opacity: 0.7 }}
+          animate={{ scale: 2.7, opacity: 0 }}
+          transition={{ duration: 0.7, delay: 0.08, ease: SALIDA_SUAVE }}
+        />
+      )}
+      {/* 3 · El vidrio se infla y estalla (con sus mismas capas) */}
+      <motion.span
+        aria-hidden="true"
+        className="absolute inset-0 rounded-full"
+        style={VIDRIO}
+        initial={{ scale: 1, opacity: 1 }}
+        animate={{ scale: 1.45, opacity: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
+        <CapasVidrio />
+        <Reflejos />
+      </motion.span>
+      {/* 4 · Gotas: tamaños, distancias y tempos variados */}
+      {gotas.map((v, j) => (
+        <motion.span
+          key={`g${j}`}
+          aria-hidden="true"
+          className="absolute left-1/2 top-1/2 rounded-full"
+          style={{
+            width: v.d,
+            height: v.d,
+            backgroundColor: v.crema ? "rgba(243,230,207,0.95)" : "rgba(255,255,255,0.9)",
+          }}
+          initial={{ x: "-50%", y: "-50%", opacity: f, scale: 1 }}
+          animate={{
+            x: `calc(-50% + ${v.x} * (${tam} / 2 + 30px) * ${v.dist})`,
+            y: `calc(-50% + ${v.y} * (${tam} / 2 + 30px) * ${v.dist})`,
+            opacity: 0,
+            scale: 0.25,
+          }}
+          transition={{ duration: v.dur, ease: SALIDA_SUAVE }}
+        />
+      ))}
+      {/* 5 · Chispas diminutas que llegan más lejos (solo el pop real) */}
+      {!suave &&
+        CHISPAS.map((v, j) => (
+          <motion.span
+            key={`c${j}`}
+            aria-hidden="true"
+            className="absolute left-1/2 top-1/2 w-[3px] h-[3px] rounded-full bg-white"
+            initial={{ x: "-50%", y: "-50%", opacity: 1 }}
+            animate={{
+              x: `calc(-50% + ${v.x} * (${tam} / 2 + 30px) * 1.9)`,
+              y: `calc(-50% + ${v.y} * (${tam} / 2 + 30px) * 1.9)`,
+              opacity: 0,
+            }}
+            transition={{ duration: 0.7, delay: 0.05, ease: SALIDA_SUAVE }}
+          />
+        ))}
+      {/* 6 · Mini-pompas de vidrio que escapan flotando hacia arriba */}
+      {MINIS.map((v, j) => (
+        <motion.span
+          key={`m${j}`}
+          aria-hidden="true"
+          className="absolute left-1/2 top-1/2 rounded-full"
+          style={{ width: v.d, height: v.d, ...VIDRIO, boxShadow: "inset 0 1px 4px rgba(255,255,255,0.5)" }}
+          initial={{ x: "-50%", y: "-50%", opacity: 0.9 * f, scale: 0.6 }}
+          animate={{
+            x: `calc(-50% + ${v.x} * (${tam} / 2 + 26px))`,
+            y: `calc(-50% + ${v.y} * (${tam} / 2 + 44px))`,
+            opacity: 0,
+            scale: 1,
+          }}
+          transition={{ duration: 0.85, delay: 0.06, ease: SALIDA_SUAVE }}
+        />
+      ))}
+    </>
+  );
+}
+
 export default function CampoBurbujas({
   rondaKey,
   burbujas,
@@ -185,6 +299,9 @@ export default function CampoBurbujas({
 }) {
   // Cuántas pompas se muestran ya; crece sola hasta cubrir todas las opciones.
   const [visibles, setVisibles] = useState(BURBUJAS_INICIALES);
+  // Pompa que está reventando sola (decorativo) y las que ya volvieron.
+  const [solaId, setSolaId] = useState<string | null>(null);
+  const [renacidas, setRenacidas] = useState<Set<string>>(new Set());
 
   // El componente NO se remonta entre rondas (el key vive en el div interno):
   // al cambiar la ronda se reinicia el conteo aquí, durante el render
@@ -193,6 +310,8 @@ export default function CampoBurbujas({
   if (rondaPrevia !== rondaKey) {
     setRondaPrevia(rondaKey);
     setVisibles(BURBUJAS_INICIALES);
+    setSolaId(null);
+    setRenacidas(new Set());
   }
 
   useEffect(() => {
@@ -200,6 +319,34 @@ export default function CampoBurbujas({
     const t = setTimeout(() => setVisibles((v) => v + 1), BROTE_MS);
     return () => clearTimeout(t);
   }, [visibles, burbujas.length, reventadaId]);
+
+  // ── Pompas que revientan solas ──
+  // Cada tanto una se rompe sin revelar nada, como pasa de verdad. La palabra
+  // no se pierde: al ratito brota otra en la misma posición con el mismo
+  // contenido — y como el texto va borroso, nadie nota que es la misma.
+  useEffect(() => {
+    if (reventadaId !== null || solaId !== null) return;
+    if (visibles < 3) return; // con el campo casi vacío se notaría demasiado
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setTimeout(
+      () => {
+        const candidatas = burbujas.slice(0, visibles);
+        setSolaId(candidatas[Math.floor(Math.random() * candidatas.length)].id);
+      },
+      SOLA_MIN_MS + Math.random() * SOLA_VAR_MS
+    );
+    return () => clearTimeout(t);
+  }, [reventadaId, solaId, visibles, burbujas]);
+
+  // …y vuelve a brotar (sin el retraso de entrada escalonada).
+  useEffect(() => {
+    if (solaId === null) return;
+    const t = setTimeout(() => {
+      setRenacidas((prev) => new Set(prev).add(solaId));
+      setSolaId(null);
+    }, SOLA_REGRESO_MS);
+    return () => clearTimeout(t);
+  }, [solaId]);
 
   return (
     <AnimatePresence mode="wait">
@@ -214,7 +361,9 @@ export default function CampoBurbujas({
         {burbujas.slice(0, visibles).map((b, i) => {
           const p = POSICIONES[i % POSICIONES.length];
           const explotada = reventadaId === b.id;
-          const brote = i >= BURBUJAS_INICIALES; // llegó después, sin stagger
+          const rompeSola = !explotada && solaId === b.id;
+          // Sin stagger de entrada: las que brotaron tarde y las que renacieron.
+          const brote = i >= BURBUJAS_INICIALES || renacidas.has(b.id);
           const tam = `calc(${p.d}px * var(--burbuja-escala, 1))`;
           return (
             <div
@@ -224,99 +373,8 @@ export default function CampoBurbujas({
             >
               {explotada ? (
                 <>
-                  {/* 1 · Destello central: un flash breve que vende el "pop" */}
-                  <motion.span
-                    aria-hidden="true"
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background:
-                        "radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 40%, transparent 70%)",
-                    }}
-                    initial={{ scale: 0.4, opacity: 1 }}
-                    animate={{ scale: 1.6, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  />
-                  {/* 2 · Doble onda expansiva */}
-                  <motion.span
-                    aria-hidden="true"
-                    className="absolute inset-0 rounded-full border-2 border-[rgba(243,230,207,0.85)]"
-                    initial={{ scale: 0.5, opacity: 0.9 }}
-                    animate={{ scale: 2.1, opacity: 0 }}
-                    transition={{ duration: 0.55, ease: SALIDA_SUAVE }}
-                  />
-                  <motion.span
-                    aria-hidden="true"
-                    className="absolute inset-0 rounded-full border border-white/60"
-                    initial={{ scale: 0.5, opacity: 0.7 }}
-                    animate={{ scale: 2.7, opacity: 0 }}
-                    transition={{ duration: 0.7, delay: 0.08, ease: SALIDA_SUAVE }}
-                  />
-                  {/* 3 · El vidrio se infla y estalla (con sus mismas capas) */}
-                  <motion.span
-                    aria-hidden="true"
-                    className="absolute inset-0 rounded-full"
-                    style={VIDRIO}
-                    initial={{ scale: 1, opacity: 1 }}
-                    animate={{ scale: 1.45, opacity: 0 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
-                  >
-                    <CapasVidrio />
-                    <Reflejos />
-                  </motion.span>
-                  {/* 4 · Gotas: tamaños, distancias y tempos variados */}
-                  {GOTAS.map((v, j) => (
-                    <motion.span
-                      key={`g${j}`}
-                      aria-hidden="true"
-                      className="absolute left-1/2 top-1/2 rounded-full"
-                      style={{
-                        width: v.d,
-                        height: v.d,
-                        backgroundColor: v.crema ? "rgba(243,230,207,0.95)" : "rgba(255,255,255,0.9)",
-                      }}
-                      initial={{ x: "-50%", y: "-50%", opacity: 1, scale: 1 }}
-                      animate={{
-                        x: `calc(-50% + ${v.x} * (${tam} / 2 + 30px) * ${v.dist})`,
-                        y: `calc(-50% + ${v.y} * (${tam} / 2 + 30px) * ${v.dist})`,
-                        opacity: 0,
-                        scale: 0.25,
-                      }}
-                      transition={{ duration: v.dur, ease: SALIDA_SUAVE }}
-                    />
-                  ))}
-                  {/* 5 · Chispas diminutas que llegan más lejos */}
-                  {CHISPAS.map((v, j) => (
-                    <motion.span
-                      key={`c${j}`}
-                      aria-hidden="true"
-                      className="absolute left-1/2 top-1/2 w-[3px] h-[3px] rounded-full bg-white"
-                      initial={{ x: "-50%", y: "-50%", opacity: 1 }}
-                      animate={{
-                        x: `calc(-50% + ${v.x} * (${tam} / 2 + 30px) * 1.9)`,
-                        y: `calc(-50% + ${v.y} * (${tam} / 2 + 30px) * 1.9)`,
-                        opacity: 0,
-                      }}
-                      transition={{ duration: 0.7, delay: 0.05, ease: SALIDA_SUAVE }}
-                    />
-                  ))}
-                  {/* 6 · Mini-pompas de vidrio que escapan flotando hacia arriba */}
-                  {MINIS.map((v, j) => (
-                    <motion.span
-                      key={`m${j}`}
-                      aria-hidden="true"
-                      className="absolute left-1/2 top-1/2 rounded-full"
-                      style={{ width: v.d, height: v.d, ...VIDRIO, boxShadow: "inset 0 1px 4px rgba(255,255,255,0.5)" }}
-                      initial={{ x: "-50%", y: "-50%", opacity: 0.9, scale: 0.6 }}
-                      animate={{
-                        x: `calc(-50% + ${v.x} * (${tam} / 2 + 26px))`,
-                        y: `calc(-50% + ${v.y} * (${tam} / 2 + 44px))`,
-                        opacity: 0,
-                        scale: 1,
-                      }}
-                      transition={{ duration: 0.85, delay: 0.06, ease: SALIDA_SUAVE }}
-                    />
-                  ))}
-                  {/* 7 · La palabra revelada, con su propio halo */}
+                  <Estallido tam={tam} />
+                  {/* La palabra revelada, con su propio halo */}
                   <motion.span
                     aria-hidden="true"
                     className="absolute -inset-5 rounded-full pointer-events-none"
@@ -339,44 +397,60 @@ export default function CampoBurbujas({
                     {b.categoria === RONDAS[0].id ? capitaliza(b.texto) : b.texto}
                   </motion.span>
                 </>
+              ) : rompeSola ? (
+                <Estallido tam={tam} suave />
               ) : (
-                <>
-                  {/* Halo pulsante detrás del vidrio (sibling anterior = queda debajo) */}
-                  <span
-                    aria-hidden="true"
-                    className="dopa-brillo absolute -inset-4 rounded-full pointer-events-none"
-                    style={{ ...HALO, animationDelay: `${-((i * 0.7) % 3.2)}s` }}
-                  />
-                  <motion.button
-                  type="button"
-                  onClick={() => onToca(b)}
-                  disabled={reventadaId !== null}
-                  aria-label={`Burbuja misteriosa ${i + 1} de ${burbujas.length}`}
-                  className="dopa-flota relative block w-full h-full rounded-full select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]"
+                // Dos envoltorios de movimiento: deriva lateral por fuera y
+                // flote+jiggle por dentro. Van separados porque cada animación
+                // necesita su propio `transform`, y el botón se queda con el
+                // suyo libre para el hover/tap de framer.
+                <span
+                  className="dopa-deriva absolute inset-0 block"
                   style={{
-                    ...VIDRIO,
-                    animationDelay: `${-((i * 0.9) % 5)}s`,
-                    animationDuration: `${4.5 + (i % 3) * 0.9}s`,
+                    animationDelay: `${-((i * 2.3) % 13)}s`,
+                    animationDuration: `${11 + (i % 4) * 2.5}s`,
                   }}
-                  whileHover={reventadaId ? undefined : { scale: 1.07 }}
-                  whileTap={reventadaId ? undefined : { scale: 0.92 }}
-                  initial={{ opacity: 0, scale: 0.4 }}
-                  // La onda expansiva "empuja" al resto: se encogen y atenúan un poco
-                  animate={{ opacity: reventadaId ? 0.45 : 1, scale: reventadaId ? 0.93 : 1 }}
-                  transition={{ delay: brote ? 0 : 0.05 + i * 0.05, type: "spring", stiffness: 220, damping: 18 }}
                 >
-                  <CapasVidrio />
-                  {/* La palabra vive dentro del vidrio pero borrosa: se intuye, no se lee */}
                   <span
-                    aria-hidden="true"
-                    className="absolute inset-0 flex items-center justify-center px-2 text-center font-serif italic text-[13px] leading-tight text-white/60"
-                    style={{ filter: "blur(5px)" }}
+                    className="dopa-flota absolute inset-0 block"
+                    style={{
+                      animationDelay: `${-((i * 0.9) % 5)}s`,
+                      animationDuration: `${4.5 + (i % 3) * 0.9}s`,
+                    }}
                   >
-                    {b.texto}
+                    {/* Halo pulsante detrás del vidrio (sibling anterior = queda debajo) */}
+                    <span
+                      aria-hidden="true"
+                      className="dopa-brillo absolute -inset-4 rounded-full pointer-events-none"
+                      style={{ ...HALO, animationDelay: `${-((i * 0.7) % 3.2)}s` }}
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => onToca(b)}
+                      disabled={reventadaId !== null}
+                      aria-label={`Burbuja misteriosa ${i + 1} de ${burbujas.length}`}
+                      className="relative block w-full h-full rounded-full select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]"
+                      style={VIDRIO}
+                      whileHover={reventadaId ? undefined : { scale: 1.07 }}
+                      whileTap={reventadaId ? undefined : { scale: 0.92 }}
+                      initial={{ opacity: 0, scale: 0.4 }}
+                      // La onda expansiva "empuja" al resto: se encogen y atenúan un poco
+                      animate={{ opacity: reventadaId ? 0.45 : 1, scale: reventadaId ? 0.93 : 1 }}
+                      transition={{ delay: brote ? 0 : 0.05 + i * 0.05, type: "spring", stiffness: 220, damping: 18 }}
+                    >
+                      <CapasVidrio />
+                      {/* La palabra vive dentro del vidrio pero borrosa: se intuye, no se lee */}
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-0 flex items-center justify-center px-2 text-center font-serif italic text-[13px] leading-tight text-white/60"
+                        style={{ filter: "blur(5px)" }}
+                      >
+                        {b.texto}
+                      </span>
+                      <Reflejos />
+                    </motion.button>
                   </span>
-                  <Reflejos />
-                  </motion.button>
-                </>
+                </span>
               )}
             </div>
           );

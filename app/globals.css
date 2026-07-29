@@ -340,11 +340,30 @@ body {
    Animación CSS pura (barata, sin JS por frame); los delays y duraciones se
    varían inline por burbuja para que el campo se sienta vivo. La variable
    --burbuja-escala reduce el tamaño de las pompas en pantallas chicas. ── */
+/* Flote vertical + jiggle de membrana: la pompa se estira al subir y se
+   achata al bajar (deformación, no rebote rígido). Los porcentajes son
+   irregulares a propósito: un vaivén simétrico se lee como metrónomo. */
 @keyframes dopa-flota {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-12px); }
+  0%   { transform: translateY(0) scale(1, 1); }
+  30%  { transform: translateY(calc(-9px * var(--burbuja-escala, 1))) scale(1.015, 0.985); }
+  55%  { transform: translateY(calc(-13px * var(--burbuja-escala, 1))) scale(0.99, 1.012); }
+  80%  { transform: translateY(calc(-4px * var(--burbuja-escala, 1))) scale(1.012, 0.99); }
+  100% { transform: translateY(0) scale(1, 1); }
 }
 .dopa-flota { animation: dopa-flota 5s ease-in-out infinite; }
+
+/* Deriva lateral. Va en un envoltorio aparte porque dos animaciones no pueden
+   escribir el mismo `transform`; al combinarse con un ciclo vertical de otra
+   duración, el camino resultante casi no se repite — se ve a la deriva y no
+   en un riel. Mismo truco que las manchas de la tarjeta del Club. */
+@keyframes dopa-deriva {
+  0%   { transform: translateX(0); }
+  22%  { transform: translateX(calc(13px * var(--burbuja-escala, 1))); }
+  47%  { transform: translateX(calc(-6px * var(--burbuja-escala, 1))); }
+  71%  { transform: translateX(calc(-15px * var(--burbuja-escala, 1))); }
+  100% { transform: translateX(0); }
+}
+.dopa-deriva { animation: dopa-deriva 13s ease-in-out infinite; }
 
 .dopa-canvas { --burbuja-escala: 0.62; }
 @media (min-width: 768px) {
@@ -378,7 +397,7 @@ body {
 .dopa-brillo { animation: dopa-brilla 3.2s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .dopa-flota { animation: none; }
+  .dopa-flota, .dopa-deriva { animation: none; }
   .dopa-punto { display: none; } /* decorativos: sin movimiento no aportan */
   .dopa-brillo { animation: none; opacity: 0.7; }
 }

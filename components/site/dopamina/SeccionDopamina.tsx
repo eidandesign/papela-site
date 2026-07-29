@@ -19,7 +19,7 @@ const JUEGO = "/club-creativo/dopamina?desde=club";
 const PASOS = [
   ["Explota tres burbujas", "Están tapadas: no sabes qué esconden. Cada ronda cambia de color y guarda algo distinto — un objeto, una acción y un cierre."],
   ["Mira armarse tu reto", "Con cada burbuja que explota, la frase se completa sola. Ninguna combinación se repite."],
-  ["Elige tu tiempo", "2, 5 o 10 minutos. El límite es parte del juego: apaga al perfeccionista."],
+  ["Elige tu tiempo", "De 5 minutos a 1 hora. El límite es parte del juego: apaga al perfeccionista."],
   ["Crea sin miedo", "Dibuja en papel, con lo que tengas a la mano. No hay dibujos malos aquí."],
   ["Vuelve a intentarlo", "Cada partida genera una combinación nueva. Juega las veces que quieras."],
 ] as const;
