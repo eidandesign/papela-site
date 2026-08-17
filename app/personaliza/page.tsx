@@ -9,12 +9,12 @@ import CategoriasStack from "@/components/site/CategoriasStack";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: { absolute: "Personaliza — Papela Atelier" },
+  title: { absolute: "Papelería personalizada en Puebla — Papela Atelier" },
   description:
     "Stickers, cake toppers, tazas, vasos, etiquetas y detalles hechos a la medida para cumpleaños, bodas, baby showers, emprendimientos y cualquier ocasión. Cuéntanos tu idea y la hacemos realidad.",
   alternates: { canonical: "https://www.papela-atelier.com/personaliza" },
   openGraph: {
-    title: "Personaliza — Papela Atelier",
+    title: "Papelería personalizada en Puebla — Papela Atelier",
     description:
       "Piezas únicas hechas a la medida para cada ocasión. Stickers, cake toppers, tazas, etiquetas y más.",
     images: [{ url: "/images/personaliza.avif", alt: "Personalización Papela Atelier" }],

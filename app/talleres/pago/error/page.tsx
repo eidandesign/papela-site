@@ -1,5 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { XCircleIcon } from "@heroicons/react/24/solid";
+
+export const metadata: Metadata = {
+  title: "Error en el pago",
+  robots: { index: false, follow: false },
+};
 
 export default function TallerPagoError() {
   return (

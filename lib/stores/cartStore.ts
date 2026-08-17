@@ -8,6 +8,10 @@ export interface CartItem {
   precio: number;
   imagenUrl: string | null;
   cantidad: number;
+  // Stock disponible al momento de agregar (del producto o de la variación).
+  // Tope de cantidad en el carrito; el servidor revalida en el checkout.
+  // Opcional: carritos persistidos antes de este campo no lo traen (sin tope).
+  stock?: number;
   // Variación elegida (opcional). Una variación es una línea distinta del carrito.
   variacionId?: string | null;
   variacionNombre?: string | null;
@@ -56,9 +60,17 @@ export const useCartStore = create<CartStore>()(
           const key = cartKey(item);
           const existing = s.items.find((i) => cartKey(i) === key);
           if (existing) {
+            const tope = item.stock ?? existing.stock;
             return {
               items: s.items.map((i) =>
-                cartKey(i) === key ? { ...i, cantidad: i.cantidad + 1 } : i
+                cartKey(i) === key
+                  ? {
+                      ...i,
+                      cantidad: tope != null ? Math.min(i.cantidad + 1, tope) : i.cantidad + 1,
+                      // Refresca el snapshot de stock con el dato más reciente
+                      stock: tope,
+                    }
+                  : i
               ),
             };
           }
@@ -77,7 +89,9 @@ export const useCartStore = create<CartStore>()(
         }
         set((s) => ({
           items: s.items.map((i) =>
-            cartKey(i) === key ? { ...i, cantidad } : i
+            cartKey(i) === key
+              ? { ...i, cantidad: i.stock != null ? Math.min(cantidad, i.stock) : cantidad }
+              : i
           ),
         }));
       },

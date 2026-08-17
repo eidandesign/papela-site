@@ -28,7 +28,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
     e.preventDefault();
     e.stopPropagation();
     if (atLimit) return;
-    addItem({ productoId, nombre, precio, imagenUrl });
+    addItem({ productoId, nombre, precio, imagenUrl, stock });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 600);
   };
@@ -42,7 +42,8 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
   const handlePlus = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({ productoId, nombre, precio, imagenUrl });
+    if (atLimit) return;
+    addItem({ productoId, nombre, precio, imagenUrl, stock });
   };
 
   const handleOpenCart = (e: React.MouseEvent) => {
@@ -55,7 +56,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
     <motion.div
       layout
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      className="absolute bottom-3 right-3 flex items-center overflow-hidden"
+      className="absolute bottom-3 right-3 z-10 flex items-center overflow-hidden"
       style={{
         background: "var(--color-verde)",
         borderRadius: 999,

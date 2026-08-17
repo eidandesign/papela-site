@@ -1,5 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
+
+export const metadata: Metadata = {
+  title: "Lugar reservado",
+  robots: { index: false, follow: false },
+};
 
 export default function TallerPagoGracias() {
   return (

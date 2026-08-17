@@ -62,10 +62,17 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // El carrito vive en localStorage: el server renderiza esta página vacía
+  // (null). Esperar al montaje evita el mismatch de hidratación.
+  const [mounted, setMounted] = useState(false);
+  // Intentional: gates the persisted-cart content so SSR and first client render match.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setMounted(true); }, []);
+
   // Redirect if cart is empty
   useEffect(() => {
-    if (items.length === 0) router.replace("/productos");
-  }, [items, router]);
+    if (mounted && items.length === 0) router.replace("/productos");
+  }, [mounted, items, router]);
 
   // Close cart drawer if open when landing here
   useEffect(() => { closeCart(); }, [closeCart]);
@@ -119,7 +126,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) return null;
+  if (!mounted || items.length === 0) return null;
 
   const esEnvio = tipoEnvio === "envio";
 
@@ -192,7 +199,7 @@ export default function CheckoutPage() {
           {!esEnvio && (
             <div className="rounded-2xl bg-[var(--color-cremita-2)] px-6 py-5 flex flex-col gap-1">
               <p className="font-sans text-sm font-semibold text-[var(--color-verde)]">
-                Recoger en el atelier
+                Recoger en Papela
               </p>
               <p className="font-sans text-sm text-[var(--color-muted)]">
                 Nos pondremos en contacto contigo al teléfono que proporcionaste para coordinar la fecha de recoger.
@@ -266,7 +273,7 @@ export default function CheckoutPage() {
               ? "bg-[#CED8D9] text-[#1e2d36]"
               : "bg-[#C9D3C0] text-[#2b3a2e]"
           }`}>
-            {esEnvio ? "📦 Envío nacional · $80 MXN" : "🏠 Recoger en el atelier · Gratis"}
+            {esEnvio ? "📦 Envío nacional · $80 MXN" : "🏠 Recoger en Papela · Gratis"}
           </div>
         </aside>
       </div>

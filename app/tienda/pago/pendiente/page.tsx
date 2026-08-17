@@ -14,7 +14,7 @@ export default function PendientePage() {
         Pago pendiente
       </h1>
       <p className="font-sans text-[18px] text-[var(--color-muted)] max-w-md">
-        Tu pago está siendo procesado. Te avisaremos por correo en cuanto se confirme.
+        Tu pago está siendo procesado. Nos pondremos en contacto contigo en cuanto se confirme.
       </p>
       <Link
         href="/productos"

@@ -10,6 +10,7 @@ export type ProductoPublico = Producto & { tags?: string[] };
 interface ProductoApi {
   id: string;
   nombre: string;
+  slug?: string | null;
   descripcion: string | null;
   precio: number;
   precio_min?: number;
@@ -32,6 +33,9 @@ function normalizar(p: ProductoApi): ProductoPublico {
   return {
     id: p.id,
     nombre: p.nombre,
+    // null mientras el admin no exponga el campo (requiere deploy del admin);
+    // quien lo consuma cae al id como respaldo.
+    slug: p.slug ?? null,
     precio: p.precio,
     imagen_url: p.imagen_url,
     categoria: "Tienda",

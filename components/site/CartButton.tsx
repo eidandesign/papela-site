@@ -1,12 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/solid";
 import { useCartStore } from "@/lib/stores/cartStore";
 import CartDrawer from "./CartDrawer";
 
 export default function CartButton({ color = "rgba(255,255,255,0.9)" }: { color?: string }) {
   const { openCart, totalItems } = useCartStore();
-  const count = totalItems();
+  // El carrito vive en localStorage: el server siempre renderiza sin badge.
+  // Mostrarlo hasta después de montar evita el mismatch de hidratación.
+  const [mounted, setMounted] = useState(false);
+  // Intentional: gates the persisted-cart badge so SSR and first client render match.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setMounted(true); }, []);
+  const count = mounted ? totalItems() : 0;
 
   return (
     <>

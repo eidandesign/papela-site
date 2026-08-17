@@ -1,5 +1,11 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ClockIcon } from "@heroicons/react/24/solid";
+
+export const metadata: Metadata = {
+  title: "Pago en proceso",
+  robots: { index: false, follow: false },
+};
 
 export default function TallerPagoPendiente() {
   return (

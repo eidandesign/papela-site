@@ -85,7 +85,7 @@ Los heroes son una `section` con `width: 98vw` (margin lateral `1vw`), `rounded-
 | `BackToTop` | `components/site/BackToTop.tsx` | Client component for scroll-to-top |
 | `ScrollReveal` | `components/site/ScrollReveal.tsx` | Framer Motion scroll reveal wrapper |
 | `CartButton` | `components/site/CartButton.tsx` | ShoppingBagIcon + badge terracota con count, renderiza CartDrawer |
-| `CartDrawer` | `components/site/CartDrawer.tsx` | Portal, slide desde derecha, selector recoger/envío, totales, CTA → `/tienda/checkout` |
+| `CartDrawer` | `components/site/CartDrawer.tsx` | Portal, slide desde derecha, selector recoger/envío, totales, CTA → `/tienda/checkout`. Si abre, cierra el ProductDrawer (no conviven). El `+` de cantidad se topa al `stock` snapshot del item (nota "Solo N disponibles"); el clamp vive en `cartStore` (`addItem`/`updateCantidad`) |
 | `AddToCartButton` | `components/site/AddToCartButton.tsx` | Chequea `cantidad >= stock`. Prop `fullWidth` para usar en drawers |
 | `QuickAddButton` | `components/site/QuickAddButton.tsx` | Círculo `+` que expande a pill `− N +` con spring animation. Capped al stock. Usa `e.stopPropagation()` para no disparar el drawer padre. NO se usa en productos con variaciones (ahí el `+` abre el drawer) |
 | `ProductCard` | `components/site/ProductCard.tsx` | Client component, onClick → `productDrawerStore.open()`. Prop `fullWidth` para grids; `variant="catalog"` = tarjeta compacta Figma (imagen cuadrada, título serif). Si el producto tiene variaciones, el `+` abre el drawer; si no, muestra QuickAddButton |

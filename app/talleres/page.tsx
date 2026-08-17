@@ -97,8 +97,12 @@ export default async function TalleresPage() {
                     </div>
 
                     <div className="flex flex-col items-center gap-4 w-full border-b border-[#dbc2b3] pb-4">
+                      {/* Link a la ficha del taller (/talleres/[id]): linking interno
+                          crawleable hacia la página con schema Event. */}
                       <h2 className="font-serif italic text-[#664917] text-[24px] leading-[32px] text-center">
-                        {taller.titulo}
+                        <Link href={`/talleres/${taller.id}`} className="hover:underline underline-offset-4">
+                          {taller.titulo}
+                        </Link>
                       </h2>
                       <div className="flex flex-col items-center gap-3 w-full">
                         {taller.fecha && (

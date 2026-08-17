@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { XMarkIcon, MinusIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useCartStore, COSTO_ENVIO, cartKey } from "@/lib/stores/cartStore";
+import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
 
 export default function CartDrawer() {
   const [mounted, setMounted] = useState(false);
@@ -27,6 +28,14 @@ export default function CartDrawer() {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
+
+  // El carrito y el drawer de producto no conviven: si el carrito abre
+  // (p. ej. tras "Agregar al carrito" dentro del ProductDrawer), el drawer
+  // de producto se cierra para que no queden encimados.
+  const closeProductDrawer = useProductDrawerStore((s) => s.close);
+  useEffect(() => {
+    if (isOpen) closeProductDrawer();
+  }, [isOpen, closeProductDrawer]);
 
   const handleCheckout = () => {
     closeCart();
@@ -116,28 +125,43 @@ export default function CartDrawer() {
                           ${(item.precio * item.cantidad).toLocaleString()} MXN
                         </p>
                         {/* Quantity controls */}
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={() => updateCantidad(cartKey(item), item.cantidad - 1)}
-                            className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:border-[var(--color-verde)] transition-colors"
-                          >
-                            <MinusIcon className="w-3 h-3 text-[var(--color-text)]" />
-                          </button>
-                          <span className="font-sans text-sm w-4 text-center">{item.cantidad}</span>
-                          <button
-                            onClick={() => updateCantidad(cartKey(item), item.cantidad + 1)}
-                            className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:border-[var(--color-verde)] transition-colors"
-                          >
-                            <PlusIcon className="w-3 h-3 text-[var(--color-text)]" />
-                          </button>
-                          <button
-                            onClick={() => removeItem(cartKey(item))}
-                            className="ml-auto p-1 rounded-full hover:bg-[var(--color-cremita-2)] transition-colors"
-                            aria-label="Eliminar"
-                          >
-                            <TrashIcon className="w-4 h-4 text-[var(--color-muted)]" />
-                          </button>
-                        </div>
+                        {(() => {
+                          const enTope = item.stock != null && item.cantidad >= item.stock;
+                          return (
+                            <>
+                              <div className="flex items-center gap-2 mt-2">
+                                <button
+                                  onClick={() => updateCantidad(cartKey(item), item.cantidad - 1)}
+                                  aria-label="Quitar uno"
+                                  className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:border-[var(--color-verde)] transition-colors"
+                                >
+                                  <MinusIcon className="w-3 h-3 text-[var(--color-text)]" />
+                                </button>
+                                <span className="font-sans text-sm w-4 text-center">{item.cantidad}</span>
+                                <button
+                                  onClick={() => updateCantidad(cartKey(item), item.cantidad + 1)}
+                                  disabled={enTope}
+                                  aria-label="Agregar uno"
+                                  className="w-7 h-7 rounded-full border border-[var(--color-border)] flex items-center justify-center hover:border-[var(--color-verde)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-[var(--color-border)]"
+                                >
+                                  <PlusIcon className="w-3 h-3 text-[var(--color-text)]" />
+                                </button>
+                                <button
+                                  onClick={() => removeItem(cartKey(item))}
+                                  className="ml-auto p-1 rounded-full hover:bg-[var(--color-cremita-2)] transition-colors"
+                                  aria-label="Eliminar"
+                                >
+                                  <TrashIcon className="w-4 h-4 text-[var(--color-muted)]" />
+                                </button>
+                              </div>
+                              {enTope && (
+                                <p className="font-sans text-[11px] text-[var(--color-muted)] mt-1.5">
+                                  Solo {item.stock} disponible{item.stock === 1 ? "" : "s"}
+                                </p>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </li>
                   ))}
@@ -155,7 +179,7 @@ export default function CartDrawer() {
                   </p>
                   <div className="flex flex-col gap-2">
                     {([
-                      { value: "recoger", label: "Recoger en el atelier", sub: "Puebla, sin costo" },
+                      { value: "recoger", label: "Recoger en Papela", sub: "Puebla, sin costo" },
                       { value: "envio", label: "Envío nacional", sub: `$${COSTO_ENVIO} MXN` },
                     ] as const).map((opt) => (
                       <button

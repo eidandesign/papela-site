@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
+import { useCartStore } from "@/lib/stores/cartStore";
 import AddToCartButton from "./AddToCartButton";
 
 const WHATSAPP = "522211865590";
@@ -23,8 +24,17 @@ export default function ProductDrawer() {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    // Al cerrar, no desbloquear el scroll si el carrito quedó abierto encima
+    // (flujo agregar al carrito: este drawer se cierra y el del carrito abre).
+    const unlock = () => {
+      if (!useCartStore.getState().isOpen) document.body.style.overflow = "";
+    };
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      unlock();
+    }
+    return unlock;
   }, [isOpen]);
 
   // Close on Escape

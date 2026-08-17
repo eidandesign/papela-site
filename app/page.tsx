@@ -7,6 +7,7 @@ import ScrollReveal from "@/components/site/ScrollReveal";
 import HeroExperience from "@/components/site/HeroExperience";
 import ProductCarousel from "@/components/site/ProductCarousel";
 import TalleresGallery from "@/components/site/TalleresGallery";
+import FaqSection from "@/components/site/FaqSection";
 import { getProductosPorColeccion } from "@/lib/productos-publicos";
 
 export const revalidate = 60;
@@ -212,6 +213,9 @@ export default async function HomePage() {
           <ProductCarousel productos={favoritos} />
         </section>
       )}
+
+      {/* ── FAQ (schema FAQPage) ──────────────────────────────────────────── */}
+      <FaqSection />
 
       {/* ── Instagram ─────────────────────────────────────────────────────── */}
       <section className="py-16 md:py-20">

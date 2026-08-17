@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getProductoById } from "@/lib/productos";
+import { notFound, permanentRedirect } from "next/navigation";
+import { getProductoBySlugOrId } from "@/lib/productos";
 import { SITE_URL } from "@/lib/site";
 import AddToCartButton from "@/components/site/AddToCartButton";
 
@@ -16,7 +16,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const producto = await getProductoById(slug);
+  const producto = await getProductoBySlugOrId(slug);
 
   if (!producto) {
     return { title: "Producto no encontrado", robots: { index: false, follow: false } };
@@ -25,7 +25,7 @@ export async function generateMetadata({
   const desc =
     producto.descripcion?.slice(0, 155) ??
     `${producto.nombre} — papelería y materiales de arte en Papela Atelier, Puebla.`;
-  const url = `${SITE_URL}/productos/${producto.id}`;
+  const url = `${SITE_URL}/productos/${producto.slug ?? producto.id}`;
 
   return {
     title: { absolute: `${producto.nombre} — Papela Atelier` },
@@ -48,9 +48,15 @@ export default async function ProductoPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const producto = await getProductoById(slug);
+  const producto = await getProductoBySlugOrId(slug);
 
   if (!producto) notFound();
+
+  // URL canónica única: las visitas por UUID (links viejos, sitemap anterior)
+  // redirigen 308 al slug legible.
+  if (producto.slug && slug !== producto.slug) {
+    permanentRedirect(`/productos/${producto.slug}`);
+  }
 
   const enStock = producto.stock > 0;
   const waText = encodeURIComponent(`Hola Papela 🌿 me interesa: ${producto.nombre}`);
@@ -70,7 +76,7 @@ export default async function ProductoPage({
       availability: enStock
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
-      url: `${SITE_URL}/productos/${producto.id}`,
+      url: `${SITE_URL}/productos/${producto.slug ?? producto.id}`,
       seller: { "@type": "Organization", name: "Papela Atelier" },
     },
   };

@@ -25,7 +25,7 @@ export default function AddToCartButton({ productoId, nombre, precio, imagenUrl,
 
   const handleAdd = () => {
     if (atLimit) return;
-    addItem({ productoId, nombre, precio, imagenUrl, variacionId, variacionNombre });
+    addItem({ productoId, nombre, precio, imagenUrl, stock, variacionId, variacionNombre });
     setAdded(true);
     setTimeout(() => {
       setAdded(false);

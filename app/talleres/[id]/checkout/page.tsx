@@ -1,10 +1,16 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { getTalleres } from "@/lib/talleres";
 import TallerCheckoutForm from "@/components/site/TallerCheckoutForm";
 import TalleresGallery from "@/components/site/TalleresGallery";
+
+export const metadata: Metadata = {
+  title: "Checkout",
+  robots: { index: false, follow: false },
+};
 
 function formatFecha(fecha: string) {
   // `fecha` es fecha sola (sin hora): se interpreta como medianoche UTC. Forzamos

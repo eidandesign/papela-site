@@ -21,6 +21,8 @@ export type Variacion = {
 export type Producto = {
   id: string;
   nombre: string;
+  /** Slug legible para URLs (/productos/libreta-flores). Generado por trigger en la DB. */
+  slug?: string | null;
   precio: number;
   imagen_url: string | null;
   categoria: string | null;
@@ -41,7 +43,7 @@ export async function getProductos(categoria?: string, limit?: number): Promise<
 
   let query = supabase
     .from("productos")
-    .select("id, nombre, precio, imagen_url, categoria, descripcion, stock, color, medida")
+    .select("id, nombre, slug, precio, imagen_url, categoria, descripcion, stock, color, medida")
     .gt("stock", 0)
     .order("created_at", { ascending: false });
 
@@ -63,13 +65,19 @@ export async function getProductos(categoria?: string, limit?: number): Promise<
   return data ?? [];
 }
 
-export async function getProductoById(id: string): Promise<Producto | null> {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Busca un producto por slug o, si el parámetro es un UUID, por id.
+ * Las URLs viejas /productos/<uuid> siguen resolviendo (la página redirige al slug).
+ */
+export async function getProductoBySlugOrId(param: string): Promise<Producto | null> {
   const supabase = createPublicClient();
 
   const { data, error } = await supabase
     .from("productos")
-    .select("id, nombre, precio, imagen_url, categoria, descripcion, stock, color, medida")
-    .eq("id", id)
+    .select("id, nombre, slug, precio, imagen_url, categoria, descripcion, stock, color, medida")
+    .eq(UUID_RE.test(param) ? "id" : "slug", param)
     .single();
 
   if (error) return null;

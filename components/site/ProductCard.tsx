@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import QuickAddButton from "./QuickAddButton";
 import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
@@ -17,19 +18,14 @@ export default function ProductCard({
   variant?: "default" | "catalog";
 }) {
   const open = useProductDrawerStore((s) => s.open);
-  const { id, nombre, precio, imagen_url, stock } = producto;
+  const { id, slug, nombre, precio, imagen_url, stock } = producto;
   const isCatalog = variant === "catalog";
   // Con variaciones, el "+" abre el detalle para que el cliente elija una.
   const hasVariaciones = (producto.variaciones?.length ?? 0) > 0;
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={`Ver detalle de ${nombre}`}
-      onClick={() => open(producto)}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(producto); } }}
-      className={`group cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-verde)] rounded-2xl ${
+      className={`group relative cursor-pointer rounded-2xl ${
         fullWidth
           ? "w-full"
           : isCatalog
@@ -58,7 +54,7 @@ export default function ProductCard({
             type="button"
             aria-label="Ver opciones"
             onClick={(e) => { e.stopPropagation(); open(producto); }}
-            className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center"
+            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center"
           >
             <PlusIcon className="w-4 h-4" />
           </button>
@@ -83,6 +79,17 @@ export default function ProductCard({
           <p className="text-sm text-[var(--color-muted)] mt-0.5">${precio.toLocaleString()} MXN</p>
         </>
       )}
+      {/* Overlay con href real a la ficha (/productos/[id]): da linking interno
+          crawleable a las páginas de producto (antes eran huérfanas — solo
+          sitemap). El click sigue abriendo el drawer; cmd/ctrl-click o el
+          crawler llegan a la página completa. Los botones internos van con
+          z-10 por encima del overlay. */}
+      <Link
+        href={`/productos/${slug ?? id}`}
+        aria-label={`Ver detalle de ${nombre}`}
+        onClick={(e) => { e.preventDefault(); open(producto); }}
+        className="absolute inset-0 z-[1] rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-verde)]"
+      />
     </div>
   );
 }

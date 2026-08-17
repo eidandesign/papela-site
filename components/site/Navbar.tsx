@@ -265,11 +265,14 @@ export default function SiteNavbar() {
             className="fixed top-0 inset-x-0 bg-transparent"
             // Como el nav flotante: sobre el overlay del menú (z-100002) cuando
             // está abierto, para que la hamburguesa/X siga visible y clickeable.
-            // pointerEvents none deja pasar los taps al overlay (logo del menú);
-            // solo el contenedor de la X los recaptura con pointerEvents auto.
+            // El header es SIEMPRE pointer-events none: es una franja fija
+            // transparente de 140/170px que taparía los clicks del contenido
+            // debajo (p. ej. "Volver al catálogo" en el checkout). Solo los
+            // grupos interactivos (links, logo, carrito, hamburguesa)
+            // recapturan con pointer-events auto.
             style={{
               zIndex: menuOpen ? 100003 : 50,
-              pointerEvents: menuOpen ? "none" : "auto",
+              pointerEvents: "none",
             }}
           >
             <nav className="w-[96%] mx-auto relative flex items-center justify-center px-6 md:px-10 h-[140px] md:h-[170px]">
@@ -278,7 +281,7 @@ export default function SiteNavbar() {
               <div className="flex items-center w-full gap-6 lg:gap-10 xl:gap-12">
                 {/* Left links — flex-1 wrapper keeps the logo page-centered */}
                 <div className="flex flex-1 justify-end">
-                  <div className="hidden lg:flex items-center gap-6 lg:gap-8 xl:gap-10">
+                  <div className="hidden lg:flex items-center gap-6 lg:gap-8 xl:gap-10 pointer-events-auto">
                   {[
                     { href: "/productos", label: "Catálogo" },
                     { href: "/personaliza", label: "Personalización" },
@@ -319,7 +322,7 @@ export default function SiteNavbar() {
 
                 {/* Right links — flex-1 wrapper keeps the logo page-centered */}
                 <div className="flex flex-1 justify-start">
-                  <div className="hidden lg:flex items-center gap-6 lg:gap-8 xl:gap-10">
+                  <div className="hidden lg:flex items-center gap-6 lg:gap-8 xl:gap-10 pointer-events-auto">
                   {[
                     { href: "/talleres", label: "Talleres" },
                     { href: "/clases", label: "Clases" },
@@ -344,7 +347,7 @@ export default function SiteNavbar() {
               </div>
 
               {/* Cart — desktop, stays in the corner */}
-              <div className="hidden lg:block absolute right-10 top-1/2 -translate-y-1/2">
+              <div className="hidden lg:block absolute right-10 top-1/2 -translate-y-1/2 pointer-events-auto">
                 <CartButton color={iconColor} />
               </div>
 

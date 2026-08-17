@@ -62,9 +62,9 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
-  alternates: {
-    canonical: SITE_URL,
-  },
+  // Sin `alternates.canonical` aquí: en App Router se hereda a todos los
+  // segmentos, y las páginas sin canonical propio (checkouts, /pago/*) se
+  // auto-canonicalizaban al home. Cada página indexable declara el suyo.
 };
 
 const jsonLd = {
@@ -84,17 +84,41 @@ const jsonLd = {
       priceRange: "$$",
       currenciesAccepted: "MXN",
       paymentAccepted: "Cash, Credit Card, MercadoPago",
+      // Dirección y horarios idénticos a la ficha de Google Business Profile —
+      // la consistencia NAP es la señal que conecta sitio ↔ ficha en Maps.
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Puebla",
+        streetAddress: "C. Hidalgo",
+        addressLocality: "Heroica Puebla de Zaragoza",
         addressRegion: "Puebla",
+        postalCode: "72830",
         addressCountry: "MX",
       },
       geo: {
         "@type": "GeoCoordinates",
-        latitude: 19.0414,
-        longitude: -98.2063,
+        latitude: 19.006,
+        longitude: -98.285,
       },
+      openingHoursSpecification: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          opens: "10:00",
+          closes: "19:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: "Saturday",
+          opens: "10:00",
+          closes: "15:30",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: "Sunday",
+          opens: "12:00",
+          closes: "19:00",
+        },
+      ],
       sameAs: [
         "https://instagram.com/papela.atelier",
         "https://tiktok.com/@papela.atelier",
@@ -136,7 +160,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className="h-full antialiased">
+    <html lang="es-MX" className="h-full antialiased">
       <head>
         {/* Satoshi viene por @import de Fontshare en globals.css; el preconnect
             adelanta el handshake TLS. Los preload cubren los dos cortes de
@@ -145,7 +169,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/otf" href="/fonts/PPEditorialNew-Italic.otf" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/otf" href="/fonts/PPEditorialNew-Ultralight.otf" crossOrigin="anonymous" />
-        <Script id="gtm" strategy="beforeInteractive">
+        {/* afterInteractive: GTM no debe bloquear el primer render (LCP).
+            El snippet preserva pushes previos al dataLayer (w[l]=w[l]||[]). */}
+        <Script id="gtm" strategy="afterInteractive">
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=

@@ -174,7 +174,7 @@ export default function NosotrosPage() {
           {
             titulo: "Nuestro objetivo",
             foto: "/images/nosotros/objetivo.jpg",
-            fotoAlt: "El equipo de Papela trabajando en el atelier",
+            fotoAlt: "El equipo de Papela trabajando en el estudio",
             body: "Detrás de Papela hay personas que aman crear, diseñar, resolver y cuidar los pequeños detalles. Nuestro equipo combina experiencia en diseño, queremos que cada persona que nos visite se sienta escuchada, bienvenida y acompañada.",
             tagline: "Un equipo de creativos para ti.",
           },
