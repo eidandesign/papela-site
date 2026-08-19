@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import SiteNavbar from "./Navbar";
 import SiteFooter from "./Footer";
 import ProductDrawer from "./ProductDrawer";
+import WhatsAppFloatButton from "./WhatsAppFloatButton";
 
 // /club = tarjeta de lealtad del Club Creativo (link privado, solo logo + tarjeta)
 // /cotizacion = cotización de proyecto (link privado, documento imprimible)
@@ -33,6 +34,7 @@ export default function ConditionalShell({ children }: { children: React.ReactNo
       <main className="flex-1">{children}</main>
       <SiteFooter />
       <ProductDrawer />
+      <WhatsAppFloatButton />
     </>
   );
 }

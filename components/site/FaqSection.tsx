@@ -113,15 +113,15 @@ export default function FaqSection() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <ScrollReveal className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-3">
-          Preguntas frecuentes
-        </p>
-        <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
-          ¿Tienes dudas? Aquí van las más comunes
-        </h2>
-      </ScrollReveal>
-      <div className="max-w-3xl">
+      <div className="max-w-3xl mx-auto">
+        <ScrollReveal className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-3">
+            Preguntas frecuentes
+          </p>
+          <h2 className="font-serif font-extralight text-[clamp(1.8rem,3.5vw,2.8rem)] text-[#403C3C]">
+            ¿Tienes dudas? Aquí van las más comunes
+          </h2>
+        </ScrollReveal>
         {FAQS.map((f) => (
           <details
             key={f.pregunta}
