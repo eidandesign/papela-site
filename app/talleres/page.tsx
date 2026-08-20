@@ -31,6 +31,12 @@ function formatFecha(fecha: string | null) {
     .toUpperCase();
 }
 
+// El admin guarda la hora como "HH:MM:SS"; en la tarjeta basta "HH:MM".
+function formatHora(hora: string | null) {
+  if (!hora) return "";
+  return hora.slice(0, 5);
+}
+
 export default async function TalleresPage() {
   const talleres = await getTalleres();
 
@@ -67,7 +73,7 @@ export default async function TalleresPage() {
               return (
               <article
                 key={taller.id}
-                className={`flex flex-col bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-[26px] transition-[transform,box-shadow] duration-300 ease-out ${
+                className={`flex flex-col bg-[#e7d8cf] border-2 border-[#d6bdb2] rounded-2xl p-4 transition-[transform,box-shadow] duration-300 ease-out ${
                   agotado ? "opacity-60" : "hover:-translate-y-1 hover:shadow-[4px_6px_0px_#d6bdb2]"
                 }`}
               >
@@ -78,48 +84,47 @@ export default async function TalleresPage() {
                   titulo={taller.titulo}
                   instructorNombre={taller.instructor_nombre}
                   instructorInstagram={taller.instructor_instagram}
+                  categoria={taller.categoria}
+                  agotado={agotado}
                 />
 
                 {/* Body */}
-                <div className="flex flex-col flex-1 pt-6">
-                  <div className="flex flex-col flex-1 items-center gap-[11px] pb-6">
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      {taller.categoria && (
-                        <span className="bg-[#f3e6cf] rounded-full px-3 py-1 font-sans font-bold text-[#12535c] text-[10px] tracking-[1px] uppercase leading-[15px]">
-                          {taller.categoria}
-                        </span>
-                      )}
-                      {agotado && (
-                        <span className="bg-[var(--color-terracota)] rounded-full px-3 py-1 font-sans font-bold text-[var(--color-cremita)] text-[10px] tracking-[1px] uppercase leading-[15px]">
-                          Agotado
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col items-center gap-4 w-full border-b border-[#dbc2b3] pb-4">
+                <div className="flex flex-col flex-1 pt-4">
+                  {/* Categoría y "Agotado" viven sobre la foto (TallerGaleriaSection). */}
+                  <div className="flex flex-col flex-1 items-start text-left gap-2 pb-4">
+                    <div className="flex flex-col items-start gap-2 w-full border-b border-[#dbc2b3] pb-3">
                       {/* Link a la ficha del taller (/talleres/[id]): linking interno
                           crawleable hacia la página con schema Event. */}
-                      <h2 className="font-serif italic text-[#664917] text-[24px] leading-[32px] text-center">
+                      {/* Alto fijo de 2 renglones (2 × 26px): así la fecha, el divisor
+                          y la descripción arrancan a la misma altura en todas las
+                          tarjetas del grid, tenga el título una línea o dos. */}
+                      <h2 className="font-serif text-[#664917] text-[20px] leading-[26px] min-h-[52px] line-clamp-2">
                         <Link href={`/talleres/${taller.id}`} className="hover:underline underline-offset-4">
                           {taller.titulo}
                         </Link>
                       </h2>
-                      <div className="flex flex-col items-center gap-3 w-full">
+                      <div className="flex flex-row flex-wrap items-baseline gap-x-2 gap-y-1 w-full">
                         {taller.fecha && (
-                          <p className="font-sans text-[#664a18] text-[20px] leading-[16px] text-center">
+                          <p className="font-sans text-[#664a18] text-[14px] leading-[20px]">
                             {formatFecha(taller.fecha)}
                           </p>
                         )}
+                        {taller.fecha && taller.hora_inicio && (
+                          <span aria-hidden="true" className="text-[#6e645f] text-[14px] leading-[20px]">·</span>
+                        )}
                         {taller.hora_inicio && (
-                          <p className="font-sans text-[#6e645f] text-[14px] leading-[16px]">
-                            {taller.hora_inicio}{taller.hora_fin ? ` — ${taller.hora_fin}` : ""}
+                          <p className="font-sans text-[#6e645f] text-[14px] leading-[20px]">
+                            {formatHora(taller.hora_inicio)}{taller.hora_fin ? ` — ${formatHora(taller.hora_fin)}` : ""}
                           </p>
                         )}
                       </div>
                     </div>
 
                     {taller.descripcion && (
-                      <TallerDescripcion texto={taller.descripcion} />
+                      <TallerDescripcion
+                        texto={taller.descripcion}
+                        className="text-[14px] leading-[20px]"
+                      />
                     )}
                   </div>
 
@@ -129,14 +134,14 @@ export default async function TalleresPage() {
                       <p className="font-sans font-bold text-[#6e645f] text-[10px] tracking-[1px] uppercase leading-[15px]">
                         Inversión
                       </p>
-                      <p className="font-serif font-extralight text-[#403c3c] text-[32px] leading-[32px]">
+                      <p className="font-serif font-extralight text-[#403c3c] text-[26px] leading-[30px]">
                         ${taller.precio.toLocaleString()}
                       </p>
                     </div>
                     {agotado ? (
                       <span
                         aria-disabled="true"
-                        className="flex items-center justify-center gap-2 bg-[#9b8f86] text-[#f3e6cf] rounded-lg px-4 py-3 font-sans text-[16px] leading-[24px] cursor-not-allowed select-none"
+                        className="flex items-center justify-center gap-2 bg-[#9b8f86] text-[#f3e6cf] rounded-lg px-3.5 py-2.5 font-sans text-[15px] leading-[24px] cursor-not-allowed select-none"
                       >
                         Agotado
                       </span>
@@ -144,7 +149,7 @@ export default async function TalleresPage() {
                       <Link
                         href={`/talleres/${taller.id}/checkout`}
                         aria-label={`Apartar lugar en ${taller.titulo}`}
-                        className="flex items-center justify-center gap-2 bg-[#12535c] text-[#f3e6cf] rounded-lg px-4 py-3 font-sans text-[16px] leading-[24px] hover:opacity-90 transition-opacity"
+                        className="flex items-center justify-center gap-2 bg-[#12535c] text-[#f3e6cf] rounded-lg px-3.5 py-2.5 font-sans text-[15px] leading-[24px] hover:opacity-90 transition-opacity"
                       >
                         Apartar lugar
                         <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />

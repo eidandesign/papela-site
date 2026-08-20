@@ -119,6 +119,9 @@ type Props = {
   titulo: string;
   instructorNombre?: string | null;
   instructorInstagram?: string | null;
+  /** Pills sobrepuestos en la esquina superior izquierda de la foto. */
+  categoria?: string | null;
+  agotado?: boolean;
 };
 
 export default function TallerGaleriaSection({
@@ -127,6 +130,8 @@ export default function TallerGaleriaSection({
   titulo,
   instructorNombre,
   instructorInstagram,
+  categoria,
+  agotado = false,
 }: Props) {
   const allItems = [mainImage, ...galeria].filter(Boolean) as string[];
   const hasExtra = galeria.length > 0;
@@ -141,7 +146,7 @@ export default function TallerGaleriaSection({
     <>
       {/* Main image */}
       <div
-        className={`relative w-full aspect-square rounded-xl overflow-hidden ${hasExtra ? "cursor-pointer" : ""}`}
+        className={`relative w-full aspect-[4/3] rounded-xl overflow-hidden ${hasExtra ? "cursor-pointer" : ""}`}
         onClick={() => hasExtra && setOpenAt(0)}
       >
         {mainImage ? (
@@ -156,12 +161,29 @@ export default function TallerGaleriaSection({
           <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
         )}
 
+        {/* Categoría / Agotado sobre la foto: ahorra el renglón que ocupaban bajo
+            la imagen y deja el cuerpo empezando directo con el título. */}
+        {(categoria || agotado) && (
+          <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
+            {categoria && (
+              <span className="bg-[#f3e6cf] rounded-full px-3 py-1 font-sans font-bold text-[#12535c] text-[10px] tracking-[1px] uppercase leading-[15px]">
+                {categoria}
+              </span>
+            )}
+            {agotado && (
+              <span className="bg-[var(--color-terracota)] rounded-full px-3 py-1 font-sans font-bold text-[var(--color-cremita)] text-[10px] tracking-[1px] uppercase leading-[15px]">
+                Agotado
+              </span>
+            )}
+          </div>
+        )}
+
         {instructorNombre && (
           <div
-            className="absolute left-4 bottom-4 bg-[#f9eae3] rounded-2xl px-6 py-4"
+            className="absolute left-3 bottom-3 bg-[#f9eae3] rounded-xl px-4 py-2.5"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="font-serif italic text-[#664917] text-[24px] leading-[32px]">
+            <p className="font-serif italic text-[#664917] text-[18px] leading-[24px]">
               {instructorNombre}
             </p>
             {instructorInstagram && (
@@ -170,7 +192,7 @@ export default function TallerGaleriaSection({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Instagram de ${instructorNombre}`}
-                className="font-sans text-[#403c3c] text-[14px] leading-[14px] hover:opacity-70 transition-opacity"
+                className="font-sans text-[#403c3c] text-[12px] leading-[14px] hover:opacity-70 transition-opacity"
               >
                 @{instructorInstagram}
               </a>
@@ -182,7 +204,7 @@ export default function TallerGaleriaSection({
       {/* Thumbnail strip — only shown when there are extra items */}
       {hasExtra && (
         <div
-          className="flex gap-2 mt-3 overflow-x-auto pb-1"
+          className="flex gap-2 mt-2 overflow-x-auto pb-1"
           style={{ scrollbarWidth: "none" }}
         >
           {galeria.map((url, i) => {
@@ -193,14 +215,14 @@ export default function TallerGaleriaSection({
               <button
                 key={i}
                 onClick={() => setOpenAt(idx)}
-                className={`relative flex-shrink-0 w-[56px] h-[56px] rounded-lg overflow-hidden border-2 transition-all duration-150 ${
+                className={`relative flex-shrink-0 w-[46px] h-[46px] rounded-lg overflow-hidden border-2 transition-all duration-150 ${
                   active
                     ? "border-[#12535c] scale-[1.04]"
                     : "border-[#d6bdb2] hover:border-[#12535c]/60"
                 }`}
                 aria-label={`Ver imagen extra ${i + 1}`}
               >
-                <Image src={url} alt="" fill sizes="56px" className="object-cover" />
+                <Image src={url} alt="" fill sizes="46px" className="object-cover" />
               </button>
             );
           })}
