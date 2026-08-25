@@ -1,16 +1,16 @@
 "use client";
 
-// Dopamina — juego inmersivo del Club Creativo (diseño Figma jul-2026).
+// Dopamina — juego inmersivo del Club Creativo (rediseño "cielo" ago-2026).
 // Página standalone (sin navbar/footer): lienzo redondeado a pantalla completa
-// cuyo fondo cambia de color con cada ronda (morado → azul → rosa) y termina
-// en verde para el cronómetro y el cierre. Fases:
+// con UN solo fondo en todas las fases: cielo azul (FONDO_CIELO) con nubes
+// caricatura que derivan con GSAP (componente Nubes) y letra blanca. Fases:
 //   burbujas (3 rondas: explota una pompa de vidrio por categoría; los slots
-//   punteados de arriba se van llenando) → reto + elección de tiempo (rosa)
-//   → cronómetro con 3·2·1 (verde) → reto completado (verde).
-// No hay galería ni subida de dibujos: el juego termina en "Volver a jugar".
+//   punteados de arriba se van llenando) → reto + elección de tiempo
+//   → cronómetro con 3·2·1 → reto completado (confeti + compartir foto).
 //
-// Performance móvil: el cambio de fondo es un crossfade de capas sólidas por
-// opacity (compositor, sin repaints por frame); burbujas sin backdrop-filter.
+// Performance móvil: fondo sólido estático (ya no hay crossfade de capas —
+// se quitó con el cambio de color por ronda); nubes y burbujas solo animan
+// transform/opacity; burbujas sin backdrop-filter.
 // Accesibilidad: región aria-live anuncia revelaciones y cambios de fase,
 // burbujas son <button> con etiqueta, focos visibles, reduced-motion via
 // MotionConfig y la media query de .dopa-flota.
@@ -22,32 +22,22 @@ import { ArrowLeftIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
 import AnimatedLogo from "../AnimatedLogo";
 import CampoBurbujas, { BURBUJAS_POR_RONDA } from "./CampoBurbujas";
 import Cronometro from "./Cronometro";
+import Confeti from "./Confeti";
+import ComparteCreacion from "./ComparteCreacion";
+import Nubes from "./Nubes";
 import {
   generaOpciones,
   armaReto,
   capitaliza,
   recuerdaSeleccion,
   RONDAS,
-  FONDO_RETO,
-  FONDO_VERDE,
+  FONDO_CIELO,
 } from "@/lib/dopamina/retos";
 import { DURACIONES, type Burbuja, type CategoriaBurbuja, type Reto } from "@/lib/dopamina/tipos";
 import { eventoDopa } from "@/lib/dopamina/analitica";
+import { CURVA_SUAVE } from "@/lib/dopamina/animacion";
 
 type Fase = "burbujas" | "reto" | "cronometro" | "final";
-
-// Mientras eliges el tiempo, el lienzo va derivando por los colores de la
-// marca: entra con el rosa de la ronda 3 (transición continua) y sigue rotando
-// hasta que eliges. Es el mismo crossfade por opacity, solo que en bucle.
-const COLORES_RETO = [FONDO_RETO, "#8C482A", "#483699", "#3E6D94", "#5E7E86"];
-const PASO_COLOR_MS = 4200; // cuánto se queda cada color antes de derivar
-const FUNDIDO_RETO_MS = 2200; // cruce largo: se siente como una deriva, no un corte
-
-// Capas de color del lienzo (crossfade por opacity). Union sin repetidos: el
-// rosa aparece tanto en la ronda 3 como en el reto, y cada capa lleva `key`.
-const COLORES_LIENZO = [
-  ...new Set([...RONDAS.map((r) => r.fondo), FONDO_VERDE, ...COLORES_RETO]),
-];
 
 // Puntitos efervescentes: suben por el lienzo como burbujas de refresco
 // (animación dopa-sube en globals.css). Delays negativos = el campo ya está
@@ -64,14 +54,13 @@ const PUNTOS = [
   { left: 95, d: 4, dur: 19, delay: -14, vaiven: 8 },
 ];
 
-const btnCrema =
-  "inline-flex items-center justify-center rounded-full bg-[var(--color-cremita)] text-[var(--color-verde)] font-sans text-[14px] font-semibold px-7 py-3 hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]";
+// (El botón crema primario ahora vive en ComparteCreacion: "Enviar mi creación".)
 const btnFantasma =
-  "inline-flex items-center justify-center rounded-full border border-[rgba(243,230,207,0.5)] text-[var(--color-cremita)] font-sans text-[13px] font-medium px-6 py-2.5 hover:bg-white/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]";
+  "inline-flex items-center justify-center rounded-full border border-[rgba(255,255,255,0.5)] text-white font-sans text-[13px] font-medium px-6 py-2.5 hover:bg-white/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 // Terciario: link con ícono. Sin caja ni borde — el nivel más bajo de la
 // jerarquía, para acciones que no son el camino principal de la pantalla.
 const btnTerciario =
-  "inline-flex items-center gap-2 font-sans text-[13px] font-medium text-[var(--color-cremita)]/70 hover:text-[var(--color-cremita)] underline underline-offset-[6px] decoration-[rgba(243,230,207,0.35)] hover:decoration-[var(--color-cremita)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)] rounded-sm";
+  "inline-flex items-center gap-2 font-sans text-[13px] font-medium text-white/70 hover:text-white underline underline-offset-[6px] decoration-[rgba(255,255,255,0.35)] hover:decoration-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white rounded-sm";
 
 // Slots del reto: tres huecos punteados que se llenan con cada revelación.
 function Slots({ seleccion }: { seleccion: Burbuja[] }) {
@@ -84,7 +73,7 @@ function Slots({ seleccion }: { seleccion: Burbuja[] }) {
             key={r.id}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="font-serif italic text-[14px] md:text-[15px] leading-none text-[var(--color-cremita)] whitespace-nowrap px-1"
+            className="font-serif italic text-[14px] md:text-[15px] leading-none text-white whitespace-nowrap px-1"
           >
             {/* Los slots se leen como oración: solo la primera palabra va en mayúscula */}
             {idx === 0 ? capitaliza(b.texto) : b.texto}
@@ -93,7 +82,7 @@ function Slots({ seleccion }: { seleccion: Burbuja[] }) {
           <span
             key={r.id}
             aria-label={`${r.etiqueta} por descubrir`}
-            className="inline-block w-[74px] md:w-[92px] h-[20px] rounded-full border border-dashed border-[rgba(243,230,207,0.55)]"
+            className="inline-block w-[74px] md:w-[92px] h-[20px] rounded-full border border-dashed border-[rgba(255,255,255,0.55)]"
           />
         );
       })}
@@ -110,8 +99,6 @@ export default function DopaminaJuego() {
   const [reto, setReto] = useState<Reto | null>(null);
   const [duracion, setDuracion] = useState(0);
   const [anuncio, setAnuncio] = useState("");
-  // Índice del color que recorre la pantalla del reto (0 = rosa de entrada).
-  const [pasoColor, setPasoColor] = useState(0);
   // Guard SÍNCRONO contra taps casi simultáneos (multitouch): el estado
   // `reventada` vive en el closure del render y dos toques en el mismo tick
   // lo verían null a la vez, programando dos timeouts de avance de ronda.
@@ -137,18 +124,8 @@ export default function DopaminaJuego() {
     reparte();
   }, []);
 
-  // Deriva de color de la pantalla del reto: avanza un paso cada tanto y el
-  // crossfade de las capas hace el resto. Se apaga con reduced-motion (es una
-  // animación en bucle) y al salir de la fase.
-  useEffect(() => {
-    if (fase !== "reto") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const int = setInterval(() => setPasoColor((p) => p + 1), PASO_COLOR_MS);
-    return () => clearInterval(int);
-  }, [fase]);
-
   // Explota una burbuja: la palabra queda en su lugar y llena su slot; tras
-  // una pausa cambia la ronda (y el color del lienzo) o pasa al reto.
+  // una pausa cambia la ronda o pasa al reto.
   const tocaBurbuja = (b: Burbuja) => {
     if (reventando.current || reventada !== null) return;
     reventando.current = true;
@@ -164,7 +141,6 @@ export default function DopaminaJuego() {
       const armado = armaReto(nueva);
       setTimeout(() => {
         setReto(armado);
-        setPasoColor(0); // entra con el rosa de la ronda 3 y de ahí deriva
         setFase("reto");
         setAnuncio(`Tu reto: ${armado.frase}`);
       }, 1900);
@@ -193,34 +169,18 @@ export default function DopaminaJuego() {
   const cat = RONDAS[Math.min(ronda, RONDAS.length - 1)];
   const enBurbujas = fase === "burbujas";
   const enReto = fase === "reto";
-  const fondo = enBurbujas
-    ? cat.fondo
-    : enReto
-      ? COLORES_RETO[pasoColor % COLORES_RETO.length]
-      : FONDO_VERDE;
 
   return (
     <MotionConfig reducedMotion="user">
       <main className="min-h-[100dvh] bg-[var(--color-bg)] p-2.5 md:p-4">
-        {/* El fondo base sigue al color activo: a media transición lo que se
-            asoma entre las dos capas es el color destino, no un tercero. */}
         <section
           className="dopa-canvas relative overflow-hidden rounded-[24px] md:rounded-[32px] min-h-[calc(100dvh-20px)] md:min-h-[calc(100dvh-32px)] flex flex-col"
-          style={{ backgroundColor: fondo }}
+          style={{ backgroundColor: FONDO_CIELO }}
         >
-          {/* Fondo: capas sólidas con crossfade por opacity (barato en móvil) */}
-          {COLORES_LIENZO.map((color) => (
-            <div
-              key={color}
-              aria-hidden="true"
-              className="absolute inset-0 transition-opacity ease-out"
-              style={{
-                backgroundColor: color,
-                opacity: color === fondo ? 1 : 0,
-                transitionDuration: enReto ? `${FUNDIDO_RETO_MS}ms` : "700ms",
-              }}
-            />
-          ))}
+          {/* Cielo: nubes caricatura con deriva GSAP, en todas las fases.
+              Fuera de burbujas se repliegan arriba: el reto/cronómetro/final
+              ponen su contenido al centro y ninguna nube debe taparlo. */}
+          <Nubes despejado={!enBurbujas} />
 
           {/* Burbujitas efervescentes subiendo */}
           {PUNTOS.map((p, i) => (
@@ -248,7 +208,7 @@ export default function DopaminaJuego() {
                 : "top-6 translate-y-0 w-[84px] md:w-[100px] opacity-90"
             }`}
           >
-            <AnimatedLogo color="var(--color-cremita)" className="w-full aspect-square" />
+            <AnimatedLogo color="#FFFFFF" className="w-full aspect-square" />
           </div>
 
           {/* Salir */}
@@ -266,24 +226,38 @@ export default function DopaminaJuego() {
             {anuncio}
           </div>
 
-          {/* Campo de burbujas: ocupa todo el lienzo */}
-          {enBurbujas && opciones && (
-            <CampoBurbujas
-              rondaKey={cat.id}
-              burbujas={opciones[cat.id]}
-              reventadaId={reventada}
-              onToca={tocaBurbuja}
-            />
-          )}
+          {/* Confeti de celebración al completar el reto */}
+          {fase === "final" && <Confeti />}
+
+          {/* Campo de burbujas: ocupa todo el lienzo. Al terminar la última
+              burbuja sale deslizándose hacia abajo (paneo de cámara: el mundo
+              baja mientras la cámara sube a la siguiente pantalla). */}
+          <AnimatePresence>
+            {enBurbujas && opciones && (
+              <motion.div
+                key="campo"
+                className="absolute inset-0"
+                exit={{ y: 70, opacity: 0 }}
+                transition={{ duration: 0.75, ease: CURVA_SUAVE }}
+              >
+                <CampoBurbujas
+                  rondaKey={cat.id}
+                  burbujas={opciones[cat.id]}
+                  reventadaId={reventada}
+                  onToca={tocaBurbuja}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Contenido por fase */}
           <div className="relative z-20 flex-1 flex flex-col pointer-events-none">
             {enBurbujas ? (
               <header className="flex flex-col items-center text-center gap-4 px-6 pt-[72px] md:pt-14">
-                <p className="label text-[var(--color-cremita)]/70">
+                <p className="label text-white/70">
                   Burbuja {Math.min(ronda + 1, RONDAS.length)} de {RONDAS.length}
                 </p>
-                <h1 className="font-sans text-[clamp(1.25rem,3vw,1.9rem)] font-medium leading-snug text-[var(--color-cremita)] max-w-2xl">
+                <h1 className="font-sans text-[clamp(1.25rem,3vw,1.9rem)] font-medium leading-snug text-white max-w-3xl">
                   Explota una burbuja y descubre tu siguiente creación
                 </h1>
                 <Slots seleccion={seleccion} />
@@ -291,16 +265,21 @@ export default function DopaminaJuego() {
             ) : (
               <div
                 className={`flex-1 flex flex-col items-center justify-center px-6 pointer-events-auto ${
-                  enReto ? "pt-24 pb-14" : "py-24"
+                  // pt-[120px]+ libra el logo chico (top-6 + 84/100px de alto):
+                  // en la pantalla final el contenido es alto (formulario) y con
+                  // py-24 el título se encimaba con el logo.
+                  enReto ? "pt-24 pb-14" : "pt-[120px] md:pt-[136px] pb-16"
                 }`}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={fase}
-                    initial={{ opacity: 0, y: 16 }}
+                    // Paneo de cámara hacia arriba: lo nuevo baja desde arriba
+                    // y lo viejo sale por abajo, igual que las capas de nubes.
+                    initial={{ opacity: 0, y: -22 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    exit={{ opacity: 0, y: 16 }}
+                    transition={{ duration: 0.45, ease: CURVA_SUAVE }}
                     // En el reto el bloque ocupa todo el alto: el reto se centra
                     // en el espacio libre (my-auto) y los tiempos caen al fondo.
                     className={`w-full flex flex-col items-center text-center ${enReto ? "flex-1" : ""}`}
@@ -315,7 +294,7 @@ export default function DopaminaJuego() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.05, duration: 0.4 }}
-                          className="label text-[var(--color-cremita)]/70 mb-5"
+                          className="label text-white/70 mb-5"
                         >
                           Tu reto
                         </motion.p>
@@ -327,10 +306,10 @@ export default function DopaminaJuego() {
                         >
                           {/* Sin caja: la frase es el héroe de la pantalla, con
                               el mismo tratamiento que los heroes del sitio
-                              (serif italic cremita, leading apretado). El clamp
+                              (serif italic blanca, leading apretado). El clamp
                               va por debajo del de los heroes porque aquí no es
                               un título de 3 palabras, es una oración larga. */}
-                          <p className="font-serif italic text-[clamp(2rem,4.8vw,3.75rem)] leading-[1.05] text-[var(--color-cremita)]">
+                          <p className="font-serif italic text-[clamp(2rem,4.8vw,3.75rem)] leading-[1.05] text-white">
                             {/* La frase se arma palabra por palabra, como las burbujas */}
                             {reto.frase.split(" ").map((palabra, i) => (
                               <motion.span
@@ -338,7 +317,7 @@ export default function DopaminaJuego() {
                                 className="inline-block"
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + i * 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ delay: 0.3 + i * 0.05, duration: 0.35, ease: CURVA_SUAVE }}
                               >
                                 {palabra}
                                 {" "}
@@ -370,7 +349,7 @@ export default function DopaminaJuego() {
                           transition={{ delay: 0.55, duration: 0.4 }}
                           className="mt-12 w-full max-w-sm md:max-w-xl"
                         >
-                          <p className="font-serif italic text-[17px] leading-snug text-[var(--color-cremita)] mb-4">
+                          <p className="font-serif italic text-[17px] leading-snug text-white mb-4">
                             Elige tu tiempo y que comience la creatividad
                           </p>
                           {/* 5 opciones: 3 + 2 centradas en mobile, una sola fila
@@ -388,12 +367,12 @@ export default function DopaminaJuego() {
                                 transition={{ delay: 0.62 + i * 0.07, type: "spring", stiffness: 260, damping: 20 }}
                                 whileHover={{ y: -3 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="group basis-[calc(33.333%-7px)] md:basis-[calc(20%-8px)] flex flex-col items-center gap-0.5 rounded-2xl border border-[rgba(243,230,207,0.55)] bg-[rgba(243,230,207,0.14)] hover:bg-[var(--color-cremita)] hover:border-[var(--color-cremita)] shadow-[0_8px_20px_rgba(0,0,0,0.14)] py-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-cremita)]"
+                                className="group basis-[calc(33.333%-7px)] md:basis-[calc(20%-8px)] flex flex-col items-center gap-0.5 rounded-2xl border border-[rgba(255,255,255,0.55)] bg-[rgba(255,255,255,0.14)] hover:bg-white hover:border-white shadow-[0_8px_20px_rgba(0,0,0,0.14)] py-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                               >
-                                <span className="font-serif text-[26px] leading-none text-[var(--color-cremita)] group-hover:text-[#403C3C] transition-colors">
+                                <span className="font-serif text-[26px] leading-none text-white group-hover:text-[#403C3C] transition-colors">
                                   {d.valor}
                                 </span>
-                                <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[var(--color-cremita)]/75 group-hover:text-[#403C3C]/70 transition-colors">
+                                <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-white/75 group-hover:text-[#403C3C]/70 transition-colors">
                                   {d.unidad}
                                 </span>
                               </motion.button>
@@ -405,7 +384,7 @@ export default function DopaminaJuego() {
 
                     {fase === "cronometro" && reto && (
                       <>
-                        <p className="font-serif text-[clamp(1.15rem,2.4vw,1.5rem)] leading-snug text-[var(--color-cremita)] max-w-xl mb-10">
+                        <p className="font-serif text-[clamp(1.15rem,2.4vw,1.5rem)] leading-snug text-white max-w-xl mb-10">
                           {reto.frase}
                         </p>
                         <Cronometro duracionSeg={duracion} onTermina={terminaReto} />
@@ -414,29 +393,35 @@ export default function DopaminaJuego() {
 
                     {fase === "final" && (
                       <>
-                        <h1 className="font-serif text-[clamp(2rem,4.5vw,2.8rem)] leading-tight text-[var(--color-cremita)] mb-3">
-                          Reto completado
-                        </h1>
-                        <p className="font-sans text-[13px] text-[var(--color-cremita)]/80 mb-7">
-                          Cada partida genera una combinación distinta: ninguna idea se repite.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            eventoDopa("volver_jugar");
-                            reparte();
-                          }}
-                          className={btnCrema}
+                        <motion.h1
+                          initial={{ opacity: 0, scale: 0.85 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                          className="font-serif text-[clamp(2rem,4.5vw,2.8rem)] leading-tight text-white mb-3"
                         >
-                          Volver a jugar
-                        </button>
-                        <div aria-hidden="true" className="w-64 h-px bg-white/20 my-9" />
-                        <p className="font-sans text-[12px] text-[var(--color-cremita)]/75 mb-4">
-                          Explora más actividades del Club Creativo.
+                          ¡Reto completado!
+                        </motion.h1>
+                        <p className="font-sans text-[13px] leading-relaxed text-white/85 max-w-sm mb-7">
+                          Nos encantaría ver lo que dibujaste. Compártelo y
+                          podría aparecer en las redes de Papela.
                         </p>
-                        <Link href="/club-creativo" onClick={() => eventoDopa("ver_club")} className={btnFantasma}>
-                          Ver Club Creativo
-                        </Link>
+                        <ComparteCreacion reto={reto?.frase ?? ""} />
+                        <div aria-hidden="true" className="w-64 h-px bg-white/20 my-9" />
+                        <div className="flex flex-wrap items-center justify-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              eventoDopa("volver_jugar");
+                              reparte();
+                            }}
+                            className={btnFantasma}
+                          >
+                            Volver a jugar
+                          </button>
+                          <Link href="/club-creativo" onClick={() => eventoDopa("ver_club")} className={btnTerciario}>
+                            Ver Club Creativo
+                          </Link>
+                        </div>
                       </>
                     )}
                   </motion.div>

@@ -22,17 +22,16 @@ const BANCOS: Record<CategoriaBurbuja, readonly string[]> = {
   cierre: CIERRES,
 };
 
-// Orden de las rondas y color de fondo del lienzo en cada una (diseño Figma:
-// morado → azul → rosa; el rosa continúa en la pantalla del reto).
-export const RONDAS: { id: CategoriaBurbuja; etiqueta: string; fondo: string }[] = [
-  { id: "objeto", etiqueta: "Objeto", fondo: "#483699" },
-  { id: "accion", etiqueta: "Acción", fondo: "#3E6D94" },
-  { id: "cierre", etiqueta: "Cierre", fondo: "#9E5A5A" },
+// Orden de las rondas del juego.
+export const RONDAS: { id: CategoriaBurbuja; etiqueta: string }[] = [
+  { id: "objeto", etiqueta: "Objeto" },
+  { id: "accion", etiqueta: "Acción" },
+  { id: "cierre", etiqueta: "Cierre" },
 ];
 
-// Fondos de las fases posteriores (reto hereda el rosa de la ronda 3).
-export const FONDO_RETO = "#9E5A5A";
-export const FONDO_VERDE = "#12535C";
+// Lienzo del juego (rediseño ago-2026): un solo cielo azul con nubes en TODAS
+// las fases — ya no hay cambio de color por ronda ni deriva en el reto.
+export const FONDO_CIELO = "#2B7CE4";
 
 // Para mostrar una palabra suelta (slots, revelación sobre la burbuja):
 // primera letra en mayúscula. Dentro de la frase van en minúscula.

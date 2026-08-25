@@ -401,3 +401,88 @@ body {
   .dopa-punto { display: none; } /* decorativos: sin movimiento no aportan */
   .dopa-brillo { animation: none; opacity: 0.7; }
 }
+
+/* Confeti de celebración (pantalla final de Dopamina): cada pieza cae girando
+   desde arriba del lienzo. Solo transform/opacity (compositor); posición,
+   color, tamaño, duración y delay se varían inline por pieza. El vaivén
+   lateral va en un wrapper aparte (cada animación necesita su transform). */
+@keyframes dopa-confeti-cae {
+  0%   { transform: translateY(-6vh) rotate(0deg); opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(104vh) rotate(var(--giro, 540deg)); opacity: 0; }
+}
+@keyframes dopa-confeti-vaiven {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(var(--vaiven, 18px)); }
+}
+.dopa-confeti {
+  position: absolute;
+  top: 0;
+  animation: dopa-confeti-vaiven var(--dur-vaiven, 1.6s) ease-in-out infinite;
+  pointer-events: none;
+}
+.dopa-confeti > span {
+  display: block;
+  animation: dopa-confeti-cae var(--dur, 3.2s) cubic-bezier(0.25, 0.4, 0.6, 1) var(--delay, 0s) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dopa-confeti { display: none; }
+}
+
+/* Elevación de las pompas del juego: como una burbuja real, sube MUY despacio
+   desde abajo del lienzo y al llegar a su tope (bajo la franja del título)
+   truena — inflado leve + desvanecido — y el ciclo la trae de vuelta por
+   abajo. Los translate(-50%) replican el centrado del wrapper (la animación
+   pisa el transform de las utilidades). Inicio/fin/duración/retraso se varían
+   por pompa vía custom properties; delays negativos = campo ya poblado.
+   Solo transform/opacity (compositor). */
+@keyframes dopa-eleva {
+  0% {
+    transform: translate(-50%, calc(-50% + var(--eleva-inicio))) scale(1);
+    opacity: 0;
+  }
+  2% { opacity: 1; }
+  98.4% {
+    transform: translate(-50%, calc(-50% + var(--eleva-fin))) scale(1);
+    opacity: 1;
+  }
+  99.4% {
+    transform: translate(-50%, calc(-50% + var(--eleva-fin) - 10px)) scale(1.15);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, calc(-50% + var(--eleva-fin) - 10px)) scale(1.15);
+    opacity: 0;
+  }
+}
+.dopa-eleva {
+  animation: dopa-eleva var(--eleva-dur, 55s) linear infinite;
+  animation-delay: var(--eleva-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Sin ciclo: la pompa se queda en su posición base (el translate de las
+     utilidades del wrapper vuelve a aplicar) */
+  .dopa-eleva { animation: none; }
+}
+
+/* Vaivén de las nubes del cielo de Dopamina: x e y en wrappers anidados con
+   ciclos distintos (mismo patrón que .dopa-deriva/.dopa-flota de las pompas)
+   → camino que casi no se repite. Amplitud/duración/retraso se varían inline
+   por nube; la capa inactiva se pausa vía animation-play-state (no se anima
+   lo que no se ve). Solo transform (compositor). */
+@keyframes dopa-nube-x {
+  0%, 100% { transform: translateX(calc(-1 * var(--amp, 24px))); }
+  50%      { transform: translateX(var(--amp, 24px)); }
+}
+@keyframes dopa-nube-y {
+  0%, 100% { transform: translateY(calc(-1 * var(--amp, 8px))); }
+  50%      { transform: translateY(var(--amp, 8px)); }
+}
+.dopa-nube-x { animation: dopa-nube-x var(--dur, 16s) ease-in-out infinite; }
+.dopa-nube-y { animation: dopa-nube-y var(--dur, 9s) ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dopa-nube-x, .dopa-nube-y { animation: none; }
+}

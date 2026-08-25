@@ -11,6 +11,8 @@
 //   dopa_reto_terminado {antes}    — terminó (antes=true si pulsó "¡Terminé!")
 //   dopa_volver_jugar              — reinició partida desde el final
 //   dopa_ver_club                  — volvió a Club Creativo desde el final
+//   dopa_comparte_enviada          — mandó su foto desde la pantalla final
+//   dopa_comparte_error            — el envío de la foto falló
 
 export function eventoDopa(evento: string, datos?: Record<string, unknown>) {
   if (typeof window === "undefined") return;

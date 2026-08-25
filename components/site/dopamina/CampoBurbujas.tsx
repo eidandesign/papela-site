@@ -5,6 +5,11 @@
 // explotar). Al tocar una, revienta con onda + partículas y la palabra queda
 // revelada en su lugar mientras llena su slot arriba.
 //
+// Elevación (ago-2026): además del flote/deriva, cada pompa SUBE muy despacio
+// como burbuja real (wrapper .dopa-eleva) y al llegar bajo la franja del
+// título truena sola (inflado+fade en el keyframe) y renace por abajo. La
+// subida se PAUSA al explotar: la palabra se revela donde ibas pasando.
+//
 // Performance móvil: el vidrio es puro gradiente + sombras (nada de
 // backdrop-filter, que se vuelve carísimo con varias capas) y el blur del
 // texto interior es un filter estático que se rasteriza una sola vez. Todas
@@ -13,6 +18,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { capitaliza, RONDAS } from "@/lib/dopamina/retos";
+import { SALIDA_SUAVE } from "@/lib/dopamina/animacion";
 import type { Burbuja } from "@/lib/dopamina/tipos";
 
 // Posiciones dispersas (porcentajes del lienzo) que rodean el logo central y
@@ -43,6 +49,24 @@ const SOLA_MIN_MS = 5500;
 const SOLA_VAR_MS = 6500;
 const SOLA_REGRESO_MS = 950;
 
+// ── Elevación (keyframes dopa-eleva en globals.css) ──
+// Toda pompa sube despacísimo y truena al llegar al tope; el ciclo la regresa
+// por abajo. Las POSICIONES marcan el punto de partida visual (delay negativo)
+// y el carril horizontal. En dvh: el lienzo mide ~100dvh menos el padding.
+const ELEVA_TOPE = 34; // dvh donde truena (el centro); la franja del título queda libre
+const ELEVA_INICIO = 108; // nace bajo el borde inferior
+const elevaVars = (i: number, top: number): React.CSSProperties => {
+  const dur = 46 + (i % 5) * 6; // 46–70 s por viaje: apenas se percibe
+  const recorrido = ELEVA_INICIO - ELEVA_TOPE;
+  return {
+    "--eleva-inicio": `${ELEVA_INICIO - top}dvh`,
+    "--eleva-fin": `${ELEVA_TOPE - top}dvh`,
+    "--eleva-dur": `${dur}s`,
+    // Arranca ya a la altura de su posición base, no desde abajo
+    "--eleva-delay": `${(-dur * (ELEVA_INICIO - top)) / recorrido}s`,
+  } as React.CSSProperties;
+};
+
 // ── Piezas de la explosión (todas deterministas, calculadas una sola vez) ──
 // Gotas principales: 10 direcciones con jitter, distancia/tamaño/tempo variados.
 const GOTAS = Array.from({ length: 10 }, (_, i) => {
@@ -68,7 +92,6 @@ const MINIS = [
   { x: -0.3, y: -1.45, d: 10 },
   { x: 0.45, y: -1.3, d: 14 },
 ];
-const SALIDA_SUAVE = [0.16, 1, 0.3, 1] as const;
 
 // ── Vidrio de la pompa ───────────────────────────────────────────────────
 // Una esfera creíble necesita CUATRO cosas, y aquí cada una es una capa propia
@@ -202,7 +225,7 @@ function Estallido({ tam, suave = false }: { tam: string; suave?: boolean }) {
       {/* 2 · Onda expansiva (doble en el pop real, sencilla en el espontáneo) */}
       <motion.span
         aria-hidden="true"
-        className="absolute inset-0 rounded-full border-2 border-[rgba(243,230,207,0.85)]"
+        className="absolute inset-0 rounded-full border-2 border-[rgba(255,255,255,0.85)]"
         initial={{ scale: 0.5, opacity: 0.9 * f }}
         animate={{ scale: 2.1, opacity: 0 }}
         transition={{ duration: 0.55, ease: SALIDA_SUAVE }}
@@ -237,7 +260,7 @@ function Estallido({ tam, suave = false }: { tam: string; suave?: boolean }) {
           style={{
             width: v.d,
             height: v.d,
-            backgroundColor: v.crema ? "rgba(243,230,207,0.95)" : "rgba(255,255,255,0.9)",
+            backgroundColor: v.crema ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.9)",
           }}
           initial={{ x: "-50%", y: "-50%", opacity: f, scale: 1 }}
           animate={{
@@ -368,8 +391,18 @@ export default function CampoBurbujas({
           return (
             <div
               key={b.id}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ top: `${p.top}%`, left: `${p.left}%`, width: tam, height: tam }}
+              className="dopa-eleva absolute -translate-x-1/2 -translate-y-1/2"
+              style={{
+                top: `${p.top}%`,
+                left: `${p.left}%`,
+                width: tam,
+                height: tam,
+                ...elevaVars(i, p.top),
+                // Congelada mientras explota: el estallido y la palabra se
+                // quedan exactamente donde la pompa iba pasando. La revelada
+                // sigue congelada hasta el cambio de ronda.
+                animationPlayState: explotada || rompeSola ? "paused" : "running",
+              }}
             >
               {explotada ? (
                 <>
@@ -390,7 +423,7 @@ export default function CampoBurbujas({
                     initial={{ scale: 0.3, y: 8, opacity: 0 }}
                     animate={{ scale: 1, y: 0, opacity: 1 }}
                     transition={{ delay: 0.18, type: "spring", stiffness: 300, damping: 16 }}
-                    className="absolute inset-0 flex items-center justify-center text-center font-serif italic text-[15px] md:text-[17px] leading-tight text-[var(--color-cremita)] whitespace-nowrap"
+                    className="absolute inset-0 flex items-center justify-center text-center font-serif italic text-[15px] md:text-[17px] leading-tight text-white whitespace-nowrap"
                     style={{ textShadow: "0 0 18px rgba(255,255,255,0.45)" }}
                   >
                     {/* Mayúscula solo en la primera ronda: es el inicio de la oración */}
@@ -429,7 +462,7 @@ export default function CampoBurbujas({
                       onClick={() => onToca(b)}
                       disabled={reventadaId !== null}
                       aria-label={`Burbuja misteriosa ${i + 1} de ${burbujas.length}`}
-                      className="relative block w-full h-full rounded-full select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-cremita)]"
+                      className="relative block w-full h-full rounded-full select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                       style={VIDRIO}
                       whileHover={reventadaId ? undefined : { scale: 1.07 }}
                       whileTap={reventadaId ? undefined : { scale: 0.92 }}
