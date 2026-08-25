@@ -23,7 +23,6 @@ import AnimatedLogo from "../AnimatedLogo";
 import CampoBurbujas, { BURBUJAS_POR_RONDA } from "./CampoBurbujas";
 import Cronometro from "./Cronometro";
 import Confeti from "./Confeti";
-import ComparteCreacion from "./ComparteCreacion";
 import Nubes from "./Nubes";
 import {
   generaOpciones,
@@ -54,7 +53,7 @@ const PUNTOS = [
   { left: 95, d: 4, dur: 19, delay: -14, vaiven: 8 },
 ];
 
-// (El botón crema primario ahora vive en ComparteCreacion: "Enviar mi creación".)
+// (El primario de la pantalla final es el CTA blanco de Instagram, inline.)
 const btnFantasma =
   "inline-flex items-center justify-center rounded-full border border-[rgba(255,255,255,0.5)] text-white font-sans text-[13px] font-medium px-6 py-2.5 hover:bg-white/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 // Terciario: link con ícono. Sin caja ni borde — el nivel más bajo de la
@@ -401,11 +400,19 @@ export default function DopaminaJuego() {
                         >
                           ¡Reto completado!
                         </motion.h1>
-                        <p className="font-sans text-[13px] leading-relaxed text-white/85 max-w-sm mb-7">
-                          Nos encantaría ver lo que dibujaste. Compártelo y
-                          podría aparecer en las redes de Papela.
+                        <p className="font-sans text-[14px] leading-relaxed text-white/90 max-w-sm mb-6">
+                          Tómale foto a tu dibujo, súbela a Instagram y
+                          etiquétanos — quienes lo hagan se llevan una sorpresa.
                         </p>
-                        <ComparteCreacion reto={reto?.frase ?? ""} />
+                        <a
+                          href="https://instagram.com/papela.atelier"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => eventoDopa("ig_comparte")}
+                          className="inline-flex items-center gap-2 rounded-full bg-white text-[var(--color-verde)] font-sans text-[14px] font-semibold px-7 py-3 hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                        >
+                          Etiqueta a @papela.atelier
+                        </a>
                         <div aria-hidden="true" className="w-64 h-px bg-white/20 my-9" />
                         <div className="flex flex-wrap items-center justify-center gap-4">
                           <button

@@ -79,13 +79,16 @@ const NUBES_CAMPO: ConfigNube[] = [
 // Anclas en px/calc (no %): el alto del lienzo cambia entre breakpoints (y la
 // pantalla final crece con el formulario); los `calc(100% - Npx)` cuelgan del
 // borde inferior y lo visible cabe en el padding del contenido (pb-14/16).
+// Las de arriba casi completas (su borde inferior queda antes del pt-[120px]
+// del contenido); las de abajo asoman ~50px, dentro del padding inferior del
+// contenido (pb-14/16 ≈ 56-64px) para no rozar botones.
 const NUBES_BORDE: ConfigNube[] = [
-  { right: "-5%", top: "-16px", w: "clamp(110px, 13vw, 190px)", op: 1 },
-  { left: "18%", top: "-20px", w: "clamp(70px, 9vw, 140px)", op: 0.95, soloMd: true },
-  { left: "62%", top: "-18px", w: "clamp(90px, 12vw, 190px)", op: 0.9 },
-  { left: "10%", top: "calc(100% - 44px)", w: "clamp(110px, 15vw, 230px)", flip: true, op: 1, soloMd: true },
-  { right: "6%", top: "calc(100% - 36px)", w: "clamp(80px, 10vw, 160px)", flip: true, op: 0.85 },
-  { left: "-3%", top: "calc(100% - 30px)", w: "clamp(100px, 13vw, 200px)", op: 0.9 },
+  { right: "-5%", top: "2px", w: "clamp(110px, 13vw, 190px)", op: 1 },
+  { left: "18%", top: "6px", w: "clamp(70px, 9vw, 140px)", op: 0.95, soloMd: true },
+  { left: "62%", top: "4px", w: "clamp(90px, 12vw, 190px)", op: 0.9 },
+  { left: "10%", top: "calc(100% - 52px)", w: "clamp(110px, 15vw, 230px)", flip: true, op: 1, soloMd: true },
+  { right: "6%", top: "calc(100% - 48px)", w: "clamp(80px, 10vw, 160px)", flip: true, op: 0.85 },
+  { left: "-3%", top: "calc(100% - 50px)", w: "clamp(100px, 13vw, 200px)", op: 0.9 },
 ];
 
 // Una capa de nubes. Inactiva = corrida hacia `salidaPx`, transparente y con
