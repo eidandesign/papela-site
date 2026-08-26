@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: "/servicios", label: "Servicios" },
   { href: "/talleres", label: "Talleres" },
   { href: "/clases", label: "Clases" },
-  { href: "/nosotros", label: "Nosotros" },
+  { href: "/club-creativo", label: "Club Creativo" },
 ];
 
 const EASE = "cubic-bezier(0.76, 0, 0.24, 1)";
@@ -120,7 +120,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        padding: "0 8vw",
+        padding: "110px 8vw 20px",
         boxSizing: "border-box",
         overflow: "hidden",
         clipPath: visible ? "inset(0% 0% 0% 0%)" : "inset(100% 0% 0% 0%)",
@@ -130,9 +130,9 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
       }}
     >
       {/* Logo top center */}
-      <div style={{ position: "absolute", top: 20, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: visible ? 1 : 0, transition: "opacity 0.3s ease 0.3s" }}>
+      <div style={{ position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: visible ? 1 : 0, transition: "opacity 0.3s ease 0.3s" }}>
         <Link href="/" onClick={onClose} aria-label="Papela Atelier — inicio">
-          <AnimatedLogo className="w-[90px] h-[90px]" />
+          <AnimatedLogo className="w-[80px] h-[80px]" />
         </Link>
       </div>
 
@@ -148,13 +148,13 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
             style={{
               display: "block",
               fontFamily: "PP Editorial New, serif",
-              fontSize: "clamp(2.6rem, 13vw, 5rem)",
+              fontSize: "clamp(1.9rem, 9vw, 4rem)",
               fontWeight: 300,
               color: FG,
               textDecoration: "none",
               lineHeight: 1.15,
-              paddingTop: 10,
-              paddingBottom: 10,
+              paddingTop: 7,
+              paddingBottom: 7,
               borderBottom: "1px solid rgba(243,230,207,0.18)",
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(30px)",
@@ -177,7 +177,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         style={{
           display: "flex",
           gap: 12,
-          marginTop: 28,
+          marginTop: 22,
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(20px)",
           transition: `opacity 0.5s ease ${socialDelay}s, transform 0.6s ${EASE} ${socialDelay}s`,
@@ -326,7 +326,7 @@ export default function SiteNavbar() {
                   {[
                     { href: "/talleres", label: "Talleres" },
                     { href: "/clases", label: "Clases" },
-                    { href: "/nosotros", label: "Nosotros" },
+                    { href: "/club-creativo", label: "Club Creativo" },
                   ].map((l, i) => (
                     <motion.div
                       key={l.href}
