@@ -233,7 +233,9 @@ export default function SiteNavbar() {
   // Páginas con fondo claro (sin hero oscuro) → navbar grande en verde para contraste.
   const onLight =
     !!pathname &&
-    (pathname.startsWith("/clases/") || pathname.includes("/checkout"));
+    (pathname.startsWith("/clases/") ||
+      pathname.includes("/checkout") ||
+      pathname.startsWith("/productos/coleccion/"));
   const linkClass = onLight
     ? "text-[var(--color-verde)]/85 hover:text-[var(--color-verde)]"
     : "text-[var(--color-cremita)]/80 hover:text-[var(--color-cremita)]";

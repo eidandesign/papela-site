@@ -7,6 +7,10 @@ interface HeroSectionProps {
   /** Background color — defaults to var(--color-verde) */
   bgColor?: string;
   className?: string;
+  /** Listón decorativo del fondo — apagarlo en heroes compactos donde cruzaría el título */
+  showRibbon?: boolean;
+  /** Cursor-pluma con trazo de tinta — apagarlo en heroes compactos/utilitarios */
+  showInk?: boolean;
 }
 
 /**
@@ -21,7 +25,7 @@ interface HeroSectionProps {
  *     </div>
  *   </HeroSection>
  */
-export default function HeroSection({ children, bgColor, className = "" }: HeroSectionProps) {
+export default function HeroSection({ children, bgColor, className = "", showRibbon = true, showInk = true }: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const inkRef = useRef<HTMLCanvasElement>(null);
   const penRef = useRef<HTMLDivElement>(null);
@@ -142,6 +146,7 @@ export default function HeroSection({ children, bgColor, className = "" }: HeroS
 
   // ── Pen cursor + fading ink line ─────────────────────────────────────────────
   useEffect(() => {
+    if (!showInk) return;
     const section = sectionRef.current;
     const canvas = inkRef.current;
     const pen = penRef.current;
@@ -302,7 +307,7 @@ export default function HeroSection({ children, bgColor, className = "" }: HeroS
       if (raf) cancelAnimationFrame(raf);
       section.style.cursor = "";
     };
-  }, []);
+  }, [showInk]);
 
   return (
     <section
@@ -316,7 +321,9 @@ export default function HeroSection({ children, bgColor, className = "" }: HeroS
       }}
     >
       {/* Ink trail canvas */}
-      <canvas ref={inkRef} className="absolute inset-0 z-0 h-full w-full" aria-hidden="true" />
+      {showInk && (
+        <canvas ref={inkRef} className="absolute inset-0 z-0 h-full w-full" aria-hidden="true" />
+      )}
 
       {/* Watercolor displacement filter */}
       <svg width="0" height="0" className="absolute" aria-hidden="true">
@@ -336,6 +343,7 @@ export default function HeroSection({ children, bgColor, className = "" }: HeroS
       <div data-hero-content className="relative z-10 flex flex-col flex-1">{children}</div>
 
       {/* Decorative SVG ribbon — draws itself on load */}
+      {showRibbon && (
       <svg
         viewBox="-67 133 1526 294"
         fill="none"
@@ -352,8 +360,10 @@ export default function HeroSection({ children, bgColor, className = "" }: HeroS
           strokeLinecap="round"
         />
       </svg>
+      )}
 
       {/* Dot + ring cursor */}
+      {showInk && (
       <div
         ref={penRef}
         aria-hidden="true"
@@ -365,6 +375,7 @@ export default function HeroSection({ children, bgColor, className = "" }: HeroS
           <circle cx="20" cy="20" r="3.5" fill="#F3E6CF" />
         </svg>
       </div>
+      )}
     </section>
   );
 }

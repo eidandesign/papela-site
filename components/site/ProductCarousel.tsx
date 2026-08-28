@@ -48,10 +48,12 @@ export default function ProductCarousel({ productos }: { productos: Producto[] }
         ref={scrollerRef}
         role="region"
         aria-label="Carrusel de productos"
-        className="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-2"
+        // pl (y no spacer) al inicio: el spacer + gap sumaban 5vw+32px y las filas
+        // sin overflow no pueden snapear de vuelta a 5vw. El padding final sí se
+        // clipea en overflow — ahí sigue el spacer.
+        className="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-2 pl-[5vw]"
         style={{ scrollbarWidth: "none", scrollPaddingLeft: "5vw" }}
       >
-        <div className="flex-shrink-0 w-[5vw]" aria-hidden="true" />
         {productos.map((p) => (
           <div key={p.id} className="snap-start">
             <ProductCard producto={p} variant="catalog" />
