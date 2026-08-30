@@ -5,10 +5,9 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { getProductoBySlugOrId } from "@/lib/productos";
 import { SITE_URL } from "@/lib/site";
 import AddToCartButton from "@/components/site/AddToCartButton";
+import { waProductoHref } from "@/lib/whatsapp";
 
 export const revalidate = 60;
-
-const WHATSAPP = "522211865590";
 
 export async function generateMetadata({
   params,
@@ -59,7 +58,7 @@ export default async function ProductoPage({
   }
 
   const enStock = producto.stock > 0;
-  const waText = encodeURIComponent(`Hola Papela 🌿 me interesa: ${producto.nombre}`);
+  const waHref = waProductoHref(producto);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -162,7 +161,7 @@ export default async function ProductoPage({
               stock={producto.stock}
             />
             <a
-              href={`https://wa.me/${WHATSAPP}?text=${waText}`}
+              href={waHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 self-start rounded-full border border-[var(--color-verde)] text-[var(--color-verde)] px-6 py-3.5 text-sm font-semibold hover:bg-[var(--color-verde)]/5 transition-colors"

@@ -8,8 +8,7 @@ import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
 import { useCartStore } from "@/lib/stores/cartStore";
 import AddToCartButton from "./AddToCartButton";
-
-const WHATSAPP = "522211865590";
+import { waProductoHref } from "@/lib/whatsapp";
 
 export default function ProductDrawer() {
   const [mounted, setMounted] = useState(false);
@@ -197,7 +196,7 @@ export default function ProductDrawer() {
             {/* CTAs — fixed footer */}
             <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3 px-6 py-5 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
               <a
-                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola Papela 🌿 me interesa: ${dispNombreCompleto}`)}`}
+                href={waProductoHref(product, dispNombreCompleto)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-verde)] text-[var(--color-verde)] px-5 py-3.5 text-sm font-semibold hover:bg-[var(--color-verde)]/5 transition-colors"
