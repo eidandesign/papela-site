@@ -33,6 +33,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Preview de Mini Sites: se embebe en un iframe del admin. CSP
+        // frame-ancestors manda sobre X-Frame-Options en navegadores modernos
+        // (la regla global de abajo sigue aplicando SAMEORIGIN al resto).
+        source: "/mini-site-preview",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: `frame-ancestors 'self' https://admin.papela-atelier.com${
+              process.env.NODE_ENV === "development" ? " http://localhost:*" : ""
+            }`,
+          },
+        ],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
