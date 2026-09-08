@@ -140,7 +140,7 @@ function iconoDe(type: BlockType, size?: number): ReactNode {
 
 const SOCIAL_LABEL: Record<SocialType, string> = { instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok" };
 
-// ── Branding "Creado con Papela" (componente aparte: en el futuro se apaga por plan) ──
+// ── Branding "Creado en Papela Atelier" (componente aparte: en el futuro se apaga por plan) ──
 
 export function PapelaBranding({ color }: { color: string }) {
   return (
@@ -154,7 +154,7 @@ export function PapelaBranding({ color }: { color: string }) {
         className="inline-flex items-center gap-1.5 text-[12px] tracking-wide opacity-60 hover:opacity-100 transition-opacity"
         style={{ color }}
       >
-        Creado con <span className="font-serif text-[15px]">Papela</span>
+        Creado en <span className="font-serif text-[15px]">Papela Atelier</span>
       </a>
     </footer>
   );
