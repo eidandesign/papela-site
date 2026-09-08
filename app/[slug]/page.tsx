@@ -54,7 +54,8 @@ export default async function MiniSitePage({ params }: Props) {
 
   if (r.status === "disabled") {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--color-bg)] text-[var(--color-text)]">
+      // 100dvh como el renderer: es la misma URL del QR del cliente.
+      <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--color-bg)] text-[var(--color-text)]" style={{ minHeight: "100dvh" }}>
         <div className="text-center max-w-sm">
           <p className="font-serif text-2xl mb-2">Este sitio no está disponible actualmente.</p>
           <p className="text-sm text-[var(--color-muted)]">Vuelve a intentarlo más tarde.</p>

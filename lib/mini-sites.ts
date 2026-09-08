@@ -32,12 +32,17 @@ export type BlockType =
 
 export type SocialType = "instagram" | "facebook" | "tiktok";
 
+/** Cómo se pinta un bloque con link: botón con texto o solo el ícono. */
+export type DisplayMode = "full" | "icon";
+
 export type MiniSitePublicBlock = {
   id: string;
   type: BlockType;
   title: string;
   subtitle: string;
   href: string | null;
+  /** "icon" = solo el ícono; los consecutivos se agrupan en una fila. Los payloads viejos no lo traen → "full". */
+  displayMode?: DisplayMode;
   content?: string;
   links?: { type: SocialType; href: string }[];
 };

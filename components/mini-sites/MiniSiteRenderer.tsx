@@ -38,6 +38,15 @@ function templateDe(id: string): TemplateStyle {
   return TEMPLATES[id] ?? TEMPLATES.minimal;
 }
 
+// El color va a parar DENTRO de un bloque <style>, donde un valor con "}" o
+// "<" podría romper la regla e inyectar CSS. El admin ya valida el hex al
+// guardar; esto es el cinturón por si el payload llega por otro lado.
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+
+function hexSeguro(v: string, fallback: string): string {
+  return HEX_RE.test((v ?? "").trim()) ? v.trim() : fallback;
+}
+
 // Texto legible sobre un color de fondo (luminancia relativa, WCAG).
 function textoSobre(hex: string): string {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
@@ -135,7 +144,9 @@ const SOCIAL_LABEL: Record<SocialType, string> = { instagram: "Instagram", faceb
 
 export function PapelaBranding({ color }: { color: string }) {
   return (
-    <footer className="mt-10 text-center">
+    // mt-auto: con poco contenido el crédito se va hasta abajo del viewport
+    // (el <main> es flex-1); con mucho, queda después de los botones.
+    <footer className="mt-auto pt-10 text-center">
       <a
         href="https://www.papela-atelier.com"
         target="_blank"
@@ -165,6 +176,44 @@ function estiloBoton(t: TemplateStyle, colors: MiniSitePublic["colors"]): CSSPro
   return { ...base, background: colors.primary, color: textoSobre(colors.primary), border: `2px solid ${colors.primary}` };
 }
 
+/**
+ * Click de cualquier link de bloque: en preview no navega; en público registra
+ * el click y deja que la navegación siga su curso normal.
+ */
+function clickDeBloque(site: MiniSitePublic, blockId: string, mode: MiniSiteMode) {
+  return (e: MouseEvent<HTMLAnchorElement>) => {
+    if (mode === "preview") {
+      e.preventDefault();
+      return;
+    }
+    trackMiniSite({ miniSiteId: site.id, blockId, type: "block_click" });
+  };
+}
+
+/**
+ * Bloque en modo "solo ícono": botón redondo sin texto. El título sigue vivo
+ * como `aria-label` y como tooltip — quien no ve el ícono necesita saber a
+ * dónde lleva.
+ */
+export function MiniSiteIconBlock({ block, site, mode }: { block: MiniSitePublicBlock; site: MiniSitePublic; mode: MiniSiteMode }) {
+  const t = templateDe(site.template);
+  const externo = !!block.href && /^https?:/i.test(block.href);
+  return (
+    <a
+      href={block.href ?? "#"}
+      target={externo ? "_blank" : undefined}
+      rel={externo ? "noopener noreferrer" : undefined}
+      onClick={clickDeBloque(site, block.id, mode)}
+      aria-label={block.title}
+      title={block.title}
+      className="w-14 h-14 flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+      style={estiloBoton({ ...t, radius: "999px" }, site.colors)}
+    >
+      {iconoDe(block.type, 24)}
+    </a>
+  );
+}
+
 export function MiniSiteBlockRenderer({
   block,
   site,
@@ -175,16 +224,7 @@ export function MiniSiteBlockRenderer({
   mode: MiniSiteMode;
 }) {
   const t = templateDe(site.template);
-  const preview = mode === "preview";
-
-  function onClick(e: MouseEvent<HTMLAnchorElement>) {
-    if (preview) {
-      e.preventDefault();
-      return;
-    }
-    // Registrar el click y dejar que la navegación siga su curso normal.
-    trackMiniSite({ miniSiteId: site.id, blockId: block.id, type: "block_click" });
-  }
+  const onClick = clickDeBloque(site, block.id, mode);
 
   if (block.type === "text") {
     return (
@@ -250,6 +290,27 @@ export function MiniSiteBlockRenderer({
   );
 }
 
+// ── Filas ────────────────────────────────────────────────────────────────────
+// Los bloques en "solo ícono" que quedan SEGUIDOS se pintan en una misma fila
+// (como la fila de redes). Basta con moverlos juntos en el editor para armar
+// una fila; separarlos con un botón de texto en medio hace dos filas.
+
+type Fila = { kind: "bloque"; block: MiniSitePublicBlock } | { kind: "iconos"; blocks: MiniSitePublicBlock[] };
+
+export function agruparEnFilas(blocks: MiniSitePublicBlock[]): Fila[] {
+  const filas: Fila[] = [];
+  for (const b of blocks) {
+    if (b.displayMode !== "icon") {
+      filas.push({ kind: "bloque", block: b });
+      continue;
+    }
+    const ultima = filas[filas.length - 1];
+    if (ultima && ultima.kind === "iconos") ultima.blocks.push(b);
+    else filas.push({ kind: "iconos", blocks: [b] });
+  }
+  return filas;
+}
+
 // ── Página completa ──────────────────────────────────────────────────────────
 
 export default function MiniSiteRenderer({ site, mode = "public" }: { site: MiniSitePublic; mode?: MiniSiteMode }) {
@@ -260,9 +321,17 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
     trackMiniSite({ miniSiteId: site.id, type: "page_view" });
   }, [mode, site.id]);
 
+  // 100dvh (no 100vh): en móvil la barra del navegador se esconde y se muestra,
+  // y con 100vh el fondo se quedaba corto justo en ese movimiento. La clase
+  // min-h-screen queda de respaldo para navegadores sin dvh.
+  const fondo = hexSeguro(site.colors.background, "#FCFAF7");
+
   return (
-    <div className="min-h-screen w-full font-sans" style={{ background: site.colors.background, color: site.colors.text }}>
-      <main className="mx-auto w-full max-w-[520px] px-5 pt-12 pb-8 flex flex-col items-center">
+    <div className="min-h-screen w-full font-sans flex flex-col" style={{ background: fondo, color: site.colors.text, minHeight: "100dvh" }}>
+      {/* El fondo también en html/body: si no, el rebote del scroll en iOS y
+          cualquier hueco dejan ver el color del sitio de Papela, no el del cliente. */}
+      <style>{`html,body{background:${fondo};}`}</style>
+      <main className="mx-auto w-full max-w-[520px] px-5 pt-12 pb-8 flex flex-1 flex-col items-center">
         <header className="flex flex-col items-center text-center mb-8">
           {site.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -290,9 +359,17 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
         </header>
 
         <div className="w-full flex flex-col gap-3">
-          {site.blocks.map((b) => (
-            <MiniSiteBlockRenderer key={b.id} block={b} site={site} mode={mode} />
-          ))}
+          {agruparEnFilas(site.blocks).map((fila) =>
+            fila.kind === "bloque" ? (
+              <MiniSiteBlockRenderer key={fila.block.id} block={fila.block} site={site} mode={mode} />
+            ) : (
+              <div key={`iconos-${fila.blocks[0].id}`} className="flex flex-wrap items-center justify-center gap-3 py-1">
+                {fila.blocks.map((b) => (
+                  <MiniSiteIconBlock key={b.id} block={b} site={site} mode={mode} />
+                ))}
+              </div>
+            ),
+          )}
           {site.blocks.length === 0 && mode === "preview" && (
             <p className="text-center text-sm opacity-60 py-6">Agrega bloques para ver aquí los botones.</p>
           )}
