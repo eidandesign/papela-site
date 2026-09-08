@@ -331,8 +331,24 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
       {/* El fondo también en html/body: si no, el rebote del scroll en iOS y
           cualquier hueco dejan ver el color del sitio de Papela, no el del cliente. */}
       <style>{`html,body{background:${fondo};}`}</style>
-      <main className="mx-auto w-full max-w-[520px] px-5 pt-12 pb-8 flex flex-1 flex-col items-center">
-        <header className="flex flex-col items-center text-center mb-8">
+      <main className={`mx-auto w-full max-w-[520px] px-5 pb-8 flex flex-1 flex-col items-center ${site.coverUrl ? "pt-5" : "pt-12"}`}>
+        <header className="flex flex-col items-center text-center mb-8 w-full">
+          {/* Portada tipo Facebook: foto ancha arriba y el logo montado encima
+              (por eso el margen negativo y el z-10). Sin portada, el encabezado
+              queda exactamente como antes. */}
+          {site.coverUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={site.coverUrl}
+              alt=""
+              className="w-full object-cover"
+              style={{ aspectRatio: "5 / 2", borderRadius: t.radius === "999px" ? "24px" : t.radius }}
+            />
+          )}
+          <div
+            className="relative z-10 flex flex-col items-center"
+            style={site.coverUrl ? { marginTop: -t.logoSize / 2 } : undefined}
+          >
           {site.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -341,17 +357,32 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
               width={t.logoSize}
               height={t.logoSize}
               className={`object-cover mb-4 ${t.logoShape === "round" ? "rounded-full" : "rounded-2xl"}`}
-              style={{ width: t.logoSize, height: t.logoSize, boxShadow: t.shadow ? "0 10px 30px rgba(0,0,0,.15)" : undefined, background: "#fff" }}
+              style={{
+                width: t.logoSize,
+                height: t.logoSize,
+                // Sobre una foto el logo necesita separarse del fondo: aro del
+                // color de la página, igual que la foto de perfil de Facebook.
+                boxShadow: [site.coverUrl ? `0 0 0 5px ${fondo}` : "", t.shadow ? "0 10px 30px rgba(0,0,0,.15)" : ""].filter(Boolean).join(", ") || undefined,
+                background: "#fff",
+              }}
             />
           ) : (
             <div
               className={`flex items-center justify-center mb-4 font-serif ${t.logoShape === "round" ? "rounded-full" : "rounded-2xl"}`}
-              style={{ width: t.logoSize, height: t.logoSize, background: site.colors.primary, color: textoSobre(site.colors.primary), fontSize: t.logoSize * 0.42 }}
+              style={{
+              width: t.logoSize,
+              height: t.logoSize,
+              background: site.colors.primary,
+              color: textoSobre(site.colors.primary),
+              fontSize: t.logoSize * 0.42,
+              boxShadow: site.coverUrl ? `0 0 0 5px ${fondo}` : undefined,
+            }}
               aria-hidden="true"
             >
               {site.businessName.trim().charAt(0).toUpperCase() || "·"}
             </div>
           )}
+          </div>
           <h1 className={`${t.headingFont === "serif" ? "font-serif font-normal" : "font-sans font-bold"} leading-tight`} style={{ fontSize: t.titleSize }}>
             {site.businessName}
           </h1>

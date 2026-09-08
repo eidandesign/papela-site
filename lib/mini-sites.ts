@@ -54,6 +54,8 @@ export type MiniSitePublic = {
   businessName: string;
   description: string;
   logoUrl: string;
+  /** Foto ancha de portada, detrás del logo. "" o ausente = sin portada. */
+  coverUrl?: string;
   template: string;
   colors: { primary: string; background: string; text: string };
   showPapelaBranding: boolean;
