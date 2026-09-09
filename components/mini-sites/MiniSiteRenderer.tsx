@@ -973,13 +973,16 @@ function MenuVista({
                           </div>
                         )}
                       </div>
-                      <div className="shrink-0 flex flex-col items-end gap-2.5">
+                      {/* Con foto, el control de agregar va MONTADO sobre su esquina
+                          inferior derecha (no debajo: alargaba el renglón). Sin foto,
+                          el control ocupa la columna derecha él solo. */}
+                      <div className="relative shrink-0">
                         {item.imagen && (
                           <button
                             type="button"
                             onClick={() => setFoto(item)}
                             aria-label={`Ver foto de ${item.nombre}`}
-                            className="ms-thumb shrink-0 w-[92px] h-[92px] rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                            className="ms-thumb block w-[96px] h-[96px] rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
                             style={{ boxShadow: "0 0 0 1px rgba(127,127,127,.18), 0 8px 20px rgba(0,0,0,.14)" }}
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -988,13 +991,17 @@ function MenuVista({
                               alt=""
                               loading="lazy"
                               decoding="async"
-                              width={92}
-                              height={92}
+                              width={96}
+                              height={96}
                               className={`w-full h-full object-cover transition-transform duration-500 ${item.disponible ? "" : "grayscale"}`}
                             />
                           </button>
                         )}
-                        {item.disponible && <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => setCantidad(item.id, n)} />}
+                        {item.disponible && (
+                          <div className={item.imagen ? "absolute -bottom-1.5 -right-1.5" : ""}>
+                            <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => setCantidad(item.id, n)} />
+                          </div>
+                        )}
                       </div>
                     </li>
                   );
