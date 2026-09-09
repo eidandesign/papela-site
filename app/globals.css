@@ -263,6 +263,27 @@ body {
   .cot-ribbon path { animation: none !important; stroke-dashoffset: 0 !important; }
 }
 
+/* ── Mini Sites — bloque Menú ──
+   Cada platillo sube en cascada al entrar (el renderer escalona el delay con
+   tope a los 8 primeros: un menú largo no debe tardar en aparecer). Misma curva
+   que .page-enter/.cot-rise. La fila de chips de secciones scrollea sin barra. */
+@keyframes ms-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.ms-rise {
+  opacity: 0;
+  animation: ms-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.ms-chips {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ms-chips::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ms-rise { animation: none !important; opacity: 1 !important; }
+}
+
 /* ── Cotización — lightbox de la foto de un renglón ──
    Overlay verde profundo con blur + tarjeta que entra con un zoom suave. */
 @keyframes cot-fade {

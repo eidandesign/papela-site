@@ -10,7 +10,7 @@
 // navegación y las analíticas.
 
 import { useEffect, type CSSProperties, type MouseEvent, type ReactNode } from "react";
-import type { BlockType, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
+import type { BlockType, MenuTag, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
 import { trackMiniSite } from "@/lib/mini-sites";
 
 export type MiniSiteMode = "public" | "preview";
@@ -132,6 +132,13 @@ const ICONS: Record<BlockType, (size?: number) => ReactNode> = {
       <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
     </Svg>
   ),
+  menu: (s) => (
+    <Svg size={s}>
+      <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5z" />
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M9 7h7M9 11h5" />
+    </Svg>
+  ),
 };
 
 function iconoDe(type: BlockType, size?: number): ReactNode {
@@ -214,6 +221,135 @@ export function MiniSiteIconBlock({ block, site, mode }: { block: MiniSitePublic
   );
 }
 
+// ── Menú (restaurantes) ──────────────────────────────────────────────────────
+// Secciones con platillos, todo dentro de la columna del sitio. Si hay más de
+// una sección, una fila de chips se queda pegada arriba y salta por anclas
+// (sin JS: la página sigue casi sin script). Los platillos entran en cascada
+// (.ms-rise, tope a los 8 primeros) y respetan prefers-reduced-motion. Un
+// platillo agotado se atenúa y se marca, nunca se esconde: el cliente debe
+// saber que existe. La foto es opcional: miniatura a la izquierda del renglón.
+
+const MENU_TAG_LABEL: Record<MenuTag, { label: string; emoji: string }> = {
+  picante: { label: "Picante", emoji: "🌶️" },
+  vegetariano: { label: "Vegetariano", emoji: "🥬" },
+  vegano: { label: "Vegano", emoji: "🌱" },
+  sin_gluten: { label: "Sin gluten", emoji: "🌾" },
+  nuevo: { label: "Nuevo", emoji: "✨" },
+  favorito: { label: "Favorito", emoji: "⭐" },
+};
+
+/** $85 · $85.50 — sin decimales cuando el precio es entero. */
+function fmtPrecio(n: number): string {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(n);
+}
+
+function MenuBlock({ block, site, t }: { block: MiniSitePublicBlock; site: MiniSitePublic; t: TemplateStyle }) {
+  const menu = block.menu;
+  if (!menu || menu.secciones.length === 0) return null;
+  const varias = menu.secciones.length > 1;
+  const fondo = hexSeguro(site.colors.background, "#FFFFFF");
+  const anclaDe = (secId: string) => `menu-${block.id}-${secId}`;
+  const suave = "rgba(127,127,127,.08)";
+  let indice = 0;
+
+  return (
+    <section className="w-full" aria-label={block.title}>
+      {block.title && (
+        <h2
+          className={`px-1 mb-2 ${t.headingFont === "serif" ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[20px]"}`}
+          style={{ color: site.colors.text }}
+        >
+          {block.title}
+        </h2>
+      )}
+
+      {varias && (
+        <nav aria-label="Secciones del menú" className="sticky top-0 z-10 -mx-5 px-5 py-2 backdrop-blur-sm" style={{ background: `${fondo}E6` }}>
+          <ul className="ms-chips flex gap-2 overflow-x-auto snap-x">
+            {menu.secciones.map((sec, i) => (
+              <li key={sec.id} className="shrink-0 snap-start">
+                <a
+                  href={`#${anclaDe(sec.id)}`}
+                  className="inline-flex items-center h-9 px-4 text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                  style={estiloBoton({ ...t, radius: "999px", button: "outline", shadow: false }, site.colors)}
+                >
+                  {sec.nombre || `Sección ${i + 1}`}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
+      <div className={`flex flex-col gap-5 ${varias ? "mt-2" : ""}`}>
+        {menu.secciones.map((sec, i) => (
+          <div key={sec.id} id={anclaDe(sec.id)} style={{ scrollMarginTop: varias ? 64 : 0 }}>
+            {(sec.nombre || varias) && (
+              <h3 className="px-1 mb-2 text-[13px] uppercase tracking-widest opacity-70" style={{ color: site.colors.text }}>
+                {sec.nombre || `Sección ${i + 1}`}
+              </h3>
+            )}
+            <ul className="flex flex-col overflow-hidden" style={{ borderRadius: t.radius, background: suave, color: site.colors.text }}>
+              {sec.items.map((item) => {
+                const orden = indice++;
+                return (
+                  <li
+                    key={item.id}
+                    className={`ms-rise px-4 py-3 border-b last:border-b-0 flex gap-3 ${item.disponible ? "" : "opacity-50"}`}
+                    style={{ animationDelay: `${Math.min(orden, 8) * 0.04}s`, borderColor: "rgba(127,127,127,.15)" }}
+                  >
+                    {item.imagen && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.imagen}
+                        alt={item.nombre}
+                        loading="lazy"
+                        decoding="async"
+                        width={56}
+                        height={56}
+                        className={`shrink-0 w-14 h-14 rounded-xl object-cover bg-white/40 ${item.disponible ? "" : "grayscale"}`}
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="min-w-0 text-[15px] font-semibold leading-snug">{item.nombre}</span>
+                        {item.precio !== null && (
+                          <span className="shrink-0 whitespace-nowrap tabular-nums text-[15px] font-semibold">
+                            {item.disponible ? fmtPrecio(item.precio) : <s>{fmtPrecio(item.precio)}</s>}
+                          </span>
+                        )}
+                      </div>
+                      {item.descripcion && <p className="mt-0.5 text-[13px] leading-snug opacity-75">{item.descripcion}</p>}
+                      {(item.tags.length > 0 || !item.disponible) && (
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {!item.disponible && (
+                            <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
+                          )}
+                          {item.tags.map((tag) => (
+                            <span key={tag} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ background: "rgba(127,127,127,.12)" }}>
+                              <span aria-hidden="true">{MENU_TAG_LABEL[tag].emoji}</span>
+                              {MENU_TAG_LABEL[tag].label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function MiniSiteBlockRenderer({
   block,
   site,
@@ -225,6 +361,8 @@ export function MiniSiteBlockRenderer({
 }) {
   const t = templateDe(site.template);
   const onClick = clickDeBloque(site, block.id, mode);
+
+  if (block.type === "menu") return <MenuBlock block={block} site={site} t={t} />;
 
   if (block.type === "text") {
     return (

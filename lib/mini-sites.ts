@@ -28,9 +28,28 @@ export type BlockType =
   | "location"
   | "pdf"
   | "text"
-  | "socials";
+  | "socials"
+  | "menu";
 
 export type SocialType = "instagram" | "facebook" | "tiktok";
+
+// ── Bloque `menu` (restaurantes) — espejo de lib/mini-sites/menu.ts del admin ──
+// Llega YA saneado: platillos con nombre, precio número o null (sin precio, no
+// $0), etiquetas del whitelist, secciones con al menos un platillo. Los
+// platillos `disponible: false` SÍ viajan: se pintan atenuados como "Agotado".
+export type MenuTag = "picante" | "vegetariano" | "vegano" | "sin_gluten" | "nuevo" | "favorito";
+export type MiniSiteMenuItem = {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  precio: number | null;
+  tags: MenuTag[];
+  disponible: boolean;
+  /** Foto del platillo (https). "" o ausente = sin foto. */
+  imagen?: string;
+};
+export type MiniSiteMenuSeccion = { id: string; nombre: string; items: MiniSiteMenuItem[] };
+export type MiniSiteMenu = { secciones: MiniSiteMenuSeccion[] };
 
 /** Cómo se pinta un bloque con link: botón con texto o solo el ícono. */
 export type DisplayMode = "full" | "icon";
@@ -45,6 +64,8 @@ export type MiniSitePublicBlock = {
   displayMode?: DisplayMode;
   content?: string;
   links?: { type: SocialType; href: string }[];
+  /** Solo `menu`. Los payloads anteriores al bloque no lo traen. */
+  menu?: MiniSiteMenu;
 };
 
 export type MiniSitePublic = {
