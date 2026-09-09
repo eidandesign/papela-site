@@ -355,6 +355,307 @@ function FotoPlatilloDialog({ item, site, onClose }: { item: MiniSiteMenuItem; s
   );
 }
 
+// ── Pedido (lista de lo que el cliente quiere) ───────────────────────────────
+// El cliente va sumando platillos desde el menú (botón + / contador por
+// renglón) y al final COPIA la lista o la manda por WhatsApp al restaurante.
+// No es un checkout: no se cobra ni se reserva nada aquí — el mensaje llega
+// al WhatsApp del negocio (el del bloque WhatsApp del sitio) y ahí lo
+// confirman como siempre, solo que sin que el cliente lo escriba a mano. Se
+// guarda en localStorage por sitio para sobrevivir recargas.
+
+type Pedido = Record<string, number>;
+
+function claveDePedido(siteId: string, blockId: string) {
+  return `papela-ms-pedido:${siteId}:${blockId}`;
+}
+
+function leerPedido(clave: string): { items: Pedido; nota: string } {
+  try {
+    const raw = window.localStorage.getItem(clave);
+    if (!raw) return { items: {}, nota: "" };
+    const d = JSON.parse(raw) as { items?: unknown; nota?: unknown };
+    const items: Pedido = {};
+    if (d.items && typeof d.items === "object") {
+      for (const [k, v] of Object.entries(d.items as Record<string, unknown>)) {
+        if (typeof v === "number" && v > 0 && v < 100) items[k] = Math.floor(v);
+      }
+    }
+    return { items, nota: typeof d.nota === "string" ? d.nota.slice(0, 300) : "" };
+  } catch {
+    return { items: {}, nota: "" };
+  }
+}
+
+/** Número del bloque WhatsApp del sitio (su href ya viene resuelto: wa.me/<dígitos>…). */
+function whatsappDelSitio(site: MiniSitePublic): string | null {
+  for (const b of site.blocks) {
+    if (b.type !== "whatsapp" || !b.href) continue;
+    const m = /wa\.me\/(\d{8,15})/.exec(b.href);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+type LineaPedido = { item: MiniSiteMenuItem; cantidad: number; seccion: string };
+
+function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
+  const out: LineaPedido[] = [];
+  for (const sec of menu.secciones) {
+    for (const item of sec.items) {
+      const n = pedido[item.id] ?? 0;
+      if (n > 0) out.push({ item, cantidad: n, seccion: sec.nombre });
+    }
+  }
+  return out;
+}
+
+/** Texto del pedido, listo para WhatsApp o el portapapeles. */
+function mensajePedido(site: MiniSitePublic, lineas: LineaPedido[], nota: string): string {
+  const renglones = lineas.map(({ item, cantidad }) =>
+    item.precio !== null ? `• ${cantidad} × ${item.nombre} — ${fmtPrecio(item.precio * cantidad)}` : `• ${cantidad} × ${item.nombre}`,
+  );
+  const todasConPrecio = lineas.every((l) => l.item.precio !== null);
+  const total = lineas.reduce((s, l) => s + (l.item.precio ?? 0) * l.cantidad, 0);
+  const partes = [`Hola, ${site.businessName} 👋 Quiero pedir:`, ...renglones];
+  if (todasConPrecio && lineas.length > 0) partes.push(`Total: ${fmtPrecio(total)}`);
+  if (nota.trim()) partes.push(`Nota: ${nota.trim()}`);
+  return partes.join("\n");
+}
+
+/** Botón + (sin cantidad) o contador − n + (con cantidad). */
+function AgregarControl({
+  cantidad,
+  nombre,
+  primario,
+  onCambiar,
+}: {
+  cantidad: number;
+  nombre: string;
+  primario: string;
+  onCambiar: (n: number) => void;
+}) {
+  const tinta = textoSobre(primario);
+  const btn = "w-9 h-9 flex items-center justify-center rounded-full transition-transform active:scale-90 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10";
+  if (cantidad === 0) {
+    return (
+      <button
+        type="button"
+        onClick={() => onCambiar(1)}
+        aria-label={`Agregar ${nombre} al pedido`}
+        className={`${btn} shadow-md`}
+        style={{ background: primario, color: tinta }}
+      >
+        <Svg size={20}>
+          <path d="M12 5v14M5 12h14" />
+        </Svg>
+      </button>
+    );
+  }
+  return (
+    <div className="ms-pop inline-flex items-center gap-1 rounded-full p-0.5 shadow-md" style={{ background: primario, color: tinta }} role="group" aria-label={`${nombre} en el pedido`}>
+      <button type="button" onClick={() => onCambiar(cantidad - 1)} aria-label={`Quitar uno de ${nombre}`} className={`${btn} w-8 h-8`}>
+        <Svg size={18}>{cantidad === 1 ? <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" /> : <path d="M5 12h14" />}</Svg>
+      </button>
+      <span className="min-w-[1.25rem] text-center text-[15px] font-bold tabular-nums" aria-live="polite">
+        {cantidad}
+      </span>
+      <button type="button" onClick={() => onCambiar(Math.min(99, cantidad + 1))} aria-label={`Agregar otro ${nombre}`} className={`${btn} w-8 h-8`}>
+        <Svg size={18}>
+          <path d="M12 5v14M5 12h14" />
+        </Svg>
+      </button>
+    </div>
+  );
+}
+
+/** Hoja inferior con el pedido: cantidades, nota, copiar o mandar por WhatsApp. */
+function PedidoSheet({
+  site,
+  lineas,
+  nota,
+  whatsapp,
+  mode,
+  onCambiar,
+  onNota,
+  onVaciar,
+  onEnviado,
+  onClose,
+}: {
+  site: MiniSitePublic;
+  lineas: LineaPedido[];
+  nota: string;
+  whatsapp: string | null;
+  mode: MiniSiteMode;
+  onCambiar: (itemId: string, n: number) => void;
+  onNota: (v: string) => void;
+  onVaciar: () => void;
+  onEnviado: (via: "whatsapp" | "copiar") => void;
+  onClose: () => void;
+}) {
+  const primario = hexSeguro(site.colors.primary, "#12535C");
+  const fondo = hexSeguro(site.colors.background, "#FFFFFF");
+  const [aviso, setAviso] = useState<string | null>(null);
+  const cerrarRef = useRef<HTMLButtonElement>(null);
+  const todasConPrecio = lineas.every((l) => l.item.precio !== null);
+  const total = lineas.reduce((s, l) => s + (l.item.precio ?? 0) * l.cantidad, 0);
+  const piezas = lineas.reduce((s, l) => s + l.cantidad, 0);
+  const texto = mensajePedido(site, lineas, nota);
+
+  useEffect(() => {
+    const previo = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    cerrarRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      document.body.style.overflow = overflow;
+      previo?.focus?.();
+    };
+  }, [onClose]);
+
+  // Sin platillos ya no hay nada que mostrar: la hoja se cierra sola.
+  useEffect(() => {
+    if (lineas.length === 0) onClose();
+  }, [lineas.length, onClose]);
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setAviso("Pedido copiado. Pégalo en el chat del restaurante.");
+    } catch {
+      setAviso("No se pudo copiar automáticamente. Selecciona el texto y cópialo.");
+    }
+    onEnviado("copiar");
+    window.setTimeout(() => setAviso(null), 3500);
+  }
+
+  const hrefWhatsapp = whatsapp ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(texto)}` : null;
+
+  return (
+    <div className="ms-fade fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tu pedido"
+        className="ms-sheet-up w-full max-w-[520px] max-h-[86dvh] flex flex-col rounded-t-[28px] overflow-hidden"
+        style={{ background: fondo, color: site.colors.text, boxShadow: "0 -12px 40px rgba(0,0,0,.35)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <div>
+            <p className="text-[11px] uppercase tracking-[.2em] opacity-60">Tu pedido</p>
+            <h2 className="text-[20px] font-bold leading-tight">
+              {piezas} {piezas === 1 ? "platillo" : "platillos"}
+            </h2>
+          </div>
+          <button
+            ref={cerrarRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="w-10 h-10 rounded-full flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+            style={{ background: "rgba(127,127,127,.14)" }}
+          >
+            <Svg size={20}>
+              <path d="M18 6 6 18M6 6l12 12" />
+            </Svg>
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-5 pb-3 flex-1">
+          <ul className="flex flex-col" style={{ borderTop: "1px solid rgba(127,127,127,.15)" }}>
+            {lineas.map(({ item, cantidad }) => (
+              <li key={item.id} className="flex items-center gap-3 py-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold leading-snug truncate">{item.nombre}</p>
+                  {item.precio !== null && (
+                    <p className="text-[13px] tabular-nums opacity-70">
+                      {fmtPrecio(item.precio)} c/u{cantidad > 1 ? ` · ${fmtPrecio(item.precio * cantidad)}` : ""}
+                    </p>
+                  )}
+                </div>
+                <AgregarControl cantidad={cantidad} nombre={item.nombre} primario={primario} onCambiar={(n) => onCambiar(item.id, n)} />
+              </li>
+            ))}
+          </ul>
+
+          <label className="block mt-4">
+            <span className="block text-[11px] uppercase tracking-[.18em] opacity-60 mb-1.5">Nota para el restaurante (opcional)</span>
+            <textarea
+              value={nota}
+              onChange={(e) => onNota(e.target.value.slice(0, 300))}
+              rows={2}
+              placeholder="Ej. sin cebolla, para llevar, nombre de quien recoge…"
+              className="w-full rounded-2xl px-4 py-3 text-[15px] leading-snug resize-none focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+              style={{ background: "rgba(127,127,127,.10)", color: site.colors.text, border: "1px solid rgba(127,127,127,.18)" }}
+            />
+          </label>
+
+          <div className="flex items-baseline justify-between mt-4">
+            <span className="text-[13px] uppercase tracking-[.18em] opacity-60">{todasConPrecio ? "Total" : "Total (sin lo que no tiene precio)"}</span>
+            <span className="text-[22px] font-bold tabular-nums" style={{ color: primario }}>
+              {fmtPrecio(total)}
+            </span>
+          </div>
+          <p className="mt-1 text-[12px] leading-snug opacity-60">
+            {whatsapp
+              ? "Al enviar se abre WhatsApp con tu pedido ya escrito; ahí lo confirmas con el restaurante."
+              : "Copia tu pedido y mándalo al restaurante por el medio que prefieras."}
+          </p>
+        </div>
+
+        <div className="px-5 pt-3 flex flex-col gap-2" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(127,127,127,.15)" }}>
+          {aviso && (
+            <p role="status" className="text-[13px] font-medium text-center rounded-xl px-3 py-2" style={{ background: "rgba(127,127,127,.12)" }}>
+              {aviso}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={copiar}
+              className="shrink-0 h-12 px-5 rounded-full text-[14px] font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+              style={{ border: `2px solid ${primario}`, color: primario }}
+            >
+              <Svg size={18}>
+                <rect x="9" y="9" width="11" height="11" rx="2" />
+                <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+              </Svg>
+              Copiar
+            </button>
+            {hrefWhatsapp && (
+              <a
+                href={hrefWhatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  if (mode === "preview") e.preventDefault();
+                  onEnviado("whatsapp");
+                }}
+                className="flex-1 min-w-0 h-12 px-4 rounded-full text-[14px] font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                style={{ background: "#25D366", color: "#fff", boxShadow: "0 8px 22px rgba(37,211,102,.35)" }}
+              >
+                {iconoDe("whatsapp", 20)}
+                Enviar por WA
+              </a>
+            )}
+          </div>
+          <button type="button" onClick={onVaciar} className="self-center text-[12px] font-semibold opacity-60 hover:opacity-100 transition-opacity py-1">
+            Vaciar pedido
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Vista del menú a página completa (reemplaza al home mientras está abierta). */
 function MenuVista({
   block,
@@ -373,6 +674,43 @@ function MenuVista({
   const fondo = hexSeguro(site.colors.background, "#FFFFFF");
   const primario = hexSeguro(site.colors.primary, "#12535C");
   const [foto, setFoto] = useState<MiniSiteMenuItem | null>(null);
+  // Pedido del cliente (por sitio+bloque, en localStorage). Solo se lee en el
+  // cliente: esta vista nunca se renderiza en el servidor (vive en el hash).
+  const clavePedido = claveDePedido(site.id, block.id);
+  const [pedido, setPedido] = useState<Pedido>(() => (typeof window === "undefined" ? {} : leerPedido(clavePedido).items));
+  const [nota, setNota] = useState<string>(() => (typeof window === "undefined" ? "" : leerPedido(clavePedido).nota));
+  const [hojaAbierta, setHojaAbierta] = useState(false);
+  const whatsapp = whatsappDelSitio(site);
+  const lineas = lineasDe(menu, pedido);
+  const piezas = lineas.reduce((n, l) => n + l.cantidad, 0);
+  const totalPedido = lineas.reduce((n, l) => n + (l.item.precio ?? 0) * l.cantidad, 0);
+
+  useEffect(() => {
+    try {
+      if (Object.keys(pedido).length === 0 && !nota) window.localStorage.removeItem(clavePedido);
+      else window.localStorage.setItem(clavePedido, JSON.stringify({ items: pedido, nota }));
+    } catch {
+      /* sin storage (modo privado): el pedido vive solo en memoria */
+    }
+  }, [pedido, nota, clavePedido]);
+
+  function setCantidad(itemId: string, n: number) {
+    setPedido((prev) => {
+      const next = { ...prev };
+      if (n <= 0) delete next[itemId];
+      else next[itemId] = Math.min(99, n);
+      return next;
+    });
+  }
+  const cerrarHoja = useCallback(() => setHojaAbierta(false), []);
+  function vaciar() {
+    setPedido({});
+    setNota("");
+    setHojaAbierta(false);
+  }
+  function enviado() {
+    if (mode === "public") trackMiniSite({ miniSiteId: site.id, blockId: block.id, type: "block_click" });
+  }
   // El encabezado pegajoso se COMPACTA al hacer scroll (logo y título más
   // chicos, sin el nombre del negocio) y la sección visible marca su chip.
   const [compacto, setCompacto] = useState(false);
@@ -443,11 +781,11 @@ function MenuVista({
   useEffect(() => {
     if (mode !== "public") return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && !foto) onVolver();
+      if (e.key === "Escape" && !foto && !hojaAbierta) onVolver();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, foto, onVolver]);
+  }, [mode, foto, hojaAbierta, onVolver]);
 
   function irA(secId: string) {
     // Centrar el chip AL INSTANTE (no suave) antes de mover la página: dos
@@ -580,7 +918,19 @@ function MenuVista({
         <div aria-hidden="true" className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${primario}66, transparent)` }} />
       </header>
 
-      <main className="mx-auto w-full max-w-[520px] px-5 pt-6 pb-28 flex flex-1 flex-col">
+      <main className="mx-auto w-full max-w-[520px] px-5 pt-5 pb-32 flex flex-1 flex-col">
+        {piezas === 0 && (
+          <p className="ms-sec-in mb-5 flex items-center gap-2.5 rounded-2xl px-4 py-3 text-[13px] leading-snug" style={{ background: "rgba(127,127,127,.10)" }}>
+            <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: primario, color: textoSobre(primario) }} aria-hidden="true">
+              <Svg size={16}>
+                <path d="M12 5v14M5 12h14" />
+              </Svg>
+            </span>
+            <span className="opacity-80">
+              Toca <strong>+</strong> en lo que quieras y al final {whatsapp ? "manda tu pedido por WhatsApp" : "copia tu pedido"} sin escribirlo.
+            </span>
+          </p>
+        )}
         <div className="flex flex-col gap-8">
           {menu.secciones.map((sec, i) => (
             <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} className="ms-sec-in" style={{ animationDelay: `${Math.min(i, 3) * 0.08}s` }}>
@@ -623,26 +973,29 @@ function MenuVista({
                           </div>
                         )}
                       </div>
-                      {item.imagen && (
-                        <button
-                          type="button"
-                          onClick={() => setFoto(item)}
-                          aria-label={`Ver foto de ${item.nombre}`}
-                          className="ms-thumb shrink-0 w-[92px] h-[92px] rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
-                          style={{ boxShadow: "0 0 0 1px rgba(127,127,127,.18), 0 8px 20px rgba(0,0,0,.14)" }}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.imagen}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            width={92}
-                            height={92}
-                            className={`w-full h-full object-cover transition-transform duration-500 ${item.disponible ? "" : "grayscale"}`}
-                          />
-                        </button>
-                      )}
+                      <div className="shrink-0 flex flex-col items-end gap-2.5">
+                        {item.imagen && (
+                          <button
+                            type="button"
+                            onClick={() => setFoto(item)}
+                            aria-label={`Ver foto de ${item.nombre}`}
+                            className="ms-thumb shrink-0 w-[92px] h-[92px] rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                            style={{ boxShadow: "0 0 0 1px rgba(127,127,127,.18), 0 8px 20px rgba(0,0,0,.14)" }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={item.imagen}
+                              alt=""
+                              loading="lazy"
+                              decoding="async"
+                              width={92}
+                              height={92}
+                              className={`w-full h-full object-cover transition-transform duration-500 ${item.disponible ? "" : "grayscale"}`}
+                            />
+                          </button>
+                        )}
+                        {item.disponible && <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => setCantidad(item.id, n)} />}
+                      </div>
                     </li>
                   );
                 })}
@@ -654,24 +1007,56 @@ function MenuVista({
         {site.showPapelaBranding && <PapelaBranding color={site.colors.text} />}
       </main>
 
-      {/* Regreso flotante abajo, centrado: siempre al alcance del pulgar. */}
-      <button
-        type="button"
-        onClick={onVolver}
-        aria-label="Volver a la página principal"
-        className="ms-back-in fixed left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2 h-12 pl-4 pr-5 rounded-full text-[14px] font-semibold transition-transform hover:scale-[1.04] active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
-        style={{
-          ...estiloBoton({ ...t, radius: "999px", shadow: true, button: t.button === "outline" ? "solid" : t.button }, site.colors),
-          bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
-          boxShadow: "0 10px 30px rgba(0,0,0,.28)",
-        }}
-      >
-        <Svg size={20}>
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </Svg>
-        Volver
-      </button>
+      {/* Barra flotante abajo: Volver (solo ícono, en la esquina izquierda) y,
+          cuando hay algo en el pedido, su resumen ocupando el resto. */}
+      <div className="fixed inset-x-0 z-40 flex justify-center px-4 pointer-events-none" style={{ bottom: "calc(14px + env(safe-area-inset-bottom, 0px))" }}>
+        <div className="ms-back-in pointer-events-auto flex items-center gap-3 w-full max-w-[520px]">
+          <button
+            type="button"
+            onClick={onVolver}
+            aria-label="Volver a la página principal"
+            title="Volver"
+            className="shrink-0 w-12 h-12 rounded-full inline-flex items-center justify-center transition-transform hover:scale-[1.06] active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+            style={{
+              ...estiloBoton({ ...t, radius: "999px", shadow: true, button: t.button === "outline" ? "solid" : t.button }, site.colors),
+              boxShadow: "0 10px 30px rgba(0,0,0,.28)",
+            }}
+          >
+            <Svg size={22}>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </Svg>
+          </button>
+          {piezas > 0 && (
+            <button
+              type="button"
+              onClick={() => setHojaAbierta(true)}
+              className="ms-pop flex-1 h-12 pl-4 pr-5 rounded-full text-[14px] font-semibold inline-flex items-center gap-3 transition-transform hover:scale-[1.02] active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+              style={{ background: primario, color: textoSobre(primario), boxShadow: "0 10px 30px rgba(0,0,0,.28)" }}
+            >
+              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold tabular-nums" style={{ background: "rgba(255,255,255,.22)" }}>
+                {piezas}
+              </span>
+              <span className="flex-1 text-left">Ver pedido</span>
+              <span className="tabular-nums opacity-90">{fmtPrecio(totalPedido)}</span>
+            </button>
+          )}
+        </div>
+      </div>
 
+      {hojaAbierta && (
+        <PedidoSheet
+          site={site}
+          lineas={lineas}
+          nota={nota}
+          whatsapp={whatsapp}
+          mode={mode}
+          onCambiar={setCantidad}
+          onNota={setNota}
+          onVaciar={vaciar}
+          onEnviado={enviado}
+          onClose={cerrarHoja}
+        />
+      )}
       {foto && <FotoPlatilloDialog item={foto} site={site} onClose={() => setFoto(null)} />}
     </div>
   );

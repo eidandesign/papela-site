@@ -318,9 +318,15 @@ body {
   to   { opacity: 1; transform: none; }
 }
 @keyframes ms-back-in {
-  from { opacity: 0; transform: translate(-50%, 24px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
 }
+/* Hoja del pedido: sube desde abajo. */
+@keyframes ms-sheet-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.ms-sheet-up { animation: ms-sheet-up 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
 .ms-view { animation: ms-view 0.35s ease-out; }
 .ms-hero-logo { animation: ms-logo-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .ms-hero-line { animation: ms-slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
@@ -332,7 +338,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .ms-rise { animation: none !important; opacity: 1 !important; }
   .ms-fade, .ms-pop, .ms-view, .ms-hero-logo, .ms-hero-line, .ms-chip-in, .ms-sec-in { animation: none !important; opacity: 1 !important; }
-  .ms-back-in { animation: none !important; opacity: 1 !important; transform: translateX(-50%) !important; }
+  .ms-back-in, .ms-sheet-up { animation: none !important; opacity: 1 !important; }
   .ms-thumb img { transition: none !important; }
 }
 
