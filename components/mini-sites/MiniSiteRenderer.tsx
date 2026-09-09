@@ -6,11 +6,11 @@
 //
 // Recibe el payload público ya resuelto (hrefs listos: wa.me, mailto:, tel:…),
 // así que aquí NO hay lógica por tipo de bloque más allá del ícono y del
-// layout (texto / fila de redes / botón). mode="preview" desactiva la
-// navegación y las analíticas.
+// layout (texto / fila de redes / botón / menú). mode="preview" desactiva la
+// navegación y las analíticas (el menú sí se abre, para revisarlo en el editor).
 
-import { useEffect, type CSSProperties, type MouseEvent, type ReactNode } from "react";
-import type { BlockType, MenuTag, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuItem, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
 import { trackMiniSite } from "@/lib/mini-sites";
 
 export type MiniSiteMode = "public" | "preview";
@@ -222,12 +222,18 @@ export function MiniSiteIconBlock({ block, site, mode }: { block: MiniSitePublic
 }
 
 // ── Menú (restaurantes) ──────────────────────────────────────────────────────
-// Secciones con platillos, todo dentro de la columna del sitio. Si hay más de
-// una sección, una fila de chips se queda pegada arriba y salta por anclas
-// (sin JS: la página sigue casi sin script). Los platillos entran en cascada
-// (.ms-rise, tope a los 8 primeros) y respetan prefers-reduced-motion. Un
-// platillo agotado se atenúa y se marca, nunca se esconde: el cliente debe
-// saber que existe. La foto es opcional: miniatura a la izquierda del renglón.
+// En el home el menú es UN BOTÓN (como los demás bloques): tocarlo abre la
+// vista del menú a página completa, con un botón flotante para regresar. En
+// público la vista vive en el hash (#menu-<id>): el botón físico de "atrás"
+// del teléfono también regresa al home y el link con hash abre el menú
+// directo. En preview es solo estado (el iframe no navega).
+//
+// Dentro de la vista: si hay más de una sección, una fila de chips se queda
+// pegada arriba y salta por anclas. Los platillos entran en cascada (.ms-rise,
+// tope a los 8 primeros) y respetan prefers-reduced-motion. Un platillo
+// agotado se atenúa y se marca, nunca se esconde. Cada renglón sigue el orden de
+// las apps de delivery (título · precio debajo · descripción, foto a la derecha)
+// y la foto se abre en grande al tocarla.
 
 const MENU_TAG_LABEL: Record<MenuTag, { label: string; emoji: string }> = {
   picante: { label: "Picante", emoji: "🌶️" },
@@ -248,105 +254,277 @@ function fmtPrecio(n: number): string {
   }).format(n);
 }
 
-function MenuBlock({ block, site, t }: { block: MiniSitePublicBlock; site: MiniSitePublic; t: TemplateStyle }) {
-  const menu = block.menu;
-  if (!menu || menu.secciones.length === 0) return null;
-  const varias = menu.secciones.length > 1;
-  const fondo = hexSeguro(site.colors.background, "#FFFFFF");
-  const anclaDe = (secId: string) => `menu-${block.id}-${secId}`;
-  const suave = "rgba(127,127,127,.08)";
-  let indice = 0;
+function menuPublicable(block: MiniSitePublicBlock): block is MiniSitePublicBlock & { menu: MiniSiteMenu } {
+  return block.type === "menu" && !!block.menu && block.menu.secciones.length > 0;
+}
+
+/** "12 platillos · 3 secciones" — línea secundaria del botón del menú. */
+function resumenMenu(menu: MiniSiteMenu): string {
+  const platillos = menu.secciones.reduce((n, s) => n + s.items.length, 0);
+  const partes = [`${platillos} ${platillos === 1 ? "platillo" : "platillos"}`];
+  if (menu.secciones.length > 1) partes.push(`${menu.secciones.length} secciones`);
+  return partes.join(" · ");
+}
+
+/** El radio de los templates es para botones; en una lista alta un radio de 999px hace un arco. */
+function radioDeLista(t: TemplateStyle): string {
+  return t.radius === "999px" ? "20px" : t.radius;
+}
+
+/** Botón del menú en el home: mismo lenguaje que los demás bloques, pero abre la vista en vez de navegar. */
+function MenuBoton({ block, site, t, onAbrir }: { block: MiniSitePublicBlock & { menu: MiniSiteMenu }; site: MiniSitePublic; t: TemplateStyle; onAbrir: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onAbrir}
+      className="group flex items-center gap-3 w-full min-h-[52px] px-4 py-3 font-semibold text-[15px] text-left transition-transform hover:-translate-y-[1px] active:translate-y-0 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+      style={estiloBoton(t, site.colors)}
+    >
+      <span className="shrink-0 w-6 flex items-center justify-center">{iconoDe("menu")}</span>
+      <span className="flex-1 text-center min-w-0">
+        <span className="block truncate">{block.title || "Menú"}</span>
+        <span className="block text-[12px] font-normal opacity-80 truncate">{block.subtitle || resumenMenu(block.menu)}</span>
+      </span>
+      <span className="shrink-0 w-6 flex items-center justify-center opacity-70" aria-hidden="true">
+        <Svg size={18}>
+          <path d="m9 6 6 6-6 6" />
+        </Svg>
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Foto de un platillo en grande. Diálogo accesible: foco al botón de cerrar al
+ * abrir y de regreso a la miniatura al cerrar, Escape, clic fuera; bloquea el
+ * scroll del fondo mientras está abierto.
+ */
+function FotoPlatilloDialog({ item, site, onClose }: { item: MiniSiteMenuItem; site: MiniSitePublic; onClose: () => void }) {
+  const cerrarRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const previo = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    cerrarRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      document.body.style.overflow = overflow;
+      previo?.focus?.();
+    };
+  }, [onClose]);
 
   return (
-    <section className="w-full" aria-label={block.title}>
-      {block.title && (
-        <h2
-          className={`px-1 mb-2 ${t.headingFont === "serif" ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[20px]"}`}
-          style={{ color: site.colors.text }}
+    <div className="ms-fade fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={item.nombre}
+        className="ms-pop relative w-full max-w-[440px] flex flex-col overflow-hidden"
+        style={{ background: hexSeguro(site.colors.background, "#FFFFFF"), color: site.colors.text, borderRadius: "20px" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          ref={cerrarRef}
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full flex items-center justify-center bg-black/55 text-white hover:bg-black/70 transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-white/40"
         >
-          {block.title}
-        </h2>
-      )}
-
-      {varias && (
-        <nav aria-label="Secciones del menú" className="sticky top-0 z-10 -mx-5 px-5 py-2 backdrop-blur-sm" style={{ background: `${fondo}E6` }}>
-          <ul className="ms-chips flex gap-2 overflow-x-auto snap-x">
-            {menu.secciones.map((sec, i) => (
-              <li key={sec.id} className="shrink-0 snap-start">
-                <a
-                  href={`#${anclaDe(sec.id)}`}
-                  className="inline-flex items-center h-9 px-4 text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
-                  style={estiloBoton({ ...t, radius: "999px", button: "outline", shadow: false }, site.colors)}
-                >
-                  {sec.nombre || `Sección ${i + 1}`}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-
-      <div className={`flex flex-col gap-5 ${varias ? "mt-2" : ""}`}>
-        {menu.secciones.map((sec, i) => (
-          <div key={sec.id} id={anclaDe(sec.id)} style={{ scrollMarginTop: varias ? 64 : 0 }}>
-            {(sec.nombre || varias) && (
-              <h3 className="px-1 mb-2 text-[13px] uppercase tracking-widest opacity-70" style={{ color: site.colors.text }}>
-                {sec.nombre || `Sección ${i + 1}`}
-              </h3>
+          <Svg size={20}>
+            <path d="M18 6 6 18M6 6l12 12" />
+          </Svg>
+        </button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={item.imagen} alt={item.nombre} className={`w-full aspect-square object-cover bg-black/5 ${item.disponible ? "" : "grayscale"}`} />
+        <div className="px-5 py-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-[18px] font-semibold leading-snug">{item.nombre}</p>
+            {item.precio !== null && (
+              <span className="shrink-0 whitespace-nowrap tabular-nums text-[18px] font-semibold">
+                {item.disponible ? fmtPrecio(item.precio) : <s>{fmtPrecio(item.precio)}</s>}
+              </span>
             )}
-            <ul className="flex flex-col overflow-hidden" style={{ borderRadius: t.radius, background: suave, color: site.colors.text }}>
-              {sec.items.map((item) => {
-                const orden = indice++;
-                return (
-                  <li
-                    key={item.id}
-                    className={`ms-rise px-4 py-3 border-b last:border-b-0 flex gap-3 ${item.disponible ? "" : "opacity-50"}`}
-                    style={{ animationDelay: `${Math.min(orden, 8) * 0.04}s`, borderColor: "rgba(127,127,127,.15)" }}
+          </div>
+          {item.descripcion && <p className="mt-1 text-[14px] leading-snug opacity-80">{item.descripcion}</p>}
+          {!item.disponible && (
+            <span className="mt-2 inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Vista del menú a página completa (reemplaza al home mientras está abierta). */
+function MenuVista({
+  block,
+  site,
+  mode,
+  onVolver,
+}: {
+  block: MiniSitePublicBlock & { menu: MiniSiteMenu };
+  site: MiniSitePublic;
+  mode: MiniSiteMode;
+  onVolver: () => void;
+}) {
+  const t = templateDe(site.template);
+  const menu = block.menu;
+  const varias = menu.secciones.length > 1;
+  const fondo = hexSeguro(site.colors.background, "#FFFFFF");
+  const [foto, setFoto] = useState<MiniSiteMenuItem | null>(null);
+  const anclaDe = (secId: string) => `menu-${block.id}-${secId}`;
+  const suave = "rgba(127,127,127,.08)";
+  const radio = radioDeLista(t);
+  // Alto de la barra pegajosa = alto del botón flotante + sus márgenes, para
+  // que al hacer scroll el botón quede "dentro" de la barra y no encima de un chip.
+  const BARRA = 60;
+  let indice = 0;
+
+  // Escape regresa al home (si no hay una foto abierta, que se cierra primero).
+  useEffect(() => {
+    if (mode !== "public") return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !foto) onVolver();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mode, foto, onVolver]);
+
+  return (
+    <div className="min-h-screen w-full font-sans flex flex-col" style={{ background: fondo, color: site.colors.text, minHeight: "100dvh" }}>
+      <style>{`html,body{background:${fondo};}`}</style>
+
+      {/* Botón flotante de regreso: siempre a la vista, alineado con la columna del sitio. */}
+      <button
+        type="button"
+        onClick={onVolver}
+        aria-label="Volver a la página principal"
+        title="Volver"
+        className="fixed z-40 w-11 h-11 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+        style={{ ...estiloBoton({ ...t, radius: "999px", shadow: true }, site.colors), top: 8, left: "max(12px, calc(50% - 260px + 20px))" }}
+      >
+        <Svg size={22}>
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </Svg>
+      </button>
+
+      <main className="mx-auto w-full max-w-[520px] px-5 pb-8 flex flex-1 flex-col">
+        <header className="flex items-center gap-3" style={{ minHeight: BARRA, paddingLeft: 56 }}>
+          {site.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={site.logoUrl} alt="" width={36} height={36} className={`w-9 h-9 object-cover shrink-0 ${t.logoShape === "round" ? "rounded-full" : "rounded-lg"}`} style={{ background: "#fff" }} />
+          )}
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-widest opacity-60 truncate">{site.businessName}</p>
+            <h1 className={`leading-tight truncate ${t.headingFont === "serif" ? "font-serif font-normal text-[24px]" : "font-sans font-bold text-[20px]"}`}>{block.title || "Menú"}</h1>
+          </div>
+        </header>
+
+        {varias && (
+          <nav
+            aria-label="Secciones del menú"
+            className="sticky top-0 z-30 -mx-5 pr-5 backdrop-blur-sm flex items-center"
+            style={{ background: `${fondo}E6`, height: BARRA, paddingLeft: 76 }}
+          >
+            <ul className="ms-chips flex gap-2 overflow-x-auto snap-x">
+              {menu.secciones.map((sec, i) => (
+                <li key={sec.id} className="shrink-0 snap-start">
+                  <a
+                    href={`#${anclaDe(sec.id)}`}
+                    onClick={(e) => {
+                      // Salto suave sin tocar el hash: el hash es el que dice "menú abierto".
+                      e.preventDefault();
+                      document.getElementById(anclaDe(sec.id))?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="inline-flex items-center h-9 px-4 text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                    style={estiloBoton({ ...t, radius: "999px", button: "outline", shadow: false }, site.colors)}
                   >
-                    {item.imagen && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.imagen}
-                        alt={item.nombre}
-                        loading="lazy"
-                        decoding="async"
-                        width={56}
-                        height={56}
-                        className={`shrink-0 w-14 h-14 rounded-xl object-cover bg-white/40 ${item.disponible ? "" : "grayscale"}`}
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="min-w-0 text-[15px] font-semibold leading-snug">{item.nombre}</span>
+                    {sec.nombre || `Sección ${i + 1}`}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
+        <div className={`flex flex-col gap-5 ${varias ? "mt-2" : "mt-4"}`}>
+          {menu.secciones.map((sec, i) => (
+            <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} style={{ scrollMarginTop: varias ? BARRA + 8 : 0 }}>
+              {(sec.nombre || varias) && (
+                <h2 className="px-1 mb-2 text-[13px] uppercase tracking-widest opacity-70">{sec.nombre || `Sección ${i + 1}`}</h2>
+              )}
+              <ul className="flex flex-col overflow-hidden" style={{ borderRadius: radio, background: suave }}>
+                {sec.items.map((item) => {
+                  const orden = indice++;
+                  return (
+                    <li
+                      key={item.id}
+                      className={`ms-rise px-4 py-4 border-b last:border-b-0 flex items-start gap-4 ${item.disponible ? "" : "opacity-50"}`}
+                      style={{ animationDelay: `${Math.min(orden, 8) * 0.04}s`, borderColor: "rgba(127,127,127,.15)" }}
+                    >
+                      {/* Orden tipo app de delivery: título, precio debajo, descripción; la foto a la derecha. */}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[16px] font-semibold leading-snug">{item.nombre}</p>
                         {item.precio !== null && (
-                          <span className="shrink-0 whitespace-nowrap tabular-nums text-[15px] font-semibold">
+                          <p className="mt-0.5 tabular-nums text-[15px]">
                             {item.disponible ? fmtPrecio(item.precio) : <s>{fmtPrecio(item.precio)}</s>}
-                          </span>
+                          </p>
+                        )}
+                        {item.descripcion && <p className="mt-1 text-[14px] leading-snug opacity-70">{item.descripcion}</p>}
+                        {(item.tags.length > 0 || !item.disponible) && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {!item.disponible && (
+                              <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
+                            )}
+                            {item.tags.map((tag) => (
+                              <span key={tag} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ background: "rgba(127,127,127,.12)" }}>
+                                <span aria-hidden="true">{MENU_TAG_LABEL[tag].emoji}</span>
+                                {MENU_TAG_LABEL[tag].label}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      {item.descripcion && <p className="mt-0.5 text-[13px] leading-snug opacity-75">{item.descripcion}</p>}
-                      {(item.tags.length > 0 || !item.disponible) && (
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                          {!item.disponible && (
-                            <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
-                          )}
-                          {item.tags.map((tag) => (
-                            <span key={tag} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ background: "rgba(127,127,127,.12)" }}>
-                              <span aria-hidden="true">{MENU_TAG_LABEL[tag].emoji}</span>
-                              {MENU_TAG_LABEL[tag].label}
-                            </span>
-                          ))}
-                        </div>
+                      {item.imagen && (
+                        <button
+                          type="button"
+                          onClick={() => setFoto(item)}
+                          aria-label={`Ver foto de ${item.nombre}`}
+                          className="shrink-0 w-24 h-24 rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.imagen}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            width={96}
+                            height={96}
+                            className={`w-full h-full object-cover ${item.disponible ? "" : "grayscale"}`}
+                          />
+                        </button>
                       )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </section>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+
+        {site.showPapelaBranding && <PapelaBranding color={site.colors.text} />}
+      </main>
+
+      {foto && <FotoPlatilloDialog item={foto} site={site} onClose={() => setFoto(null)} />}
+    </div>
   );
 }
 
@@ -354,15 +532,21 @@ export function MiniSiteBlockRenderer({
   block,
   site,
   mode,
+  onAbrirMenu,
 }: {
   block: MiniSitePublicBlock;
   site: MiniSitePublic;
   mode: MiniSiteMode;
+  /** Lo pasa la página completa; sin él, un bloque de menú no se pinta. */
+  onAbrirMenu?: (blockId: string) => void;
 }) {
   const t = templateDe(site.template);
   const onClick = clickDeBloque(site, block.id, mode);
 
-  if (block.type === "menu") return <MenuBlock block={block} site={site} t={t} />;
+  if (block.type === "menu") {
+    if (!menuPublicable(block) || !onAbrirMenu) return null;
+    return <MenuBoton block={block} site={site} t={t} onAbrir={() => onAbrirMenu(block.id)} />;
+  }
 
   if (block.type === "text") {
     return (
@@ -449,15 +633,96 @@ export function agruparEnFilas(blocks: MiniSitePublicBlock[]): Fila[] {
   return filas;
 }
 
+// ── Menú abierto ↔ hash ─────────────────────────────────────────────────────
+// En público, "qué menú está abierto" NO es estado de React: es el hash de la
+// URL, leído con useSyncExternalStore. Así el botón físico de atrás (popstate),
+// un link con #menu-<id> y el botón del home convergen en la misma fuente, y
+// la hidratación no choca (en el servidor el hash es "" → home).
+
+const HASH_MENU_RE = /^#menu-([A-Za-z0-9_-]+)$/;
+const oyentesHash = new Set<() => void>();
+
+function suscribirHash(cb: () => void) {
+  oyentesHash.add(cb);
+  window.addEventListener("popstate", cb);
+  window.addEventListener("hashchange", cb);
+  return () => {
+    oyentesHash.delete(cb);
+    window.removeEventListener("popstate", cb);
+    window.removeEventListener("hashchange", cb);
+  };
+}
+/** pushState/replaceState no disparan popstate: avisar a mano. */
+function avisarHash() {
+  oyentesHash.forEach((cb) => cb());
+}
+const leerHash = () => window.location.hash;
+const leerHashServidor = () => "";
+
+/** Id del bloque de menú que pide el hash, si existe en el sitio. */
+function menuDelHash(site: MiniSitePublic, hash: string): string | null {
+  const m = HASH_MENU_RE.exec(hash);
+  if (!m) return null;
+  const b = site.blocks.find((x) => x.id === m[1]);
+  return b && menuPublicable(b) ? b.id : null;
+}
+
 // ── Página completa ──────────────────────────────────────────────────────────
 
 export default function MiniSiteRenderer({ site, mode = "public" }: { site: MiniSitePublic; mode?: MiniSiteMode }) {
   const t = templateDe(site.template);
+  // Público: el menú abierto vive en el hash. Preview (iframe del editor): solo estado.
+  const hash = useSyncExternalStore(suscribirHash, leerHash, leerHashServidor);
+  const [menuPreview, setMenuPreview] = useState<string | null>(null);
+  const menuAbierto = mode === "public" ? menuDelHash(site, hash) : menuPreview;
+  // Dónde iba el scroll del home al abrir el menú, para regresar al mismo lugar.
+  const scrollHome = useRef(0);
 
   useEffect(() => {
     if (mode !== "public") return;
     trackMiniSite({ miniSiteId: site.id, type: "page_view" });
   }, [mode, site.id]);
+
+  // Al abrir: arriba del todo. Al cerrar: de vuelta a donde iba el home.
+  useEffect(() => {
+    if (menuAbierto) window.scrollTo({ top: 0 });
+    else if (scrollHome.current) window.scrollTo({ top: scrollHome.current });
+  }, [menuAbierto]);
+
+  const abrirMenu = useCallback(
+    (id: string) => {
+      scrollHome.current = window.scrollY;
+      if (mode === "public") {
+        window.history.pushState({ papelaMenu: id }, "", `#menu-${id}`);
+        avisarHash();
+        trackMiniSite({ miniSiteId: site.id, blockId: id, type: "block_click" });
+        return;
+      }
+      setMenuPreview(id);
+    },
+    [mode, site.id],
+  );
+
+  const volverAlHome = useCallback(() => {
+    if (mode === "public") {
+      // Si el menú se abrió desde este home, "atrás" lo cierra y deja el
+      // historial limpio; si se llegó directo por el link con hash, no hay a
+      // dónde regresar: se limpia el hash en su lugar.
+      if (window.history.state?.papelaMenu) {
+        window.history.back();
+        return;
+      }
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      avisarHash();
+      return;
+    }
+    setMenuPreview(null);
+  }, [mode]);
+
+  const bloqueMenu = menuAbierto ? site.blocks.find((b) => b.id === menuAbierto) : undefined;
+  if (bloqueMenu && menuPublicable(bloqueMenu)) {
+    return <MenuVista key={bloqueMenu.id} block={bloqueMenu} site={site} mode={mode} onVolver={volverAlHome} />;
+  }
 
   // 100dvh (no 100vh): en móvil la barra del navegador se esconde y se muestra,
   // y con 100vh el fondo se quedaba corto justo en ese movimiento. La clase
@@ -530,7 +795,7 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
         <div className="w-full flex flex-col gap-3">
           {agruparEnFilas(site.blocks).map((fila) =>
             fila.kind === "bloque" ? (
-              <MiniSiteBlockRenderer key={fila.block.id} block={fila.block} site={site} mode={mode} />
+              <MiniSiteBlockRenderer key={fila.block.id} block={fila.block} site={site} mode={mode} onAbrirMenu={abrirMenu} />
             ) : (
               <div key={`iconos-${fila.blocks[0].id}`} className="flex flex-wrap items-center justify-center gap-3 py-1">
                 {fila.blocks.map((b) => (

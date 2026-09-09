@@ -152,13 +152,20 @@ body {
 /* Transición de página (app/template.tsx). CSS puro = corre en GPU, sin JS,
    y nunca deja el contenido invisible si el JS falla. template.tsx se remonta
    en cada navegación, así que la animación dispara sola al cambiar de ruta. */
+/* fill-mode `backwards` (no `both`) y sin `will-change: transform`: con
+   `both` el wrapper se queda para siempre con el transform del último
+   keyframe (aunque diga `none`, el navegador conserva el valor interpolado
+   translateY(0)), y un ancestro con transform se vuelve el contenedor de
+   TODO lo `position: fixed` de la página — el botón flotante y el lightbox
+   del menú de los Mini Sites scrolleaban con la página en vez de quedarse en
+   el viewport. Con `backwards` el wrapper vuelve a su estado natural al
+   terminar (opacity 1, sin transform), que es exactamente lo que queremos. */
 @keyframes page-enter {
   from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 .page-enter {
-  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: opacity, transform;
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 /* Back to School — avioneta de gis que cruza volando el fondo verde del hero.
@@ -280,8 +287,21 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 .ms-chips::-webkit-scrollbar { display: none; }
+/* Foto de un platillo en grande: el fondo se funde y la tarjeta entra con un
+   zoom corto (mismo lenguaje que el lightbox de la cotización). */
+@keyframes ms-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ms-pop {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.ms-fade { animation: ms-fade 0.18s ease-out; }
+.ms-pop { animation: ms-pop 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
 @media (prefers-reduced-motion: reduce) {
   .ms-rise { animation: none !important; opacity: 1 !important; }
+  .ms-fade, .ms-pop { animation: none !important; }
 }
 
 /* ── Cotización — lightbox de la foto de un renglón ──
