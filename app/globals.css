@@ -299,9 +299,41 @@ body {
 }
 .ms-fade { animation: ms-fade 0.18s ease-out; }
 .ms-pop { animation: ms-pop 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Vista del menú: la página entra con un fundido corto, el logo del encabezado
+   "brota" con un rebote suave, las líneas del título y los chips se deslizan
+   escalonados, cada sección sube, y el botón de regreso llega desde abajo. */
+@keyframes ms-view { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ms-logo-pop {
+  0%   { opacity: 0; transform: scale(0.6); }
+  70%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ms-slide-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes ms-chip-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes ms-back-in {
+  from { opacity: 0; transform: translate(-50%, 24px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.ms-view { animation: ms-view 0.35s ease-out; }
+.ms-hero-logo { animation: ms-logo-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ms-hero-line { animation: ms-slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+.ms-chip-in { animation: ms-chip-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ms-sec-in { animation: ms-slide-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.ms-back-in { animation: ms-back-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both; }
+.ms-thumb img { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.ms-thumb:hover img { transform: scale(1.06); }
 @media (prefers-reduced-motion: reduce) {
   .ms-rise { animation: none !important; opacity: 1 !important; }
-  .ms-fade, .ms-pop { animation: none !important; }
+  .ms-fade, .ms-pop, .ms-view, .ms-hero-logo, .ms-hero-line, .ms-chip-in, .ms-sec-in { animation: none !important; opacity: 1 !important; }
+  .ms-back-in { animation: none !important; opacity: 1 !important; transform: translateX(-50%) !important; }
+  .ms-thumb img { transition: none !important; }
 }
 
 /* ── Cotización — lightbox de la foto de un renglón ──

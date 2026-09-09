@@ -223,7 +223,7 @@ export function MiniSiteIconBlock({ block, site, mode }: { block: MiniSitePublic
 
 // ── Menú (restaurantes) ──────────────────────────────────────────────────────
 // En el home el menú es UN BOTÓN (como los demás bloques): tocarlo abre la
-// vista del menú a página completa, con un botón flotante para regresar. En
+// vista del menú a página completa, con un botón flotante abajo para regresar. En
 // público la vista vive en el hash (#menu-<id>): el botón físico de "atrás"
 // del teléfono también regresa al home y el link con hash abre el menú
 // directo. En preview es solo estado (el iframe no navega).
@@ -258,14 +258,6 @@ function menuPublicable(block: MiniSitePublicBlock): block is MiniSitePublicBloc
   return block.type === "menu" && !!block.menu && block.menu.secciones.length > 0;
 }
 
-/** "12 platillos · 3 secciones" — línea secundaria del botón del menú. */
-function resumenMenu(menu: MiniSiteMenu): string {
-  const platillos = menu.secciones.reduce((n, s) => n + s.items.length, 0);
-  const partes = [`${platillos} ${platillos === 1 ? "platillo" : "platillos"}`];
-  if (menu.secciones.length > 1) partes.push(`${menu.secciones.length} secciones`);
-  return partes.join(" · ");
-}
-
 /** El radio de los templates es para botones; en una lista alta un radio de 999px hace un arco. */
 function radioDeLista(t: TemplateStyle): string {
   return t.radius === "999px" ? "20px" : t.radius;
@@ -283,7 +275,7 @@ function MenuBoton({ block, site, t, onAbrir }: { block: MiniSitePublicBlock & {
       <span className="shrink-0 w-6 flex items-center justify-center">{iconoDe("menu")}</span>
       <span className="flex-1 text-center min-w-0">
         <span className="block truncate">{block.title || "Menú"}</span>
-        <span className="block text-[12px] font-normal opacity-80 truncate">{block.subtitle || resumenMenu(block.menu)}</span>
+        {block.subtitle && <span className="block text-[12px] font-normal opacity-80 truncate">{block.subtitle}</span>}
       </span>
       <span className="shrink-0 w-6 flex items-center justify-center opacity-70" aria-hidden="true">
         <Svg size={18}>
@@ -379,14 +371,73 @@ function MenuVista({
   const menu = block.menu;
   const varias = menu.secciones.length > 1;
   const fondo = hexSeguro(site.colors.background, "#FFFFFF");
+  const primario = hexSeguro(site.colors.primary, "#12535C");
   const [foto, setFoto] = useState<MiniSiteMenuItem | null>(null);
+  // El encabezado pegajoso se COMPACTA al hacer scroll (logo y título más
+  // chicos, sin el nombre del negocio) y la sección visible marca su chip.
+  const [compacto, setCompacto] = useState(false);
+  const [activa, setActiva] = useState<string | null>(menu.secciones[0]?.id ?? null);
+  const headerRef = useRef<HTMLElement>(null);
+  const chipsRef = useRef<HTMLUListElement>(null);
+  // Mientras dura el salto suave a una sección (tocar un chip) el scroll-spy
+  // se calla: si en medio del salto cambiara el chip activo, la fila de chips
+  // haría su propio scroll suave y Chrome CANCELA el de la página.
+  const saltandoRef = useRef<number | null>(null);
+  // `medir` vive dentro del efecto del scroll; este ref lo expone para que el
+  // animador del salto lo llame al terminar (y el chip activo se re-evalúe).
+  const medirRef = useRef<() => void>(() => {});
   const anclaDe = (secId: string) => `menu-${block.id}-${secId}`;
-  const suave = "rgba(127,127,127,.08)";
   const radio = radioDeLista(t);
-  // Alto de la barra pegajosa = alto del botón flotante + sus márgenes, para
-  // que al hacer scroll el botón quede "dentro" de la barra y no encima de un chip.
-  const BARRA = 60;
+  const serif = t.headingFont === "serif";
   let indice = 0;
+
+  // Scroll: compactar el encabezado y detectar la sección activa (la última
+  // cuyo inicio ya pasó bajo el encabezado). Throttle con rAF.
+  useEffect(() => {
+    let raf = 0;
+    const medir = () => {
+      raf = 0;
+      setCompacto(window.scrollY > 32);
+      if (!varias || saltandoRef.current) return;
+      const limite = (headerRef.current?.getBoundingClientRect().bottom ?? 0) + 24;
+      let actual = menu.secciones[0]?.id ?? null;
+      for (const sec of menu.secciones) {
+        const el = document.getElementById(anclaDe(sec.id));
+        if (el && el.getBoundingClientRect().top <= limite) actual = sec.id;
+      }
+      // Al fondo de la página la última sección quizá nunca alcanza el
+      // encabezado (es corta): si ya no hay más scroll, ella es la activa.
+      const alFondo = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+      if (alFondo) actual = menu.secciones[menu.secciones.length - 1].id;
+      setActiva(actual);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(medir);
+    };
+    medirRef.current = medir;
+    window.addEventListener("scroll", onScroll, { passive: true });
+    medir();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+      if (saltandoRef.current) window.clearTimeout(saltandoRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [varias, menu.secciones, block.id]);
+
+  // El chip activo se mantiene a la vista dentro de su fila (sin mover la página).
+  useEffect(() => {
+    if (saltandoRef.current) return; // irA ya lo centró, al instante
+    centrarChip(activa, "smooth");
+  }, [activa]);
+
+  function centrarChip(secId: string | null, behavior: ScrollBehavior) {
+    const ul = chipsRef.current;
+    const chip = secId ? ul?.querySelector<HTMLElement>(`[data-chip="${secId}"]`) : null;
+    if (!ul || !chip) return;
+    const destino = chip.offsetLeft - (ul.clientWidth - chip.offsetWidth) / 2;
+    ul.scrollTo({ left: Math.max(0, destino), behavior });
+  }
 
   // Escape regresa al home (si no hay una foto abierta, que se cierra primero).
   useEffect(() => {
@@ -398,89 +449,168 @@ function MenuVista({
     return () => window.removeEventListener("keydown", onKey);
   }, [mode, foto, onVolver]);
 
+  function irA(secId: string) {
+    // Centrar el chip AL INSTANTE (no suave) antes de mover la página: dos
+    // scrolls suaves a la vez se cancelan entre sí en Chrome.
+    centrarChip(secId, "auto");
+    setActiva(secId);
+    const el = document.getElementById(anclaDe(secId));
+    if (!el) return;
+    // Red de seguridad por si la animación no llega a su último frame
+    // (pestaña en segundo plano): el detector no puede quedarse mudo.
+    if (saltandoRef.current) window.clearTimeout(saltandoRef.current);
+    saltandoRef.current = window.setTimeout(terminarSalto, 1500);
+    // Al llegar, el encabezado ya estará COMPACTO (cualquier scroll > 32px lo
+    // compacta). Como el encabezado va en el flujo, al encogerse TODO el
+    // contenido sube esa diferencia: si ahora está expandido hay que
+    // descontarla, y el margen final es la altura compacta — con la actual el
+    // título quedaría escondido debajo.
+    const alto = headerRef.current?.getBoundingClientRect().height ?? altoCompacto;
+    const encoge = compacto ? 0 : Math.max(0, alto - altoCompacto);
+    const top = el.getBoundingClientRect().top + window.scrollY - encoge - altoCompacto - 8;
+    animarScroll(Math.max(0, top));
+  }
+
+  // Desplazamiento propio (rAF + ease-out) en vez de `behavior: "smooth"`: el
+  // suave del navegador se cancela con cualquier otro scroll programático
+  // que ocurra en medio (y al compactarse el encabezado los hay), y el salto
+  // se quedaba a la mitad. Respeta prefers-reduced-motion (salta directo).
+  function terminarSalto() {
+    if (saltandoRef.current) window.clearTimeout(saltandoRef.current);
+    saltandoRef.current = null;
+    medirRef.current();
+  }
+
+  function animarScroll(destino: number) {
+    const inicio = window.scrollY;
+    const delta = destino - inicio;
+    const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducido || Math.abs(delta) < 2) {
+      window.scrollTo({ top: destino, behavior: "instant" });
+      terminarSalto();
+      return;
+    }
+    const duracion = Math.min(700, 320 + Math.abs(delta) * 0.12);
+    const t0 = performance.now();
+    const paso = (ahora: number) => {
+      const p = Math.min(1, (ahora - t0) / duracion);
+      const e = 1 - Math.pow(1 - p, 3);
+      window.scrollTo({ top: inicio + delta * e, behavior: "instant" });
+      if (p < 1) requestAnimationFrame(paso);
+      else terminarSalto();
+    };
+    requestAnimationFrame(paso);
+  }
+
+  // Medidas del encabezado compacto (padding 10 + logo 40 + título 6+17 +
+  // padding 8 + línea 1, más la fila de chips 4+40+12). Si cambias el layout
+  // de arriba, cambia esto.
+  const altoCompacto = 10 + 40 + 6 + 17 + 8 + 1 + (varias ? 56 : 0);
+  const logoTam = compacto ? 40 : 68;
+  const chipActivoStyle: CSSProperties = { background: primario, color: textoSobre(primario), border: `1.5px solid ${primario}` };
+  const chipStyle: CSSProperties = { background: "rgba(127,127,127,.10)", color: site.colors.text, border: "1.5px solid rgba(127,127,127,.18)" };
+
   return (
-    <div className="min-h-screen w-full font-sans flex flex-col" style={{ background: fondo, color: site.colors.text, minHeight: "100dvh" }}>
+    <div className="ms-view min-h-screen w-full font-sans flex flex-col" style={{ background: fondo, color: site.colors.text, minHeight: "100dvh" }}>
       <style>{`html,body{background:${fondo};}`}</style>
 
-      {/* Botón flotante de regreso: siempre a la vista, alineado con la columna del sitio. */}
-      <button
-        type="button"
-        onClick={onVolver}
-        aria-label="Volver a la página principal"
-        title="Volver"
-        className="fixed z-40 w-11 h-11 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
-        style={{ ...estiloBoton({ ...t, radius: "999px", shadow: true }, site.colors), top: 8, left: "max(12px, calc(50% - 260px + 20px))" }}
-      >
-        <Svg size={22}>
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </Svg>
-      </button>
-
-      <main className="mx-auto w-full max-w-[520px] px-5 pb-8 flex flex-1 flex-col">
-        <header className="flex items-center gap-3" style={{ minHeight: BARRA, paddingLeft: 56 }}>
-          {site.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={site.logoUrl} alt="" width={36} height={36} className={`w-9 h-9 object-cover shrink-0 ${t.logoShape === "round" ? "rounded-full" : "rounded-lg"}`} style={{ background: "#fff" }} />
-          )}
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-widest opacity-60 truncate">{site.businessName}</p>
-            <h1 className={`leading-tight truncate ${t.headingFont === "serif" ? "font-serif font-normal text-[24px]" : "font-sans font-bold text-[20px]"}`}>{block.title || "Menú"}</h1>
+      {/* Encabezado pegajoso: logo centrado + "Menú" debajo; se compacta al bajar. */}
+      <header ref={headerRef} className="sticky top-0 z-30 backdrop-blur-md" style={{ background: `${fondo}E8` }}>
+        <div className="mx-auto w-full max-w-[520px] px-5 flex flex-col items-center text-center" style={{ paddingTop: compacto ? 10 : 22, paddingBottom: compacto ? 8 : 12, transition: "padding .3s cubic-bezier(.22,1,.36,1)" }}>
+          <div
+            className="ms-hero-logo shrink-0 rounded-full overflow-hidden flex items-center justify-center font-serif"
+            style={{
+              width: logoTam,
+              height: logoTam,
+              transition: "width .3s cubic-bezier(.22,1,.36,1), height .3s cubic-bezier(.22,1,.36,1)",
+              boxShadow: `0 0 0 2px ${fondo}, 0 0 0 4px ${primario}`,
+              background: site.logoUrl ? "#fff" : primario,
+              color: textoSobre(primario),
+              fontSize: logoTam * 0.42,
+            }}
+            aria-hidden="true"
+          >
+            {site.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={site.logoUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              site.businessName.trim().charAt(0).toUpperCase() || "·"
+            )}
           </div>
-        </header>
+          <p
+            className="ms-hero-line text-[11px] uppercase tracking-[.22em] opacity-60 overflow-hidden"
+            style={{ maxHeight: compacto ? 0 : 20, marginTop: compacto ? 0 : 10, opacity: compacto ? 0 : 0.6, transition: "max-height .3s, margin .3s, opacity .2s" }}
+          >
+            {site.businessName}
+          </p>
+          <h1
+            className={`ms-hero-line leading-none ${serif ? "font-serif font-normal" : "font-sans font-bold"}`}
+            style={{ fontSize: compacto ? 17 : serif ? 32 : 26, marginTop: compacto ? 6 : 4, transition: "font-size .3s cubic-bezier(.22,1,.36,1), margin .3s" }}
+          >
+            {block.title || "Menú"}
+          </h1>
+        </div>
 
         {varias && (
-          <nav
-            aria-label="Secciones del menú"
-            className="sticky top-0 z-30 -mx-5 pr-5 backdrop-blur-sm flex items-center"
-            style={{ background: `${fondo}E6`, height: BARRA, paddingLeft: 76 }}
-          >
-            <ul className="ms-chips flex gap-2 overflow-x-auto snap-x">
-              {menu.secciones.map((sec, i) => (
-                <li key={sec.id} className="shrink-0 snap-start">
-                  <a
-                    href={`#${anclaDe(sec.id)}`}
-                    onClick={(e) => {
-                      // Salto suave sin tocar el hash: el hash es el que dice "menú abierto".
-                      e.preventDefault();
-                      document.getElementById(anclaDe(sec.id))?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }}
-                    className="inline-flex items-center h-9 px-4 text-[13px] font-semibold whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
-                    style={estiloBoton({ ...t, radius: "999px", button: "outline", shadow: false }, site.colors)}
-                  >
-                    {sec.nombre || `Sección ${i + 1}`}
-                  </a>
-                </li>
-              ))}
+          <nav aria-label="Secciones del menú" className="mx-auto w-full max-w-[520px]">
+            <ul ref={chipsRef} className="ms-chips flex gap-2 overflow-x-auto px-5 pb-3 pt-1">
+              {menu.secciones.map((sec, i) => {
+                const esActiva = sec.id === activa;
+                return (
+                  <li key={sec.id} data-chip={sec.id} className="ms-chip-in shrink-0" style={{ animationDelay: `${0.12 + i * 0.05}s` }}>
+                    <a
+                      href={`#${anclaDe(sec.id)}`}
+                      aria-current={esActiva ? "true" : undefined}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        irA(sec.id);
+                      }}
+                      className="inline-flex items-center h-10 px-[18px] rounded-full text-[14px] font-semibold whitespace-nowrap transition-[transform,background-color,color] duration-200 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                      style={esActiva ? chipActivoStyle : chipStyle}
+                    >
+                      {sec.nombre || `Sección ${i + 1}`}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
         )}
+        {/* Línea de cierre en degradado: separa el encabezado del contenido sin un borde duro. */}
+        <div aria-hidden="true" className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${primario}66, transparent)` }} />
+      </header>
 
-        <div className={`flex flex-col gap-5 ${varias ? "mt-2" : "mt-4"}`}>
+      <main className="mx-auto w-full max-w-[520px] px-5 pt-6 pb-28 flex flex-1 flex-col">
+        <div className="flex flex-col gap-8">
           {menu.secciones.map((sec, i) => (
-            <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} style={{ scrollMarginTop: varias ? BARRA + 8 : 0 }}>
+            <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} className="ms-sec-in" style={{ animationDelay: `${Math.min(i, 3) * 0.08}s` }}>
               {(sec.nombre || varias) && (
-                <h2 className="px-1 mb-2 text-[13px] uppercase tracking-widest opacity-70">{sec.nombre || `Sección ${i + 1}`}</h2>
+                <div className="flex items-center gap-3 mb-3 px-1">
+                  <h2 className={`leading-tight ${serif ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[21px]"}`}>{sec.nombre || `Sección ${i + 1}`}</h2>
+                  <span aria-hidden="true" className="flex-1 h-px" style={{ background: "rgba(127,127,127,.22)" }} />
+                  <span className="text-[11px] font-semibold tabular-nums opacity-50">{sec.items.length}</span>
+                </div>
               )}
-              <ul className="flex flex-col overflow-hidden" style={{ borderRadius: radio, background: suave }}>
+              <ul className="flex flex-col overflow-hidden" style={{ borderRadius: radio, background: "rgba(127,127,127,.07)", boxShadow: "inset 0 0 0 1px rgba(127,127,127,.12)" }}>
                 {sec.items.map((item) => {
                   const orden = indice++;
                   return (
                     <li
                       key={item.id}
                       className={`ms-rise px-4 py-4 border-b last:border-b-0 flex items-start gap-4 ${item.disponible ? "" : "opacity-50"}`}
-                      style={{ animationDelay: `${Math.min(orden, 8) * 0.04}s`, borderColor: "rgba(127,127,127,.15)" }}
+                      style={{ animationDelay: `${0.1 + Math.min(orden, 8) * 0.05}s`, borderColor: "rgba(127,127,127,.14)" }}
                     >
                       {/* Orden tipo app de delivery: título, precio debajo, descripción; la foto a la derecha. */}
                       <div className="min-w-0 flex-1">
                         <p className="text-[16px] font-semibold leading-snug">{item.nombre}</p>
                         {item.precio !== null && (
-                          <p className="mt-0.5 tabular-nums text-[15px]">
+                          <p className="mt-1 tabular-nums text-[15px] font-semibold" style={{ color: item.disponible ? primario : undefined }}>
                             {item.disponible ? fmtPrecio(item.precio) : <s>{fmtPrecio(item.precio)}</s>}
                           </p>
                         )}
-                        {item.descripcion && <p className="mt-1 text-[14px] leading-snug opacity-70">{item.descripcion}</p>}
+                        {item.descripcion && <p className="mt-1.5 text-[14px] leading-snug opacity-70">{item.descripcion}</p>}
                         {(item.tags.length > 0 || !item.disponible) && (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
+                          <div className="mt-2.5 flex flex-wrap gap-1.5">
                             {!item.disponible && (
                               <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
                             )}
@@ -498,7 +628,8 @@ function MenuVista({
                           type="button"
                           onClick={() => setFoto(item)}
                           aria-label={`Ver foto de ${item.nombre}`}
-                          className="shrink-0 w-24 h-24 rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                          className="ms-thumb shrink-0 w-[92px] h-[92px] rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                          style={{ boxShadow: "0 0 0 1px rgba(127,127,127,.18), 0 8px 20px rgba(0,0,0,.14)" }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -506,9 +637,9 @@ function MenuVista({
                             alt=""
                             loading="lazy"
                             decoding="async"
-                            width={96}
-                            height={96}
-                            className={`w-full h-full object-cover ${item.disponible ? "" : "grayscale"}`}
+                            width={92}
+                            height={92}
+                            className={`w-full h-full object-cover transition-transform duration-500 ${item.disponible ? "" : "grayscale"}`}
                           />
                         </button>
                       )}
@@ -522,6 +653,24 @@ function MenuVista({
 
         {site.showPapelaBranding && <PapelaBranding color={site.colors.text} />}
       </main>
+
+      {/* Regreso flotante abajo, centrado: siempre al alcance del pulgar. */}
+      <button
+        type="button"
+        onClick={onVolver}
+        aria-label="Volver a la página principal"
+        className="ms-back-in fixed left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-2 h-12 pl-4 pr-5 rounded-full text-[14px] font-semibold transition-transform hover:scale-[1.04] active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+        style={{
+          ...estiloBoton({ ...t, radius: "999px", shadow: true, button: t.button === "outline" ? "solid" : t.button }, site.colors),
+          bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          boxShadow: "0 10px 30px rgba(0,0,0,.28)",
+        }}
+      >
+        <Svg size={20}>
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </Svg>
+        Volver
+      </button>
 
       {foto && <FotoPlatilloDialog item={foto} site={site} onClose={() => setFoto(null)} />}
     </div>
@@ -684,9 +833,12 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
   }, [mode, site.id]);
 
   // Al abrir: arriba del todo. Al cerrar: de vuelta a donde iba el home.
+  // Instantáneo a propósito: el sitio tiene scroll suave global y un cambio de
+  // vista no debe "viajar" — además, un scroll suave se cancela con cualquier
+  // otro scroll programático que ocurra en medio.
   useEffect(() => {
-    if (menuAbierto) window.scrollTo({ top: 0 });
-    else if (scrollHome.current) window.scrollTo({ top: scrollHome.current });
+    if (menuAbierto) window.scrollTo({ top: 0, behavior: "instant" });
+    else if (scrollHome.current) window.scrollTo({ top: scrollHome.current, behavior: "instant" });
   }, [menuAbierto]);
 
   const abrirMenu = useCallback(
