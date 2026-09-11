@@ -10,7 +10,7 @@
 // navegación y las analíticas (el menú sí se abre, para revisarlo en el editor).
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react";
-import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuPaquete, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
+import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuPaqueteGrupo, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
 import { trackMiniSite } from "@/lib/mini-sites";
 
 export type MiniSiteMode = "public" | "preview";
@@ -258,13 +258,10 @@ function menuPublicable(block: MiniSitePublicBlock): block is MiniSitePublicBloc
   return block.type === "menu" && !!block.menu && (block.menu.secciones.length > 0 || paquetesDe(block.menu).length > 0);
 }
 
-/** Paquetes del menú (los payloads viejos no traen la clave). */
-function paquetesDe(menu: MiniSiteMenu): MiniSiteMenuPaquete[] {
-  return menu.paquetes ?? [];
+/** Grupos de paquetes del menú (los payloads viejos no traen la clave). Solo los que traen opciones. */
+function paquetesDe(menu: MiniSiteMenu): MiniSiteMenuPaqueteGrupo[] {
+  return (menu.paquetes ?? []).filter((g) => g.items.length > 0);
 }
-
-/** Ancla de la sección "Paquetes" en la vista (no choca con los ids del menú, que son cortos y sin `__`). */
-const ANCLA_PAQUETES = "__paquetes";
 
 /** Lo que el diálogo de foto necesita: lo comparten platillos y paquetes. */
 type FotoDialogItem = {
@@ -304,15 +301,6 @@ function MenuBoton({ block, site, t, onAbrir }: { block: MiniSitePublicBlock & {
         </Svg>
       </span>
     </button>
-  );
-}
-
-/** Pill de promoción del paquete ("Solo miércoles", "2×1"). */
-function EtiquetaPaquete({ texto, primario, className = "" }: { texto: string; primario: string; className?: string }) {
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${className}`} style={{ background: primario, color: textoSobre(primario) }}>
-      {texto}
-    </span>
   );
 }
 
@@ -451,9 +439,11 @@ type LineaPedido = { item: Pedible; cantidad: number; seccion: string; paquete: 
 
 function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
   const out: LineaPedido[] = [];
-  for (const pq of paquetesDe(menu)) {
-    const n = pedido[pq.id] ?? 0;
-    if (n > 0) out.push({ item: pq, cantidad: n, seccion: "Paquetes", paquete: true });
+  for (const g of paquetesDe(menu)) {
+    for (const pq of g.items) {
+      const n = pedido[pq.id] ?? 0;
+      if (n > 0) out.push({ item: pq, cantidad: n, seccion: g.nombre || "Paquetes", paquete: true });
+    }
   }
   for (const sec of menu.secciones) {
     for (const item of sec.items) {
@@ -730,10 +720,10 @@ function MenuVista({
   const t = templateDe(site.template);
   const menu = block.menu;
   const paquetes = paquetesDe(menu);
-  // Lo que navegan los chips y el scroll-spy: "Paquetes" (si hay) + las secciones.
+  // Lo que navegan los chips y el scroll-spy: cada paquete (grupo) + las secciones.
   const navSecciones = useMemo(
-    () => [...(paquetes.length ? [{ id: ANCLA_PAQUETES, nombre: "Paquetes" }] : []), ...menu.secciones.map((s) => ({ id: s.id, nombre: s.nombre }))],
-    [paquetes.length, menu.secciones],
+    () => [...paquetes.map((g) => ({ id: g.id, nombre: g.nombre || "Paquetes" })), ...menu.secciones.map((s) => ({ id: s.id, nombre: s.nombre }))],
+    [paquetes, menu.secciones],
   );
   const varias = navSecciones.length > 1;
   const fondo = hexSeguro(site.colors.background, "#FFFFFF");
@@ -997,18 +987,18 @@ function MenuVista({
           </p>
         )}
         <div className="flex flex-col gap-8">
-          {paquetes.length > 0 && (
-            <section id={anclaDe(ANCLA_PAQUETES)} aria-label="Paquetes" className="ms-sec-in">
+          {paquetes.map((g, gi) => (
+            <section key={g.id} id={anclaDe(g.id)} aria-label={g.nombre || "Paquetes"} className="ms-sec-in" style={{ animationDelay: `${Math.min(gi, 3) * 0.08}s` }}>
               <div className="flex items-center gap-3 mb-3 px-1">
-                <h2 className={`leading-tight ${serif ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[21px]"}`}>Paquetes</h2>
+                <h2 className={`leading-tight ${serif ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[21px]"}`}>{g.nombre || "Paquetes"}</h2>
                 <span aria-hidden="true" className="flex-1 h-px" style={{ background: "rgba(127,127,127,.22)" }} />
-                <span className="text-[11px] font-semibold tabular-nums opacity-50">{paquetes.length}</span>
+                <span className="text-[11px] font-semibold tabular-nums opacity-50">{g.items.length}</span>
               </div>
               <ul className="flex flex-col gap-4">
-                {paquetes.map((pq, i) => (
+                {g.items.map((pq, i) => (
                   <li key={pq.id} className={`ms-rise overflow-hidden ${pq.disponible ? "" : "opacity-60"}`} style={{ animationDelay: `${0.1 + Math.min(i, 6) * 0.06}s`, borderRadius: radio, background: "rgba(127,127,127,.07)", boxShadow: "inset 0 0 0 1px rgba(127,127,127,.12)" }}>
-                    {/* Foto ANCHA arriba (es una promo: la foto vende) con la etiqueta montada en la esquina. */}
-                    {pq.imagen ? (
+                    {/* Foto ANCHA arriba (es una promo: la foto vende). */}
+                    {pq.imagen && (
                       <button
                         type="button"
                         onClick={() => setFoto({ ...pq, ancha: true })}
@@ -1017,14 +1007,7 @@ function MenuVista({
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={pq.imagen} alt="" loading="lazy" decoding="async" className={`w-full aspect-[16/10] object-cover ${pq.disponible ? "" : "grayscale"}`} />
-                        {pq.etiqueta && <EtiquetaPaquete texto={pq.etiqueta} primario={primario} className="absolute top-3 left-3 shadow-md" />}
                       </button>
-                    ) : (
-                      pq.etiqueta && (
-                        <div className="px-4 pt-4">
-                          <EtiquetaPaquete texto={pq.etiqueta} primario={primario} />
-                        </div>
-                      )
                     )}
                     <div className="px-4 py-4">
                       <div className="flex items-start justify-between gap-3">
@@ -1050,7 +1033,7 @@ function MenuVista({
                 ))}
               </ul>
             </section>
-          )}
+          ))}
           {menu.secciones.map((sec, i) => (
             <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} className="ms-sec-in" style={{ animationDelay: `${Math.min(i, 3) * 0.08}s` }}>
               {(sec.nombre || varias) && (

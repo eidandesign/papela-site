@@ -49,22 +49,22 @@ export type MiniSiteMenuItem = {
   imagen?: string;
 };
 export type MiniSiteMenuSeccion = { id: string; nombre: string; items: MiniSiteMenuItem[] };
-/** Paquete / promoción: varias cosas a un precio, con foto ancha y lista de lo que incluye. */
+/** Subpaquete: varias cosas a un precio, con foto ancha y lista de lo que incluye. */
 export type MiniSiteMenuPaquete = {
   id: string;
   nombre: string;
-  /** Pill corta sobre la foto ("Solo miércoles", "2×1"). "" = sin etiqueta. */
-  etiqueta: string;
   descripcion: string;
   incluye: string[];
   precio: number | null;
   imagen: string;
   disponible: boolean;
 };
+/** Paquete = la promoción ("Miércoles de Kilotes") con sus opciones a distinto precio. */
+export type MiniSiteMenuPaqueteGrupo = { id: string; nombre: string; items: MiniSiteMenuPaquete[] };
 export type MiniSiteMenu = {
   secciones: MiniSiteMenuSeccion[];
   /** Los payloads anteriores a los paquetes no lo traen. */
-  paquetes?: MiniSiteMenuPaquete[];
+  paquetes?: MiniSiteMenuPaqueteGrupo[];
 };
 
 /** Cómo se pinta un bloque con link: botón con texto o solo el ícono. */
