@@ -49,7 +49,23 @@ export type MiniSiteMenuItem = {
   imagen?: string;
 };
 export type MiniSiteMenuSeccion = { id: string; nombre: string; items: MiniSiteMenuItem[] };
-export type MiniSiteMenu = { secciones: MiniSiteMenuSeccion[] };
+/** Paquete / promoción: varias cosas a un precio, con foto ancha y lista de lo que incluye. */
+export type MiniSiteMenuPaquete = {
+  id: string;
+  nombre: string;
+  /** Pill corta sobre la foto ("Solo miércoles", "2×1"). "" = sin etiqueta. */
+  etiqueta: string;
+  descripcion: string;
+  incluye: string[];
+  precio: number | null;
+  imagen: string;
+  disponible: boolean;
+};
+export type MiniSiteMenu = {
+  secciones: MiniSiteMenuSeccion[];
+  /** Los payloads anteriores a los paquetes no lo traen. */
+  paquetes?: MiniSiteMenuPaquete[];
+};
 
 /** Cómo se pinta un bloque con link: botón con texto o solo el ícono. */
 export type DisplayMode = "full" | "icon";

@@ -9,8 +9,8 @@
 // layout (texto / fila de redes / botón / menú). mode="preview" desactiva la
 // navegación y las analíticas (el menú sí se abre, para revisarlo en el editor).
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react";
-import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuItem, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuPaquete, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
 import { trackMiniSite } from "@/lib/mini-sites";
 
 export type MiniSiteMode = "public" | "preview";
@@ -255,8 +255,29 @@ function fmtPrecio(n: number): string {
 }
 
 function menuPublicable(block: MiniSitePublicBlock): block is MiniSitePublicBlock & { menu: MiniSiteMenu } {
-  return block.type === "menu" && !!block.menu && block.menu.secciones.length > 0;
+  return block.type === "menu" && !!block.menu && (block.menu.secciones.length > 0 || paquetesDe(block.menu).length > 0);
 }
+
+/** Paquetes del menú (los payloads viejos no traen la clave). */
+function paquetesDe(menu: MiniSiteMenu): MiniSiteMenuPaquete[] {
+  return menu.paquetes ?? [];
+}
+
+/** Ancla de la sección "Paquetes" en la vista (no choca con los ids del menú, que son cortos y sin `__`). */
+const ANCLA_PAQUETES = "__paquetes";
+
+/** Lo que el diálogo de foto necesita: lo comparten platillos y paquetes. */
+type FotoDialogItem = {
+  nombre: string;
+  descripcion: string;
+  precio: number | null;
+  imagen?: string;
+  disponible: boolean;
+  /** Solo paquetes: qué incluye. */
+  incluye?: string[];
+  /** Solo paquetes: la foto es ancha (los platillos van cuadrados). */
+  ancha?: boolean;
+};
 
 /** El radio de los templates es para botones; en una lista alta un radio de 999px hace un arco. */
 function radioDeLista(t: TemplateStyle): string {
@@ -286,12 +307,39 @@ function MenuBoton({ block, site, t, onAbrir }: { block: MiniSitePublicBlock & {
   );
 }
 
+/** Pill de promoción del paquete ("Solo miércoles", "2×1"). */
+function EtiquetaPaquete({ texto, primario, className = "" }: { texto: string; primario: string; className?: string }) {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${className}`} style={{ background: primario, color: textoSobre(primario) }}>
+      {texto}
+    </span>
+  );
+}
+
+/** Lista "Incluye" del paquete, con palomita por renglón. */
+function IncluyeLista({ incluye, className = "" }: { incluye: string[]; className?: string }) {
+  return (
+    <ul className={`flex flex-col gap-1 ${className}`} aria-label="Incluye">
+      {incluye.map((r, i) => (
+        <li key={i} className="flex items-start gap-2 text-[14px] leading-snug">
+          <span className="shrink-0 mt-[3px] opacity-70" aria-hidden="true">
+            <Svg size={14}>
+              <path d="m5 12 4 4L19 6" />
+            </Svg>
+          </span>
+          <span>{r}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /**
  * Foto de un platillo en grande. Diálogo accesible: foco al botón de cerrar al
  * abrir y de regreso a la miniatura al cerrar, Escape, clic fuera; bloquea el
  * scroll del fondo mientras está abierto.
  */
-function FotoPlatilloDialog({ item, site, onClose }: { item: MiniSiteMenuItem; site: MiniSitePublic; onClose: () => void }) {
+function FotoPlatilloDialog({ item, site, onClose }: { item: FotoDialogItem; site: MiniSitePublic; onClose: () => void }) {
   const cerrarRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -335,7 +383,7 @@ function FotoPlatilloDialog({ item, site, onClose }: { item: MiniSiteMenuItem; s
           </Svg>
         </button>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={item.imagen} alt={item.nombre} className={`w-full aspect-square object-cover bg-black/5 ${item.disponible ? "" : "grayscale"}`} />
+        <img src={item.imagen} alt={item.nombre} className={`w-full ${item.ancha ? "aspect-[4/3]" : "aspect-square"} object-cover bg-black/5 ${item.disponible ? "" : "grayscale"}`} />
         <div className="px-5 py-4">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-[18px] font-semibold leading-snug">{item.nombre}</p>
@@ -346,6 +394,7 @@ function FotoPlatilloDialog({ item, site, onClose }: { item: MiniSiteMenuItem; s
             )}
           </div>
           {item.descripcion && <p className="mt-1 text-[14px] leading-snug opacity-80">{item.descripcion}</p>}
+          {item.incluye && item.incluye.length > 0 && <IncluyeLista incluye={item.incluye} className="mt-3" />}
           {!item.disponible && (
             <span className="mt-2 inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
           )}
@@ -396,24 +445,31 @@ function whatsappDelSitio(site: MiniSitePublic): string | null {
   return null;
 }
 
-type LineaPedido = { item: MiniSiteMenuItem; cantidad: number; seccion: string };
+/** Lo mínimo que el pedido necesita de un platillo o paquete (comparten el espacio de ids). */
+type Pedible = { id: string; nombre: string; precio: number | null };
+type LineaPedido = { item: Pedible; cantidad: number; seccion: string; paquete: boolean };
 
 function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
   const out: LineaPedido[] = [];
+  for (const pq of paquetesDe(menu)) {
+    const n = pedido[pq.id] ?? 0;
+    if (n > 0) out.push({ item: pq, cantidad: n, seccion: "Paquetes", paquete: true });
+  }
   for (const sec of menu.secciones) {
     for (const item of sec.items) {
       const n = pedido[item.id] ?? 0;
-      if (n > 0) out.push({ item, cantidad: n, seccion: sec.nombre });
+      if (n > 0) out.push({ item, cantidad: n, seccion: sec.nombre, paquete: false });
     }
   }
   return out;
 }
 
-/** Texto del pedido, listo para WhatsApp o el portapapeles. */
+/** Texto del pedido, listo para WhatsApp o el portapapeles. Los paquetes se marcan para que el restaurante no los confunda con un platillo. */
 function mensajePedido(site: MiniSitePublic, lineas: LineaPedido[], nota: string): string {
-  const renglones = lineas.map(({ item, cantidad }) =>
-    item.precio !== null ? `• ${cantidad} × ${item.nombre} — ${fmtPrecio(item.precio * cantidad)}` : `• ${cantidad} × ${item.nombre}`,
-  );
+  const renglones = lineas.map(({ item, cantidad, paquete }) => {
+    const nombre = paquete ? `Paquete ${item.nombre}` : item.nombre;
+    return item.precio !== null ? `• ${cantidad} × ${nombre} — ${fmtPrecio(item.precio * cantidad)}` : `• ${cantidad} × ${nombre}`;
+  });
   const todasConPrecio = lineas.every((l) => l.item.precio !== null);
   const total = lineas.reduce((s, l) => s + (l.item.precio ?? 0) * l.cantidad, 0);
   const partes = [`Hola, ${site.businessName} 👋 Quiero pedir:`, ...renglones];
@@ -571,10 +627,13 @@ function PedidoSheet({
 
         <div className="overflow-y-auto px-5 pb-3 flex-1">
           <ul className="flex flex-col" style={{ borderTop: "1px solid rgba(127,127,127,.15)" }}>
-            {lineas.map(({ item, cantidad }) => (
+            {lineas.map(({ item, cantidad, paquete }) => (
               <li key={item.id} className="flex items-center gap-3 py-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-semibold leading-snug truncate">{item.nombre}</p>
+                  <p className="text-[15px] font-semibold leading-snug truncate">
+                    {paquete && <span className="mr-1.5 inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide align-middle" style={{ background: "rgba(127,127,127,.14)" }}>Paquete</span>}
+                    {item.nombre}
+                  </p>
                   {item.precio !== null && (
                     <p className="text-[13px] tabular-nums opacity-70">
                       {fmtPrecio(item.precio)} c/u{cantidad > 1 ? ` · ${fmtPrecio(item.precio * cantidad)}` : ""}
@@ -670,10 +729,16 @@ function MenuVista({
 }) {
   const t = templateDe(site.template);
   const menu = block.menu;
-  const varias = menu.secciones.length > 1;
+  const paquetes = paquetesDe(menu);
+  // Lo que navegan los chips y el scroll-spy: "Paquetes" (si hay) + las secciones.
+  const navSecciones = useMemo(
+    () => [...(paquetes.length ? [{ id: ANCLA_PAQUETES, nombre: "Paquetes" }] : []), ...menu.secciones.map((s) => ({ id: s.id, nombre: s.nombre }))],
+    [paquetes.length, menu.secciones],
+  );
+  const varias = navSecciones.length > 1;
   const fondo = hexSeguro(site.colors.background, "#FFFFFF");
   const primario = hexSeguro(site.colors.primary, "#12535C");
-  const [foto, setFoto] = useState<MiniSiteMenuItem | null>(null);
+  const [foto, setFoto] = useState<FotoDialogItem | null>(null);
   // Pedido del cliente (por sitio+bloque, en localStorage). Solo se lee en el
   // cliente: esta vista nunca se renderiza en el servidor (vive en el hash).
   const clavePedido = claveDePedido(site.id, block.id);
@@ -714,7 +779,7 @@ function MenuVista({
   // El encabezado pegajoso se COMPACTA al hacer scroll (logo y título más
   // chicos, sin el nombre del negocio) y la sección visible marca su chip.
   const [compacto, setCompacto] = useState(false);
-  const [activa, setActiva] = useState<string | null>(menu.secciones[0]?.id ?? null);
+  const [activa, setActiva] = useState<string | null>(navSecciones[0]?.id ?? null);
   const headerRef = useRef<HTMLElement>(null);
   const chipsRef = useRef<HTMLUListElement>(null);
   // Mientras dura el salto suave a una sección (tocar un chip) el scroll-spy
@@ -738,15 +803,15 @@ function MenuVista({
       setCompacto(window.scrollY > 32);
       if (!varias || saltandoRef.current) return;
       const limite = (headerRef.current?.getBoundingClientRect().bottom ?? 0) + 24;
-      let actual = menu.secciones[0]?.id ?? null;
-      for (const sec of menu.secciones) {
+      let actual = navSecciones[0]?.id ?? null;
+      for (const sec of navSecciones) {
         const el = document.getElementById(anclaDe(sec.id));
         if (el && el.getBoundingClientRect().top <= limite) actual = sec.id;
       }
       // Al fondo de la página la última sección quizá nunca alcanza el
       // encabezado (es corta): si ya no hay más scroll, ella es la activa.
       const alFondo = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
-      if (alFondo) actual = menu.secciones[menu.secciones.length - 1].id;
+      if (alFondo) actual = navSecciones[navSecciones.length - 1].id;
       setActiva(actual);
     };
     const onScroll = () => {
@@ -761,7 +826,7 @@ function MenuVista({
       if (saltandoRef.current) window.clearTimeout(saltandoRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [varias, menu.secciones, block.id]);
+  }, [varias, navSecciones, block.id]);
 
   // El chip activo se mantiene a la vista dentro de su fila (sin mover la página).
   useEffect(() => {
@@ -892,7 +957,7 @@ function MenuVista({
         {varias && (
           <nav aria-label="Secciones del menú" className="mx-auto w-full max-w-[520px]">
             <ul ref={chipsRef} className="ms-chips flex gap-2 overflow-x-auto px-5 pb-3 pt-1">
-              {menu.secciones.map((sec, i) => {
+              {navSecciones.map((sec, i) => {
                 const esActiva = sec.id === activa;
                 return (
                   <li key={sec.id} data-chip={sec.id} className="ms-chip-in shrink-0" style={{ animationDelay: `${0.12 + i * 0.05}s` }}>
@@ -932,6 +997,60 @@ function MenuVista({
           </p>
         )}
         <div className="flex flex-col gap-8">
+          {paquetes.length > 0 && (
+            <section id={anclaDe(ANCLA_PAQUETES)} aria-label="Paquetes" className="ms-sec-in">
+              <div className="flex items-center gap-3 mb-3 px-1">
+                <h2 className={`leading-tight ${serif ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[21px]"}`}>Paquetes</h2>
+                <span aria-hidden="true" className="flex-1 h-px" style={{ background: "rgba(127,127,127,.22)" }} />
+                <span className="text-[11px] font-semibold tabular-nums opacity-50">{paquetes.length}</span>
+              </div>
+              <ul className="flex flex-col gap-4">
+                {paquetes.map((pq, i) => (
+                  <li key={pq.id} className={`ms-rise overflow-hidden ${pq.disponible ? "" : "opacity-60"}`} style={{ animationDelay: `${0.1 + Math.min(i, 6) * 0.06}s`, borderRadius: radio, background: "rgba(127,127,127,.07)", boxShadow: "inset 0 0 0 1px rgba(127,127,127,.12)" }}>
+                    {/* Foto ANCHA arriba (es una promo: la foto vende) con la etiqueta montada en la esquina. */}
+                    {pq.imagen ? (
+                      <button
+                        type="button"
+                        onClick={() => setFoto({ ...pq, ancha: true })}
+                        aria-label={`Ver foto de ${pq.nombre}`}
+                        className="ms-thumb relative block w-full overflow-hidden cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={pq.imagen} alt="" loading="lazy" decoding="async" className={`w-full aspect-[16/10] object-cover ${pq.disponible ? "" : "grayscale"}`} />
+                        {pq.etiqueta && <EtiquetaPaquete texto={pq.etiqueta} primario={primario} className="absolute top-3 left-3 shadow-md" />}
+                      </button>
+                    ) : (
+                      pq.etiqueta && (
+                        <div className="px-4 pt-4">
+                          <EtiquetaPaquete texto={pq.etiqueta} primario={primario} />
+                        </div>
+                      )
+                    )}
+                    <div className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-[18px] font-bold leading-snug min-w-0 flex-1">{pq.nombre}</p>
+                        {pq.precio !== null && (
+                          <p className="shrink-0 tabular-nums text-[20px] font-bold leading-snug" style={{ color: pq.disponible ? primario : undefined }}>
+                            {pq.disponible ? fmtPrecio(pq.precio) : <s>{fmtPrecio(pq.precio)}</s>}
+                          </p>
+                        )}
+                      </div>
+                      {pq.descripcion && <p className="mt-1.5 text-[14px] leading-snug opacity-75">{pq.descripcion}</p>}
+                      {pq.incluye.length > 0 && <IncluyeLista incluye={pq.incluye} className="mt-3" />}
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        {pq.disponible ? (
+                          <span className="text-[12px] opacity-60">Precio por paquete</span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
+                        )}
+                        {pq.disponible && <AgregarControl cantidad={pedido[pq.id] ?? 0} nombre={pq.nombre} primario={primario} onCambiar={(n) => setCantidad(pq.id, n)} />}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {menu.secciones.map((sec, i) => (
             <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} className="ms-sec-in" style={{ animationDelay: `${Math.min(i, 3) * 0.08}s` }}>
               {(sec.nombre || varias) && (
