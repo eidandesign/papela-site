@@ -38,6 +38,43 @@ function templateDe(id: string): TemplateStyle {
   return TEMPLATES[id] ?? TEMPLATES.minimal;
 }
 
+// ── Portada: foto o video ──────────────────────────────────────────────────
+// El video va en loop, mudo y con playsInline (sin eso iOS lo abre a pantalla
+// completa). Es decorativo, así que con prefers-reduced-motion se queda quieto
+// en su primer cuadro: el usuario pidió menos movimiento, no menos contenido.
+//
+// El play() se dispara desde aquí y no solo con `autoPlay`: React no escribe el
+// atributo `muted` en el HTML (solo la propiedad), así que el intento de
+// autoplay del navegador al parsear ve un video CON audio y lo bloquea. Y si la
+// página se cargó en segundo plano (Chrome pausa el video para ahorrar batería
+// y rechaza el play), se reintenta al volver a ser visible.
+function CoverMedia({ url, type, radius }: { url: string; type: "image" | "video"; radius: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const aplicar = () => {
+      if (mq.matches) v.pause();
+      else if (document.visibilityState === "visible") v.play().catch(() => {});
+    };
+    aplicar();
+    mq.addEventListener("change", aplicar);
+    document.addEventListener("visibilitychange", aplicar);
+    return () => {
+      mq.removeEventListener("change", aplicar);
+      document.removeEventListener("visibilitychange", aplicar);
+    };
+  }, [url]);
+
+  const style = { aspectRatio: "5 / 2", borderRadius: radius } as const;
+  if (type === "video") {
+    return <video ref={ref} src={url} className="w-full object-cover" style={style} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" />;
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={url} alt="" className="w-full object-cover" style={style} />;
+}
+
 // El color va a parar DENTRO de un bloque <style>, donde un valor con "}" o
 // "<" podría romper la regla e inyectar CSS. El admin ya valida el hex al
 // guardar; esto es el cinturón por si el payload llega por otro lado.
@@ -1386,13 +1423,7 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
               (por eso el margen negativo y el z-10). Sin portada, el encabezado
               queda exactamente como antes. */}
           {site.coverUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={site.coverUrl}
-              alt=""
-              className="w-full object-cover"
-              style={{ aspectRatio: "5 / 2", borderRadius: t.radius === "999px" ? "24px" : t.radius }}
-            />
+            <CoverMedia url={site.coverUrl} type={site.coverType ?? "image"} radius={t.radius === "999px" ? "24px" : t.radius} />
           )}
           <div
             className="relative z-10 flex flex-col items-center"

@@ -91,8 +91,10 @@ export type MiniSitePublic = {
   businessName: string;
   description: string;
   logoUrl: string;
-  /** Foto ancha de portada, detrás del logo. "" o ausente = sin portada. */
+  /** Foto o video ancho de portada, detrás del logo. "" o ausente = sin portada. */
   coverUrl?: string;
+  /** Si `coverUrl` es foto o video. Ausente (payloads viejos) = foto. */
+  coverType?: "image" | "video";
   template: string;
   colors: { primary: string; background: string; text: string };
   showPapelaBranding: boolean;
