@@ -235,7 +235,9 @@ export default function SiteNavbar() {
     !!pathname &&
     (pathname.startsWith("/clases/") ||
       pathname.includes("/checkout") ||
-      pathname.startsWith("/productos/coleccion/"));
+      pathname.startsWith("/productos/coleccion/") ||
+      pathname === "/privacidad" ||
+      pathname === "/terminos");
   const linkClass = onLight
     ? "text-[var(--color-verde)]/85 hover:text-[var(--color-verde)]"
     : "text-[var(--color-cremita)]/80 hover:text-[var(--color-cremita)]";
