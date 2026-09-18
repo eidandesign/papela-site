@@ -476,16 +476,16 @@ type LineaPedido = { item: Pedible; cantidad: number; seccion: string; paquete: 
 
 function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
   const out: LineaPedido[] = [];
-  for (const g of paquetesDe(menu)) {
-    for (const pq of g.items) {
-      const n = pedido[pq.id] ?? 0;
-      if (n > 0) out.push({ item: pq, cantidad: n, seccion: g.nombre || "Paquetes", paquete: true });
-    }
-  }
   for (const sec of menu.secciones) {
     for (const item of sec.items) {
       const n = pedido[item.id] ?? 0;
       if (n > 0) out.push({ item, cantidad: n, seccion: sec.nombre, paquete: false });
+    }
+  }
+  for (const g of paquetesDe(menu)) {
+    for (const pq of g.items) {
+      const n = pedido[pq.id] ?? 0;
+      if (n > 0) out.push({ item: pq, cantidad: n, seccion: g.nombre || "Paquetes", paquete: true });
     }
   }
   return out;
@@ -757,9 +757,10 @@ function MenuVista({
   const t = templateDe(site.template);
   const menu = block.menu;
   const paquetes = paquetesDe(menu);
-  // Lo que navegan los chips y el scroll-spy: cada paquete (grupo) + las secciones.
+  // Lo que navegan los chips y el scroll-spy, en el MISMO orden que el editor:
+  // primero las secciones (como las acomodó el staff) y después los paquetes.
   const navSecciones = useMemo(
-    () => [...paquetes.map((g) => ({ id: g.id, nombre: g.nombre || "Paquetes" })), ...menu.secciones.map((s) => ({ id: s.id, nombre: s.nombre }))],
+    () => [...menu.secciones.map((s) => ({ id: s.id, nombre: s.nombre })), ...paquetes.map((g) => ({ id: g.id, nombre: g.nombre || "Paquetes" }))],
     [paquetes, menu.secciones],
   );
   const varias = navSecciones.length > 1;
@@ -1024,53 +1025,6 @@ function MenuVista({
           </p>
         )}
         <div className="flex flex-col gap-8">
-          {paquetes.map((g, gi) => (
-            <section key={g.id} id={anclaDe(g.id)} aria-label={g.nombre || "Paquetes"} className="ms-sec-in" style={{ animationDelay: `${Math.min(gi, 3) * 0.08}s` }}>
-              <div className="flex items-center gap-3 mb-3 px-1">
-                <h2 className={`leading-tight ${serif ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[21px]"}`}>{g.nombre || "Paquetes"}</h2>
-                <span aria-hidden="true" className="flex-1 h-px" style={{ background: "rgba(127,127,127,.22)" }} />
-                <span className="text-[11px] font-semibold tabular-nums opacity-50">{g.items.length}</span>
-              </div>
-              <ul className="flex flex-col gap-4">
-                {g.items.map((pq, i) => (
-                  <li key={pq.id} className={`ms-rise overflow-hidden ${pq.disponible ? "" : "opacity-60"}`} style={{ animationDelay: `${0.1 + Math.min(i, 6) * 0.06}s`, borderRadius: radio, background: "rgba(127,127,127,.07)", boxShadow: "inset 0 0 0 1px rgba(127,127,127,.12)" }}>
-                    {/* Foto ANCHA arriba (es una promo: la foto vende). */}
-                    {pq.imagen && (
-                      <button
-                        type="button"
-                        onClick={() => setFoto({ ...pq, ancha: true })}
-                        aria-label={`Ver foto de ${pq.nombre}`}
-                        className="ms-thumb relative block w-full overflow-hidden cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={pq.imagen} alt="" loading="lazy" decoding="async" className={`w-full aspect-[16/10] object-cover ${pq.disponible ? "" : "grayscale"}`} />
-                      </button>
-                    )}
-                    <div className="px-4 py-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="text-[18px] font-bold leading-snug min-w-0 flex-1">{pq.nombre}</p>
-                        {pq.precio !== null && (
-                          <p className="shrink-0 tabular-nums text-[20px] font-bold leading-snug" style={{ color: pq.disponible ? primario : undefined }}>
-                            {pq.disponible ? fmtPrecio(pq.precio) : <s>{fmtPrecio(pq.precio)}</s>}
-                          </p>
-                        )}
-                      </div>
-                      {pq.descripcion && <p className="mt-1.5 text-[14px] leading-snug opacity-75">{pq.descripcion}</p>}
-                      {pq.incluye.length > 0 && <IncluyeLista incluye={pq.incluye} className="mt-3" />}
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        {pq.disponible ? (
-                          <span className="text-[12px] opacity-60">Precio por paquete</span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
-                        )}
-                        {pq.disponible && <AgregarControl cantidad={pedido[pq.id] ?? 0} nombre={pq.nombre} primario={primario} onCambiar={(n) => setCantidad(pq.id, n)} />}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
           {menu.secciones.map((sec, i) => (
             <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} className="ms-sec-in" style={{ animationDelay: `${Math.min(i, 3) * 0.08}s` }}>
               {(sec.nombre || varias) && (
@@ -1145,6 +1099,53 @@ function MenuVista({
                     </li>
                   );
                 })}
+              </ul>
+            </section>
+          ))}
+          {paquetes.map((g, gi) => (
+            <section key={g.id} id={anclaDe(g.id)} aria-label={g.nombre || "Paquetes"} className="ms-sec-in" style={{ animationDelay: `${Math.min(gi, 3) * 0.08}s` }}>
+              <div className="flex items-center gap-3 mb-3 px-1">
+                <h2 className={`leading-tight ${serif ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[21px]"}`}>{g.nombre || "Paquetes"}</h2>
+                <span aria-hidden="true" className="flex-1 h-px" style={{ background: "rgba(127,127,127,.22)" }} />
+                <span className="text-[11px] font-semibold tabular-nums opacity-50">{g.items.length}</span>
+              </div>
+              <ul className="flex flex-col gap-4">
+                {g.items.map((pq, i) => (
+                  <li key={pq.id} className={`ms-rise overflow-hidden ${pq.disponible ? "" : "opacity-60"}`} style={{ animationDelay: `${0.1 + Math.min(i, 6) * 0.06}s`, borderRadius: radio, background: "rgba(127,127,127,.07)", boxShadow: "inset 0 0 0 1px rgba(127,127,127,.12)" }}>
+                    {/* Foto ANCHA arriba (es una promo: la foto vende). */}
+                    {pq.imagen && (
+                      <button
+                        type="button"
+                        onClick={() => setFoto({ ...pq, ancha: true })}
+                        aria-label={`Ver foto de ${pq.nombre}`}
+                        className="ms-thumb relative block w-full overflow-hidden cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={pq.imagen} alt="" loading="lazy" decoding="async" className={`w-full aspect-[16/10] object-cover ${pq.disponible ? "" : "grayscale"}`} />
+                      </button>
+                    )}
+                    <div className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-[18px] font-bold leading-snug min-w-0 flex-1">{pq.nombre}</p>
+                        {pq.precio !== null && (
+                          <p className="shrink-0 tabular-nums text-[20px] font-bold leading-snug" style={{ color: pq.disponible ? primario : undefined }}>
+                            {pq.disponible ? fmtPrecio(pq.precio) : <s>{fmtPrecio(pq.precio)}</s>}
+                          </p>
+                        )}
+                      </div>
+                      {pq.descripcion && <p className="mt-1.5 text-[14px] leading-snug opacity-75">{pq.descripcion}</p>}
+                      {pq.incluye.length > 0 && <IncluyeLista incluye={pq.incluye} className="mt-3" />}
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        {pq.disponible ? (
+                          <span className="text-[12px] opacity-60">Precio por paquete</span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
+                        )}
+                        {pq.disponible && <AgregarControl cantidad={pedido[pq.id] ?? 0} nombre={pq.nombre} primario={primario} onCambiar={(n) => setCantidad(pq.id, n)} />}
+                      </div>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </section>
           ))}
