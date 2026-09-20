@@ -11,6 +11,11 @@ interface HeroSectionProps {
   showRibbon?: boolean;
   /** Cursor-pluma con trazo de tinta — apagarlo en heroes compactos/utilitarios */
   showInk?: boolean;
+  /**
+   * Hero compacto en mobile (la altura la marca el contenido) y completo en
+   * desktop. Además esconde el listón abajo de md, donde cruzaría el texto.
+   */
+  compactMobile?: boolean;
 }
 
 /**
@@ -25,7 +30,7 @@ interface HeroSectionProps {
  *     </div>
  *   </HeroSection>
  */
-export default function HeroSection({ children, bgColor, className = "", showRibbon = true, showInk = true }: HeroSectionProps) {
+export default function HeroSection({ children, bgColor, className = "", showRibbon = true, showInk = true, compactMobile = false }: HeroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const inkRef = useRef<HTMLCanvasElement>(null);
   const penRef = useRef<HTMLDivElement>(null);
@@ -64,7 +69,6 @@ export default function HeroSection({ children, bgColor, className = "", showRib
             const badge = sectionRef.current?.querySelector<HTMLElement>("[data-hero-badge]");
             const heading = sectionRef.current?.querySelector<HTMLElement>("h1");
             const para = sectionRef.current?.querySelector<HTMLElement>("p");
-            const content = sectionRef.current?.querySelector<HTMLElement>("[data-hero-content]");
 
             if (heading) heading.style.filter = "url(#watercolor-hero)";
 
@@ -98,8 +102,19 @@ export default function HeroSection({ children, bgColor, className = "", showRib
               tl.to(path, { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut" }, "-=1.2");
             }
 
-            // Scroll parallax (same as home)
-            if (content) {
+            return () => split?.revert();
+          });
+
+          // Scroll parallax (same as home). En un hero compactMobile el
+          // recorrido es tan corto que el contenido se metería bajo el navbar
+          // apenas arrancas a scrollear, así que ahí solo corre en desktop.
+          mm.add(
+            compactMobile
+              ? "(prefers-reduced-motion: no-preference) and (min-width: 768px)"
+              : "(prefers-reduced-motion: no-preference)",
+            () => {
+              const content = sectionRef.current?.querySelector<HTMLElement>("[data-hero-content]");
+              if (!content) return;
               gsap.to(content, {
                 yPercent: -16,
                 autoAlpha: 0.2,
@@ -112,9 +127,7 @@ export default function HeroSection({ children, bgColor, className = "", showRib
                 },
               });
             }
-
-            return () => split?.revert();
-          });
+          );
 
           mm.add("(prefers-reduced-motion: reduce)", () => {
             const badge = sectionRef.current?.querySelector<HTMLElement>("[data-hero-badge]");
@@ -142,7 +155,7 @@ export default function HeroSection({ children, bgColor, className = "", showRib
       cancelled = true;
       ctx?.revert();
     };
-  }, []);
+  }, [compactMobile]);
 
   // ── Pen cursor + fading ink line ─────────────────────────────────────────────
   useEffect(() => {
@@ -312,7 +325,9 @@ export default function HeroSection({ children, bgColor, className = "", showRib
   return (
     <section
       ref={sectionRef}
-      className={`relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden min-h-[80vh] flex flex-col ${className}`}
+      className={`relative mt-6 rounded-[32px] md:rounded-[48px] overflow-hidden flex flex-col ${
+        compactMobile ? "min-h-0 md:min-h-[80vh]" : "min-h-[80vh]"
+      } ${className}`}
       style={{
         backgroundColor: bgColor ?? "var(--color-verde)",
         width: "98vw",
@@ -348,7 +363,9 @@ export default function HeroSection({ children, bgColor, className = "", showRib
         viewBox="-67 133 1526 294"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="absolute bottom-[20px] left-0 right-0 w-full pointer-events-none h-[130px] md:h-auto z-20"
+        className={`absolute bottom-[20px] left-0 right-0 w-full pointer-events-none h-[130px] md:h-auto z-20 ${
+          compactMobile ? "hidden md:block" : ""
+        }`}
         preserveAspectRatio="xMidYMax slice"
       >
         <path

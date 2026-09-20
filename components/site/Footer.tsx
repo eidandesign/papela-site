@@ -12,6 +12,7 @@ const SITEMAP: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/productos", label: "Catálogo" },
       { href: "/personaliza", label: "Personalización" },
       { href: "/servicios", label: "Servicios" },
+      { href: "/back-to-school", label: "Back to School" },
     ],
   },
   {
@@ -36,25 +37,14 @@ export default function SiteFooter() {
   return (
     <footer className="bg-[var(--color-bg)] border-t border-[var(--color-border)]">
 
-      {/* Back to School — destacado (mismo fondo e imagen que el hero de la página) */}
-      <div className="w-[90%] mx-auto pt-20 md:pt-24 overflow-x-clip">
+      {/* Club Creativo — banner destacado */}
+      <div className="w-[90%] mx-auto pt-24 md:pt-28 overflow-x-clip">
         <Link
-          href="/back-to-school"
-          className="group relative flex flex-col rounded-[24px] px-7 py-7 md:px-10 md:py-9 min-h-[220px] md:min-h-[240px] justify-center"
+          href="/club-creativo"
+          className="group relative flex flex-col rounded-[24px] px-7 pt-7 pb-[150px] sm:pb-7 md:px-10 md:py-9 min-h-[220px] md:min-h-[240px] justify-center"
         >
-          {/* Fondo + textura + viñeta, recortados a las esquinas redondeadas */}
+          {/* Fondo + viñeta, recortados a las esquinas redondeadas */}
           <div className="absolute inset-0 z-0 overflow-hidden rounded-[24px]" style={{ backgroundColor: "#263834" }}>
-            {/* Textura de pizarrón (misma del hero) */}
-            <Image
-              src="/images/back-to-school/pizarron.webp"
-              alt=""
-              fill
-              aria-hidden="true"
-              sizes="90vw"
-              className="pointer-events-none absolute inset-0 object-cover"
-              style={{ mixBlendMode: "soft-light", opacity: 0.9, filter: "grayscale(1) contrast(1.15) brightness(1.1)" }}
-            />
-            {/* Viñeta sutil (misma del hero) */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
@@ -65,30 +55,30 @@ export default function SiteFooter() {
             />
           </div>
 
-          {/* Niños del hero — en mobile corridos a la derecha; en desktop la
-              cabeza sobresale del banner (efecto de salir del recuadro) */}
-          <div className="pointer-events-none absolute z-10 bottom-0 -right-6 sm:right-1 md:right-3 w-[190px] sm:w-[270px] md:w-[360px] lg:w-[410px]">
+          {/* Niños creando — anclados al borde inferior; en desktop sobresalen
+              por arriba del recuadro (el pt del contenedor reserva ese espacio) */}
+          <div className="pointer-events-none absolute z-10 bottom-0 right-0 w-[250px] sm:w-[260px] md:w-[420px] lg:w-[520px] xl:w-[560px]">
             <Image
-              src="/images/back-to-school/hero-ninos.png"
-              alt="Niños listos para el regreso a clases"
-              width={600}
-              height={450}
+              src="/images/club/banner-ninos.webp"
+              alt="Niños creando y jugando en Papela"
+              width={1536}
+              height={931}
+              sizes="(min-width: 1280px) 560px, (min-width: 1024px) 520px, (min-width: 768px) 420px, (min-width: 640px) 260px, 250px"
               className="h-auto w-full object-contain"
-              style={{ filter: "drop-shadow(12px 16px 20px rgba(0,0,0,0.45))" }}
             />
           </div>
 
           {/* Texto */}
-          <div className="relative z-20 max-w-[56%] sm:max-w-[58%] md:max-w-[56%]">
-            <p className="label whitespace-nowrap text-[var(--color-cremita)]/70 mb-2">Temporada escolar</p>
+          <div className="relative z-20 max-w-full sm:max-w-[58%] md:max-w-[56%]">
+            <p className="label whitespace-nowrap text-[var(--color-cremita)]/70 mb-4">Perfecto para inspirarte</p>
             <p className="font-serif italic text-[clamp(1.6rem,3.5vw,2.4rem)] leading-[1.05] text-[var(--color-cremita)]">
-              Back to School
+              Ideas para crear, jugar y divertirte.
             </p>
-            <p className="font-sans text-sm text-[var(--color-cremita)]/80 mt-2 max-w-md">
-              Etiquetas escolares, lista de útiles y todo lo que necesites para este regreso a clases.
+            <p className="font-sans text-[14px] md:text-[16px] leading-[20px] text-[var(--color-cremita)]/80 mt-4 max-w-[379px]">
+              Descubre juegos, actividades y recursos creativos para disfrutar en casa o compartir con los peques.
             </p>
-            <span className="mt-5 inline-flex items-center gap-2 font-sans text-sm font-medium text-[var(--color-cremita)]">
-              Más información
+            <span className="mt-4 inline-flex items-center gap-2 font-sans text-sm font-medium text-[var(--color-cremita)]">
+              Explorar Club Creativo
               <span className="w-9 h-9 rounded-full bg-[var(--color-cremita)] flex items-center justify-center transition-transform group-hover:translate-x-1">
                 <ArrowRightIcon className="w-4 h-4 text-[var(--color-verde)]" />
               </span>
