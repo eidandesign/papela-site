@@ -3,6 +3,7 @@ import HeroSection from "@/components/site/HeroSection";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import AnimatedLogo from "@/components/site/AnimatedLogo";
 import SeccionDopamina from "@/components/site/dopamina/SeccionDopamina";
+import TarjetaPreview from "@/components/site/club/TarjetaPreview";
 
 export const revalidate = 60;
 
@@ -45,13 +46,12 @@ export default function ClubCreativoPage() {
 
         {/* Tarjeta de Lealtad */}
         <ScrollReveal className="h-full" delay={0.1}>
-          <article className="relative h-full rounded-[28px] overflow-hidden flex flex-col bg-[#E0D2CA] shadow-[0_18px_44px_rgba(74,59,49,0.12)]">
-            <div className="relative flex-1 min-h-[340px] md:min-h-[420px]">
-              {/* Marca de agua (espacio listo para una foto real de la tarjeta) */}
-              <div className="absolute inset-x-0 top-0 bottom-[28%] flex items-center justify-center">
-                <div className="w-[120px] md:w-[150px] aspect-square opacity-30">
-                  <AnimatedLogo color="var(--color-verde)" className="w-full h-full" />
-                </div>
+          <article className="group relative h-full rounded-[28px] overflow-hidden flex flex-col bg-[#E0D2CA] shadow-[0_18px_44px_rgba(74,59,49,0.12)]">
+            <div className="relative flex-1 min-h-[470px] md:min-h-[500px]">
+              {/* Preview: una tarjeta de ejemplo, ladeada, sobre el espacio
+                  libre de arriba (el título vive abajo) */}
+              <div className="absolute inset-x-0 top-12 md:top-14 flex justify-center">
+                <TarjetaPreview className="-rotate-[5deg] transition-transform duration-500 ease-out group-hover:rotate-0 group-hover:scale-[1.03]" />
               </div>
 
               <p className="label text-[var(--color-terracota)] absolute left-6 top-5 md:left-7 md:top-6">

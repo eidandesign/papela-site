@@ -37,7 +37,7 @@ export default function ConditionalShell({ children }: { children: React.ReactNo
     <>
       <SiteNavbar />
       <main className="flex-1">{children}</main>
-      <SiteFooter />
+      <SiteFooter showClubBanner={!pathname?.startsWith("/club-creativo")} />
       <ProductDrawer />
       <WhatsAppFloatButton />
     </>

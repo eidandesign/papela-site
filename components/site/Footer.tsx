@@ -33,11 +33,13 @@ const SITEMAP: { title: string; links: { href: string; label: string }[] }[] = [
   },
 ];
 
-export default function SiteFooter() {
+/** `showClubBanner`: se apaga dentro de /club-creativo (no tiene caso invitar a donde ya estás). */
+export default function SiteFooter({ showClubBanner = true }: { showClubBanner?: boolean }) {
   return (
     <footer className="bg-[var(--color-bg)] border-t border-[var(--color-border)]">
 
       {/* Club Creativo — banner destacado */}
+      {showClubBanner && (
       <div className="w-[90%] mx-auto pt-24 md:pt-28 overflow-x-clip">
         <Link
           href="/club-creativo"
@@ -86,9 +88,10 @@ export default function SiteFooter() {
           </div>
         </Link>
       </div>
+      )}
 
       {/* Top section — mapa de sitio + contacto */}
-      <div className="w-[90%] mx-auto pt-12 pb-10 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">
+      <div className={`w-[90%] mx-auto ${showClubBanner ? "pt-12" : "pt-16 md:pt-20"} pb-10 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10`}>
 
         {/* Mapa de sitio */}
         {SITEMAP.map((col) => (

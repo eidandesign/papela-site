@@ -12,7 +12,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
-import AnimatedLogo from "../AnimatedLogo";
 import { Nube } from "./Nubes";
 import { FONDO_CIELO } from "@/lib/dopamina/retos";
 import HojaClub from "../club/HojaClub";
@@ -28,11 +27,16 @@ const PASOS = [
   ["Vuelve a intentarlo", "Cada partida genera una combinación nueva. Juega las veces que quieras."],
 ] as const;
 
+// Reto de ejemplo del preview (objeto · acción · cierre, los tres salen de
+// lib/dopamina/bancos.ts para que sea una frase que el juego sí puede armar).
+const EJEMPLO = ["un pulpo", "tocando el ukelele", "en la luna"];
+
 // Pompas decorativas del preview (porcentajes del panel de cielo).
+// Dejan libre el centro-arriba, donde vive la frase de ejemplo.
 const POMPAS = [
-  { top: 14, left: 14, d: 60 },
-  { top: 22, left: 78, d: 44 },
-  { top: 48, left: 10, d: 38 },
+  { top: 7, left: 50, d: 28 },
+  { top: 24, left: 80, d: 42 },
+  { top: 56, left: 10, d: 58 },
   { top: 52, left: 76, d: 64 },
   { top: 60, left: 42, d: 44 },
 ];
@@ -105,7 +109,7 @@ export default function SeccionDopamina() {
       <Link
         href={JUEGO}
         aria-label="Dopamina, el juego creativo — jugar"
-        className="group relative block flex-1 min-h-[340px] md:min-h-[420px]"
+        className="group relative block flex-1 min-h-[470px] md:min-h-[500px]"
         style={{ backgroundColor: FONDO_CIELO }}
       >
         <Nube style={{ position: "absolute", right: "-6%", top: "4%", width: "34%", opacity: 0.95 }} />
@@ -130,11 +134,25 @@ export default function SeccionDopamina() {
         <span aria-hidden="true" className="absolute top-[30%] right-[26%] w-1.5 h-1.5 rounded-full bg-white/70" />
         <span aria-hidden="true" className="absolute bottom-[32%] left-[30%] w-1.5 h-1.5 rounded-full bg-white/70" />
 
-        {/* Logo flotando en el centro del cielo (sube un poco: el texto vive abajo) */}
-        <div className="absolute inset-x-0 top-0 bottom-[28%] flex items-center justify-center">
-          <div className="w-[120px] md:w-[150px] aspect-square opacity-90 transition-transform duration-500 ease-out group-hover:scale-105">
-            <AnimatedLogo color="#FFFFFF" className="w-full h-full" />
+        {/* Preview del juego: los tres slots ya revelados + el reto armado,
+            con el mismo tratamiento tipográfico que DopaminaJuego */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-[17%] flex flex-col items-center text-center px-8 transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+        >
+          <div className="flex flex-wrap items-center justify-center gap-1.5 mb-5">
+            {EJEMPLO.map((parte) => (
+              <span
+                key={parte}
+                className="font-serif italic text-[12px] leading-none text-white whitespace-nowrap rounded-full border border-dashed border-white/55 px-2.5 py-1.5"
+              >
+                {parte}
+              </span>
+            ))}
           </div>
+          <p className="font-serif italic text-[clamp(1.6rem,2.6vw,2.2rem)] leading-[1.08] text-white max-w-[15ch]">
+            Dibuja {EJEMPLO.join(" ")}.
+          </p>
         </div>
 
         {/* Eyebrow arriba, como el "HAPPENING NOW" de la App Store */}
