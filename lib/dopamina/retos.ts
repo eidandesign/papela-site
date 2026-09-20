@@ -31,7 +31,13 @@ export const RONDAS: { id: CategoriaBurbuja; etiqueta: string }[] = [
 
 // Lienzo del juego (rediseño ago-2026): un solo cielo azul con nubes en TODAS
 // las fases — ya no hay cambio de color por ronda ni deriva en el reto.
-export const FONDO_CIELO = "#2B7CE4";
+// ⚠️ Accesibilidad: TODO el texto del juego es blanco sobre este azul, así que
+// su luminosidad manda el contraste. #2670D6 da 4.80:1 con blanco (WCAG AA pide
+// 4.5:1 para texto normal). El azul original, #2B7CE4, daba 4.11:1: pasaba solo
+// para texto grande, y aquí hay etiquetas de 11–13px. Si se cambia el color,
+// no aclararlo más allá de #2672DA (4.66:1), y el texto chico va en blanco
+// PLENO: al 60% de opacidad cae a ~2.7:1 con cualquiera de estos azules.
+export const FONDO_CIELO = "#2670D6";
 
 // Para mostrar una palabra suelta (slots, revelación sobre la burbuja):
 // primera letra en mayúscula. Dentro de la frase van en minúscula.
@@ -89,6 +95,18 @@ export function generaOpciones(porCategoria = 9): Record<CategoriaBurbuja, Burbu
       .map((texto) => ({ id: `${cat}:${texto}`, texto, categoria: cat }));
   }
   return opciones;
+}
+
+// Cambiar UNA parte de la combinación (pantalla del reto): si al jugador le
+// gustó el quién y el dónde pero no el qué, re-sortea solo esa pieza. Sale del
+// banco COMPLETO de la categoría (no solo de las 9 pompas repartidas), sin lo
+// reciente ni lo que se pida evitar (la pieza actual: nunca devuelve la misma).
+export function sorteaParte(categoria: CategoriaBurbuja, evita: string[] = []): Burbuja {
+  const fuera = new Set([...leeRecientes(), ...evita]);
+  const frescas = BANCOS[categoria].filter((t) => !fuera.has(t));
+  const pool = frescas.length > 0 ? frescas : BANCOS[categoria].filter((t) => !evita.includes(t));
+  const texto = pool[Math.floor(Math.random() * pool.length)];
+  return { id: `${categoria}:${texto}`, texto, categoria };
 }
 
 export function armaReto(seleccion: Burbuja[]): Reto {

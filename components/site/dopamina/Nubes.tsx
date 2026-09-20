@@ -63,16 +63,19 @@ type ConfigNube = {
   soloMd?: boolean;
 };
 
-// CAMPO: posiciones % (mismo criterio que CampoBurbujas), todas debajo de la
-// franja del título (~0-28%) para no ensuciar el texto. `soloMd`: las que en
-// el lienzo angosto de mobile sobrarían.
+// CAMPO: posiciones % (mismo criterio que CampoBurbujas). El título de la
+// ronda va al CENTRO del lienzo en letra blanca, así que ninguna nube (blanca
+// también) puede cruzar la franja ~33-68% — creció cuando los huecos pasaron
+// de una fila a tres óvalos apilados: se reparten en una banda alta (bajo el
+// logo) y una baja. `soloMd`: las que en el lienzo angosto de mobile
+// sobrarían.
 const NUBES_CAMPO: ConfigNube[] = [
-  { right: "-5%", top: "30%", w: "clamp(150px, 22vw, 340px)", op: 1 },
-  { left: "8%", top: "34%", w: "clamp(70px, 9vw, 140px)", op: 0.95, soloMd: true },
-  { left: "16%", top: "48%", w: "clamp(110px, 15vw, 230px)", flip: true, op: 1, soloMd: true },
-  { left: "30%", top: "64%", w: "clamp(90px, 12vw, 190px)", op: 0.9 },
-  { right: "6%", top: "74%", w: "clamp(80px, 10vw, 160px)", flip: true, op: 0.85 },
-  { left: "-3%", top: "82%", w: "clamp(100px, 13vw, 200px)", op: 0.9 },
+  { right: "-5%", top: "19%", w: "clamp(150px, 22vw, 340px)", op: 1 },
+  { left: "8%", top: "24%", w: "clamp(70px, 9vw, 140px)", op: 0.95, soloMd: true },
+  { left: "12%", top: "76%", w: "clamp(110px, 15vw, 230px)", flip: true, op: 1, soloMd: true },
+  { left: "30%", top: "74%", w: "clamp(90px, 12vw, 190px)", op: 0.9 },
+  { right: "6%", top: "80%", w: "clamp(80px, 10vw, 160px)", flip: true, op: 0.85 },
+  { left: "-3%", top: "86%", w: "clamp(100px, 13vw, 200px)", op: 0.9 },
 ];
 
 // BORDE: medio asomadas arriba y abajo, sin tocar texto en ninguna fase.

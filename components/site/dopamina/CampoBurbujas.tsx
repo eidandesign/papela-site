@@ -21,8 +21,8 @@ import { capitaliza, RONDAS } from "@/lib/dopamina/retos";
 import { SALIDA_SUAVE } from "@/lib/dopamina/animacion";
 import type { Burbuja } from "@/lib/dopamina/tipos";
 
-// Posiciones dispersas (porcentajes del lienzo) que rodean el logo central y
-// respetan el encabezado. El tamaño base escala en mobile vía la variable
+// Posiciones dispersas (porcentajes del lienzo) que rodean el centro, donde
+// va el título de la ronda (antes ahí iba el logo grande). El tamaño base escala en mobile vía la variable
 // --burbuja-escala definida en globals.css (.dopa-canvas).
 const POSICIONES = [
   { top: 34, left: 10, d: 104 },
@@ -53,7 +53,10 @@ const SOLA_REGRESO_MS = 950;
 // Toda pompa sube despacísimo y truena al llegar al tope; el ciclo la regresa
 // por abajo. Las POSICIONES marcan el punto de partida visual (delay negativo)
 // y el carril horizontal. En dvh: el lienzo mide ~100dvh menos el padding.
-const ELEVA_TOPE = 34; // dvh donde truena (el centro); la franja del título queda libre
+// El título ya no vive arriba sino al centro (como HUD sobre el campo), así
+// que las pompas pueden subir casi hasta el logo antes de tronar. 24dvh deja
+// libre el logo chico (acaba en ~108/124px) aun con la pompa más grande.
+const ELEVA_TOPE = 24;
 const ELEVA_INICIO = 108; // nace bajo el borde inferior
 const elevaVars = (i: number, top: number): React.CSSProperties => {
   const dur = 46 + (i % 5) * 6; // 46–70 s por viaje: apenas se percibe
@@ -105,7 +108,7 @@ const MINIS = [
 //   4. reflejos  → el brillo especular (el "reflejo" de la fuente de luz) y su
 //                  rebote chico abajo-derecha. Van ENCIMA de la palabra para
 //                  que se lea como algo que pasa en la superficie del vidrio.
-const VIDRIO: React.CSSProperties = {
+export const VIDRIO: React.CSSProperties = {
   background:
     // Caída rápida desde el núcleo: el centro-derecha queda casi transparente
     // (se ve el fondo a través) y la pompa deja de leerse como canica opaca.
@@ -181,7 +184,7 @@ const REFLEJO_BAJO: React.CSSProperties = {
 };
 
 // Capas bajo la palabra (borde, cáustica, iridiscencia).
-function CapasVidrio() {
+export function CapasVidrio() {
   return (
     <>
       <span aria-hidden="true" className="absolute inset-0 rounded-full" style={RIM} />
@@ -192,7 +195,7 @@ function CapasVidrio() {
 }
 
 // Capas sobre la palabra (los reflejos viven en la superficie del vidrio).
-function Reflejos() {
+export function Reflejos() {
   return (
     <>
       <span aria-hidden="true" className="absolute" style={REFLEJO} />
@@ -204,8 +207,9 @@ function Reflejos() {
 // El estallido, compartido por los dos casos en que una pompa se rompe: cuando
 // la tocas (revela palabra) y cuando revienta sola. `suave` es la versión de
 // las espontáneas: mismo lenguaje, menos volumen, para que no compita con el
-// pop que sí importa.
-function Estallido({ tam, suave = false }: { tam: string; suave?: boolean }) {
+// pop que sí importa. (La pompa del reto opcional NO estalla: se infla hasta
+// poner la pantalla en blanco — ver Destello.)
+export function Estallido({ tam, suave = false }: { tam: string; suave?: boolean }) {
   const gotas = suave ? GOTAS.filter((_, j) => j % 2 === 0) : GOTAS;
   const f = suave ? 0.55 : 1; // factor de opacidad de la versión suave
   return (
@@ -313,11 +317,15 @@ export default function CampoBurbujas({
   rondaKey,
   burbujas,
   reventadaId,
+  palabraSeFue = false,
   onToca,
 }: {
   rondaKey: string;
   burbujas: Burbuja[];
   reventadaId: string | null;
+  // La palabra revelada despegó hacia su hueco del centro (PalabraVuela la
+  // releva): aquí se apaga de golpe, sin transición, para que parezca la misma.
+  palabraSeFue?: boolean;
   onToca: (b: Burbuja) => void;
 }) {
   // Cuántas pompas se muestran ya; crece sola hasta cubrir todas las opciones.
@@ -420,11 +428,18 @@ export default function CampoBurbujas({
                     transition={{ delay: 0.16, duration: 0.4, ease: "easeOut" }}
                   />
                   <motion.span
+                    data-palabra-revelada
                     initial={{ scale: 0.3, y: 8, opacity: 0 }}
                     animate={{ scale: 1, y: 0, opacity: 1 }}
                     transition={{ delay: 0.18, type: "spring", stiffness: 300, damping: 16 }}
-                    className="absolute inset-0 flex items-center justify-center text-center font-serif italic text-[15px] md:text-[17px] leading-tight text-white whitespace-nowrap"
-                    style={{ textShadow: "0 0 18px rgba(255,255,255,0.45)" }}
+                    // La palabra no envuelve y suele ser más ancha que la
+                    // pompa: centrada sobre una pompa pegada al borde se salía
+                    // del lienzo y quedaba cortada. En los carriles de orilla
+                    // se ancla hacia adentro.
+                    className={`absolute inset-0 flex items-center text-center font-serif italic text-[15px] md:text-[17px] leading-tight text-white whitespace-nowrap ${
+                      p.left < 22 ? "justify-start" : p.left > 78 ? "justify-end" : "justify-center"
+                    }`}
+                    style={{ textShadow: "0 0 18px rgba(255,255,255,0.45)", visibility: palabraSeFue ? "hidden" : undefined }}
                   >
                     {/* Mayúscula solo en la primera ronda: es el inicio de la oración */}
                     {b.categoria === RONDAS[0].id ? capitaliza(b.texto) : b.texto}

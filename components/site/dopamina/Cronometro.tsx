@@ -9,6 +9,11 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CURVA_SUAVE } from "@/lib/dopamina/animacion";
 
+// Alto del bloque, IGUAL en la cuenta regresiva y en el aro: va al fondo de la
+// pantalla con la frase centrada en el espacio que sobra — si los dos estados
+// midieran distinto, la frase brincaría al pasar del "1" al reloj.
+const ALTO_BLOQUE = "min-h-[244px]";
+
 const RADIO = 74;
 const CIRCUNFERENCIA = 2 * Math.PI * RADIO;
 
@@ -62,7 +67,7 @@ export default function Cronometro({
 
   if (cuenta !== null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[260px]" aria-live="assertive">
+      <div className={`flex flex-col items-center justify-center ${ALTO_BLOQUE}`} aria-live="assertive">
         <AnimatePresence mode="wait">
           {/* leading-[1.25] + padding en em: el dígito serif tiene tinta que
               sobresale del em-box (medido ~118% del font-size) y con leading-none
@@ -81,13 +86,15 @@ export default function Cronometro({
             {cuenta}
           </motion.p>
         </AnimatePresence>
-        <p className="label text-white/60 mt-6">Prepara tu papel…</p>
+        <p className="label text-white mt-6">Prepara tu papel…</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center">
+    // Sin justify-end: al acabarse el tiempo el botón desaparece y el aro no
+    // debe caerse al hueco que deja.
+    <div className={`flex flex-col items-center ${ALTO_BLOQUE}`}>
       <div className="relative w-[168px] h-[168px]" role="timer" aria-label={`Quedan ${mm}:${ss}`}>
         <svg width="168" height="168" viewBox="0 0 168 168" className="-rotate-90">
           <circle cx="84" cy="84" r={RADIO} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.5" />
@@ -125,7 +132,7 @@ export default function Cronometro({
         <button
           type="button"
           onClick={() => onTermina(true)}
-          className="mt-10 rounded-full bg-white text-[var(--color-verde)] font-sans text-[14px] font-semibold px-7 py-3 hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          className="mt-6 min-h-11 rounded-full bg-white text-[var(--color-verde)] font-sans text-[14px] font-semibold px-7 py-3 hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
           ¡Terminé!
         </button>

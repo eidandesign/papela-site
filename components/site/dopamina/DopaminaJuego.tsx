@@ -5,7 +5,8 @@
 // con UN solo fondo en todas las fases: cielo azul (FONDO_CIELO) con nubes
 // caricatura que derivan con GSAP (componente Nubes) y letra blanca. Fases:
 //   burbujas (3 rondas: explota una pompa de vidrio por categoría; los slots
-//   punteados de arriba se van llenando) → reto + elección de tiempo
+//   punteados de arriba se van llenando) → reto + elección de tiempo (con un
+//   reto extra OPCIONAL: restricción creativa, ver BloqueRetoExtra)
 //   → cronómetro con 3·2·1 → reto completado (confeti + compartir foto).
 //
 // Performance móvil: fondo sólido estático (ya no hay crossfade de capas —
@@ -17,15 +18,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import { ArrowLeftIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion";
+import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import AnimatedLogo from "../AnimatedLogo";
 import CampoBurbujas, { BURBUJAS_POR_RONDA } from "./CampoBurbujas";
 import Cronometro from "./Cronometro";
 import Confeti from "./Confeti";
 import Nubes from "./Nubes";
+import BloqueRetoExtra, { RetoExtraTexto } from "./BloqueRetoExtra";
+import SelectorTiempo from "./SelectorTiempo";
+import FraseReto from "./FraseReto";
+import SlotsRonda, { PalabraVuela } from "./SlotsRonda";
+import Destello, { type OrigenDestello } from "./Destello";
+import { btnFantasma, btnTerciario } from "./estilos";
 import {
   generaOpciones,
+  sorteaParte,
   armaReto,
   capitaliza,
   recuerdaSeleccion,
@@ -33,6 +41,7 @@ import {
   FONDO_CIELO,
 } from "@/lib/dopamina/retos";
 import { DURACIONES, type Burbuja, type CategoriaBurbuja, type Reto } from "@/lib/dopamina/tipos";
+import { sorteaRetoExtra, type RetoExtra } from "@/lib/dopamina/retos-extra";
 import { eventoDopa } from "@/lib/dopamina/analitica";
 import { CURVA_SUAVE } from "@/lib/dopamina/animacion";
 
@@ -53,42 +62,6 @@ const PUNTOS = [
   { left: 95, d: 4, dur: 19, delay: -14, vaiven: 8 },
 ];
 
-// (El primario de la pantalla final es el CTA blanco de Instagram, inline.)
-const btnFantasma =
-  "inline-flex items-center justify-center rounded-full border border-[rgba(255,255,255,0.5)] text-white font-sans text-[13px] font-medium px-6 py-2.5 hover:bg-white/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
-// Terciario: link con ícono. Sin caja ni borde — el nivel más bajo de la
-// jerarquía, para acciones que no son el camino principal de la pantalla.
-const btnTerciario =
-  "inline-flex items-center gap-2 font-sans text-[13px] font-medium text-white/70 hover:text-white underline underline-offset-[6px] decoration-[rgba(255,255,255,0.35)] hover:decoration-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white rounded-sm";
-
-// Slots del reto: tres huecos punteados que se llenan con cada revelación.
-function Slots({ seleccion }: { seleccion: Burbuja[] }) {
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-2.5">
-      {RONDAS.map((r, idx) => {
-        const b = seleccion.find((s) => s.categoria === r.id);
-        return b ? (
-          <motion.span
-            key={r.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="font-serif italic text-[14px] md:text-[15px] leading-none text-white whitespace-nowrap px-1"
-          >
-            {/* Los slots se leen como oración: solo la primera palabra va en mayúscula */}
-            {idx === 0 ? capitaliza(b.texto) : b.texto}
-          </motion.span>
-        ) : (
-          <span
-            key={r.id}
-            aria-label={`${r.etiqueta} por descubrir`}
-            className="inline-block w-[74px] md:w-[92px] h-[20px] rounded-full border border-dashed border-[rgba(255,255,255,0.55)]"
-          />
-        );
-      })}
-    </div>
-  );
-}
-
 export default function DopaminaJuego() {
   const [fase, setFase] = useState<Fase>("burbujas");
   const [opciones, setOpciones] = useState<Record<CategoriaBurbuja, Burbuja[]> | null>(null);
@@ -96,7 +69,34 @@ export default function DopaminaJuego() {
   const [reventada, setReventada] = useState<string | null>(null);
   const [seleccion, setSeleccion] = useState<Burbuja[]>([]);
   const [reto, setReto] = useState<Reto | null>(null);
-  const [duracion, setDuracion] = useState(0);
+  // Reto extra opcional (restricción creativa). Nunca se elige solo: nace
+  // cuando el jugador explota la pompa de reto y muere al repartir.
+  const [retoExtra, setRetoExtra] = useState<RetoExtra | null>(null);
+  // Sobrevive al reparto a propósito: la partida siguiente tampoco repite
+  // el último reto extra que salió.
+  const ultimoRetoExtra = useRef<string | null>(null);
+  // Destello en curso: el blanco que se infla desde la pompa de reto y tras el
+  // cual se cambia la escena. ("Cambiar reto" NO lo usa: ahí la máquina de
+  // escribir borra y reescribe.)
+  const [destello, setDestello] = useState<OrigenDestello | null>(null);
+  // Vuelo de la palabra revelada: de donde tronó la pompa a su hueco del
+  // centro. `llegadas` = huecos que ya recibieron su palabra (SlotsRonda solo
+  // pinta esos); `vuelo` = la que va en el aire.
+  const [llegadas, setLlegadas] = useState<ReadonlySet<CategoriaBurbuja>>(new Set());
+  const [vuelo, setVuelo] = useState<{
+    texto: string;
+    categoria: CategoriaBurbuja;
+    desde: { x: number; y: number };
+    hasta: { x: number; y: number };
+    escala: number;
+  } | null>(null);
+  const despegue = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lienzo = useRef<HTMLElement>(null);
+  const sinMovimiento = useReducedMotion();
+  // Tiempo elegido en el selector (solo selecciona; arranca "¡Comenzar!").
+  // Nace en 10 min para que el botón nunca esté deshabilitado, y NO se reinicia
+  // al repartir: la siguiente partida recuerda la preferencia del jugador.
+  const [duracion, setDuracion] = useState<number>(DURACIONES[1].seg);
   const [anuncio, setAnuncio] = useState("");
   // Guard SÍNCRONO contra taps casi simultáneos (multitouch): el estado
   // `reventada` vive en el closure del render y dos toques en el mismo tick
@@ -110,6 +110,11 @@ export default function DopaminaJuego() {
     setReventada(null);
     setSeleccion([]);
     setReto(null);
+    setRetoExtra(null);
+    setDestello(null);
+    if (despegue.current) clearTimeout(despegue.current);
+    setVuelo(null);
+    setLlegadas(new Set());
     setFase("burbujas");
     eventoDopa("inicio_partida");
   };
@@ -123,8 +128,43 @@ export default function DopaminaJuego() {
     reparte();
   }, []);
 
-  // Explota una burbuja: la palabra queda en su lugar y llena su slot; tras
-  // una pausa cambia la ronda o pasa al reto.
+  const aterriza = (categoria: CategoriaBurbuja) => {
+    setLlegadas((prev) => new Set(prev).add(categoria));
+    setVuelo(null);
+  };
+
+  // La palabra ya se reveló sobre su pompa: ahora despega hacia su hueco. Se
+  // mide en el momento (la pompa venía subiendo y los huecos dependen del
+  // viewport): origen = la tinta de la palabra revelada, destino = el centro
+  // del texto dentro del hueco. Si algo no está, el hueco se llena sin vuelo.
+  const despega = (b: Burbuja, texto: string) => {
+    const l = lienzo.current;
+    const palabra = l?.querySelector("[data-palabra-revelada]");
+    const hueco = l?.querySelector<HTMLElement>(`[data-slot="${b.categoria}"]`);
+    if (!l || !palabra || !hueco) {
+      aterriza(b.categoria);
+      return;
+    }
+    const tinta = document.createRange();
+    tinta.selectNodeContents(palabra);
+    const rp = tinta.getBoundingClientRect();
+    const rh = hueco.getBoundingClientRect();
+    const rl = l.getBoundingClientRect();
+    const pxHueco = parseFloat(getComputedStyle(hueco).fontSize);
+    const pxPalabra = parseFloat(getComputedStyle(palabra).fontSize);
+    setVuelo({
+      texto,
+      categoria: b.categoria,
+      desde: { x: rp.left + rp.width / 2 - rl.left, y: rp.top + rp.height / 2 - rl.top },
+      // +0.07em: el óvalo lleva más aire arriba que abajo (piezas.ts), así que
+      // el texto vive un pelo por debajo del centro de la caja.
+      hasta: { x: rh.left + rh.width / 2 - rl.left, y: rh.top + rh.height / 2 - rl.top + pxHueco * 0.07 },
+      escala: pxHueco / pxPalabra,
+    });
+  };
+
+  // Explota una burbuja: la palabra se revela en su lugar, vuela a su hueco y,
+  // tras una pausa, cambia la ronda o pasa al reto.
   const tocaBurbuja = (b: Burbuja) => {
     if (reventando.current || reventada !== null) return;
     reventando.current = true;
@@ -134,6 +174,13 @@ export default function DopaminaJuego() {
     const nueva = [...seleccion, b];
     setSeleccion(nueva);
     setAnuncio(`Descubriste: ${b.texto}`);
+    // Sin movimiento el hueco se llena de una vez; si no, la palabra posa un
+    // momento sobre su pompa (la revelación) y luego despega.
+    if (sinMovimiento) aterriza(b.categoria);
+    else {
+      const texto = seleccion.length === 0 ? capitaliza(b.texto) : b.texto;
+      despegue.current = setTimeout(() => despega(b, texto), 720);
+    }
     if (nueva.length === RONDAS.length) {
       eventoDopa("burbujas_completas");
       recuerdaSeleccion(nueva); // estas 3 palabras no volverán a salir pronto
@@ -148,13 +195,63 @@ export default function DopaminaJuego() {
         setRonda((r) => r + 1);
         setReventada(null);
         reventando.current = false;
-      }, 1400);
+        // 1650 (antes 1400): revelación 0.7 s + vuelo 0.6 s + un respiro con el
+        // hueco ya lleno antes de cambiar de ronda.
+      }, 1650);
     }
   };
 
-  const eligeTiempo = (seg: number) => {
-    setDuracion(seg);
-    eventoDopa("duracion_elegida", { seg });
+  // Cambia UNA pieza de la frase (tocándola en la pantalla del reto): las otras
+  // dos se quedan. No reparte burbujas ni toca el reto extra ni el tiempo. La
+  // pieza nueva también entra a la memoria anti-repetición.
+  const cambiaParte = (categoria: CategoriaBurbuja) => {
+    if (!reto) return;
+    const actual = reto.burbujas.find((b) => b.categoria === categoria);
+    const nueva = sorteaParte(categoria, actual ? [actual.texto] : []);
+    const burbujas = reto.burbujas.map((b) => (b.categoria === categoria ? nueva : b));
+    const armado = armaReto(burbujas);
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(20);
+    recuerdaSeleccion([nueva]);
+    setSeleccion(burbujas);
+    setReto(armado);
+    setAnuncio(`Nueva frase: ${armado.frase}`);
+    eventoDopa("parte_cambiada", { categoria });
+  };
+
+  // Sortea el reto extra (al explotar su pompa o con "Cambiar reto"), siempre
+  // distinto al anterior. No toca la combinación ni el flujo principal.
+  const sorteaExtra = (cambio: boolean) => {
+    const nuevo = sorteaRetoExtra(ultimoRetoExtra.current);
+    ultimoRetoExtra.current = nuevo.id;
+    setRetoExtra(nuevo);
+    setAnuncio(`Reto extra: ${nuevo.texto}`);
+    eventoDopa(cambio ? "reto_extra_cambiado" : "reto_extra_agregado", { categoria: nuevo.categoria });
+  };
+
+  // Arranca el destello desde la pompa tocada. El reto NO se sortea aquí sino
+  // cuando la pantalla ya está en blanco (onCubierto): así el cambio de layout
+  // ocurre tapado. Con reduced-motion no hay destello: se cambia en seco (un
+  // fundido a blanco de pantalla completa es justo lo que esa preferencia pide
+  // evitar).
+  const lanzaDestello = (pompa: HTMLElement) => {
+    if (destello) return;
+    const l = lienzo.current?.getBoundingClientRect();
+    if (!l || sinMovimiento) {
+      sorteaExtra(false);
+      return;
+    }
+    const r = pompa.getBoundingClientRect();
+    setDestello({
+      x: r.left + r.width / 2 - l.left,
+      y: r.top + r.height / 2 - l.top,
+      tam: r.width,
+      ancho: l.width,
+      alto: l.height,
+    });
+  };
+
+  const comienza = () => {
+    eventoDopa("duracion_elegida", { seg: duracion, reto_extra: retoExtra !== null });
     setFase("cronometro");
     setAnuncio("El cronómetro va a empezar");
   };
@@ -168,11 +265,16 @@ export default function DopaminaJuego() {
   const cat = RONDAS[Math.min(ronda, RONDAS.length - 1)];
   const enBurbujas = fase === "burbujas";
   const enReto = fase === "reto";
+  // Reto y cronómetro comparten estructura: textos centrados en el aire libre
+  // y un bloque al fondo (tiempo + ¡Comenzar! / aro + ¡Terminé!). Mismo formato
+  // de textos en las dos, así al comenzar nada se encoge ni cambia de sitio.
+  const conTextos = enReto || fase === "cronometro";
 
   return (
     <MotionConfig reducedMotion="user">
       <main className="min-h-[100dvh] bg-[var(--color-bg)] p-2.5 md:p-4">
         <section
+          ref={lienzo}
           className="dopa-canvas relative overflow-hidden rounded-[24px] md:rounded-[32px] min-h-[calc(100dvh-20px)] md:min-h-[calc(100dvh-32px)] flex flex-col"
           style={{ backgroundColor: FONDO_CIELO }}
         >
@@ -198,14 +300,11 @@ export default function DopaminaJuego() {
             />
           ))}
 
-          {/* Logo: grande al centro durante las burbujas, chico arriba después */}
+          {/* Logo: chico y arriba en TODAS las fases (antes iba grande al
+              centro durante las burbujas; ahora el centro es del título). */}
           <div
             aria-hidden="true"
-            className={`absolute pointer-events-none transition-all duration-700 ease-out left-1/2 -translate-x-1/2 ${
-              enBurbujas
-                ? "top-1/2 -translate-y-1/2 w-[180px] md:w-[300px] opacity-90"
-                : "top-6 translate-y-0 w-[84px] md:w-[100px] opacity-90"
-            }`}
+            className="absolute pointer-events-none left-1/2 -translate-x-1/2 top-6 w-[84px] md:w-[100px] opacity-90"
           >
             <AnimatedLogo color="#FFFFFF" className="w-full aspect-square" />
           </div>
@@ -225,6 +324,23 @@ export default function DopaminaJuego() {
             {anuncio}
           </div>
 
+          {/* Destello del reto extra: tapa TODO el lienzo (z-40, sobre Salir) */}
+          {destello && (
+            <Destello origen={destello} onCubierto={() => sorteaExtra(false)} onFin={() => setDestello(null)} />
+          )}
+
+          {/* La palabra revelada volando a su hueco */}
+          {vuelo && (
+            <PalabraVuela
+              key={vuelo.categoria}
+              texto={vuelo.texto}
+              desde={vuelo.desde}
+              hasta={vuelo.hasta}
+              escala={vuelo.escala}
+              onLlega={() => aterriza(vuelo.categoria)}
+            />
+          )}
+
           {/* Confeti de celebración al completar el reto */}
           {fase === "final" && <Confeti />}
 
@@ -243,6 +359,8 @@ export default function DopaminaJuego() {
                   rondaKey={cat.id}
                   burbujas={opciones[cat.id]}
                   reventadaId={reventada}
+                  // Al despegar (y ya aterrizada) la palabra deja su pompa.
+                  palabraSeFue={vuelo !== null || (reventada !== null && llegadas.size === seleccion.length)}
                   onToca={tocaBurbuja}
                 />
               </motion.div>
@@ -252,14 +370,27 @@ export default function DopaminaJuego() {
           {/* Contenido por fase */}
           <div className="relative z-20 flex-1 flex flex-col pointer-events-none">
             {enBurbujas ? (
-              <header className="flex flex-col items-center text-center gap-4 px-6 pt-[72px] md:pt-14">
-                <p className="label text-white/70">
+              // Al centro del lienzo (my-auto), como un HUD: va SOBRE el campo
+              // (z-20) y sin pointer-events, así que las pompas que pasan por
+              // detrás se siguen pudiendo tocar. La sombra de texto lo separa
+              // del vidrio cuando una pompa le cruza por atrás.
+              <header
+                className="my-auto flex flex-col items-center text-center gap-4 px-6"
+                style={{ textShadow: "0 1px 14px rgba(18,64,150,0.55)" }}
+              >
+                <p className="label text-white">
                   Burbuja {Math.min(ronda + 1, RONDAS.length)} de {RONDAS.length}
                 </p>
-                <h1 className="font-sans text-[clamp(1.25rem,3vw,1.9rem)] font-medium leading-snug text-white max-w-3xl">
+                {/* Se atenúa mientras una pompa revela su palabra: si tronó
+                    sobre el centro, la palabra no pelea con el título. */}
+                <h1
+                  className={`font-sans text-[clamp(1.25rem,3vw,1.9rem)] font-medium leading-snug text-white max-w-3xl transition-opacity duration-300 ${
+                    reventada !== null ? "opacity-25" : ""
+                  }`}
+                >
                   Explota una burbuja y descubre tu siguiente creación
                 </h1>
-                <Slots seleccion={seleccion} />
+                <SlotsRonda seleccion={seleccion} llegadas={llegadas} />
               </header>
             ) : (
               <div
@@ -267,7 +398,10 @@ export default function DopaminaJuego() {
                   // pt-[120px]+ libra el logo chico (top-6 + 84/100px de alto):
                   // en la pantalla final el contenido es alto (formulario) y con
                   // py-24 el título se encimaba con el logo.
-                  enReto ? "pt-24 pb-14" : "pt-[120px] md:pt-[136px] pb-16"
+                  // En el reto el contenido ya NO se centra: "Tu reto" arranca
+                  // arriba, así que el pt debe librar el logo con aire en
+                  // ambos breakpoints (acaba en 108px mobile / 124px desktop).
+                  conTextos ? "pt-[128px] md:pt-[148px] pb-8 md:pb-9" : "pt-[120px] md:pt-[136px] pb-16"
                 }`}
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -279,113 +413,98 @@ export default function DopaminaJuego() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 16 }}
                     transition={{ duration: 0.45, ease: CURVA_SUAVE }}
-                    // En el reto el bloque ocupa todo el alto: el reto se centra
-                    // en el espacio libre (my-auto) y los tiempos caen al fondo.
-                    className={`w-full flex flex-col items-center text-center ${enReto ? "flex-1" : ""}`}
+                    // En el reto el bloque ocupa todo el alto: el reto va arriba,
+                    // el reto extra se centra en el espacio libre (my-auto) y el
+                    // tiempo + ¡Comenzar! caen al fondo.
+                    className={`w-full flex flex-col items-center text-center ${conTextos ? "flex-1" : ""}`}
                   >
                     {fase === "reto" && reto && (
                       <>
-                        {/* Bloque 1 — el reto, centrado en el espacio libre.
-                            Coreografía de entrada: label → frase palabra por
-                            palabra → "otras burbujas" → pregunta → tiempos. */}
-                        <div className="my-auto flex flex-col items-center w-full">
-                        <motion.p
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.05, duration: 0.4 }}
-                          className="label text-white/70 mb-5"
-                        >
-                          Tu reto
-                        </motion.p>
-                        <motion.div
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.12, type: "spring", stiffness: 200, damping: 20 }}
-                          className="w-full max-w-3xl"
-                        >
-                          {/* Sin caja: la frase es el héroe de la pantalla, con
-                              el mismo tratamiento que los heroes del sitio
-                              (serif italic blanca, leading apretado). El clamp
-                              va por debajo del de los heroes porque aquí no es
-                              un título de 3 palabras, es una oración larga. */}
-                          <p className="font-serif italic text-[clamp(2rem,4.8vw,3.75rem)] leading-[1.05] text-white">
-                            {/* La frase se arma palabra por palabra, como las burbujas */}
-                            {reto.frase.split(" ").map((palabra, i) => (
-                              <motion.span
-                                key={i}
-                                className="inline-block"
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + i * 0.05, duration: 0.35, ease: CURVA_SUAVE }}
-                              >
-                                {palabra}
-                                {" "}
-                              </motion.span>
-                            ))}
-                          </p>
-                        </motion.div>
+                        {/* Dos layouts, de arriba hacia abajo (pensados en mobile):
+                            SIN reto extra → 1 · el reto (piezas tocables) · 2 · la
+                            pompa de reto flotando en el aire libre · 3 · tiempo.
+                            CON reto extra (inmersivo) → la pantalla se limpia:
+                            solo frase + reto al centro y el tiempo al fondo. El
+                            paso de uno a otro ocurre tapado por el Destello. */}
+                        {retoExtra ? (
+                          <div className="my-auto w-full flex flex-col items-center py-6 md:py-4">
+                            <FraseReto reto={reto} onCambiaParte={cambiaParte} />
+                            <div className="mt-6 w-full">
+                              <BloqueRetoExtra
+                                reto={retoExtra}
+                                cubriendo={destello !== null}
+                                onExplota={lanzaDestello}
+                                onCambia={() => sorteaExtra(true)}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* 1 — el reto. Ya no lleva la etiqueta "Tu reto":
+                                el verbo "Dibuja" de la propia frase hace de
+                                etiqueta (vive dentro de FraseReto). */}
+                            {/* mt: aire bajo el logo — aquí la frase arranca
+                                arriba (no va centrada) y "DIBUJA" quedaba
+                                pegado a él. */}
+                            <div className="mt-6 md:mt-3 w-full flex justify-center">
+                              <FraseReto reto={reto} onCambiaParte={cambiaParte} />
+                            </div>
 
-                        {/* Terciario: descartar el reto es la salida, no la
-                            acción. Va pegado a la frase (es sobre ELLA) y como
-                            link para no competir con los botones de tiempo. */}
-                        <motion.button
-                          type="button"
-                          onClick={reparte}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.9, duration: 0.4 }}
-                          className={`${btnTerciario} mt-7`}
-                        >
-                          <ArrowPathIcon className="w-3.5 h-3.5" />
-                          Probar otras burbujas
-                        </motion.button>
-                        </div>
+                            {/* Pista: los óvalos punteados de la frase se tocan.
+                                Solo aquí; en el layout limpio (con reto extra)
+                                el jugador ya lo aprendió y sobra. Ya no hay
+                                "Probar otras burbujas": cambiar por piezas lo
+                                reemplaza (tres toques = frase nueva). */}
+                            <motion.p
+                              layout="position"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: 0.85, duration: 0.4 }}
+                              className="mt-4 font-sans text-[13px] leading-snug text-white"
+                            >
+                              Toca una parte de la frase para cambiarla
+                            </motion.p>
 
-                        {/* Bloque 2 — al fondo: el paso que falta para seguir */}
+                            {/* 2 — reto extra opcional: flota en el espacio
+                                libre entre el reto y el tiempo (my-auto). */}
+                            <div className="my-auto w-full py-5 md:py-3">
+                              <BloqueRetoExtra
+                                reto={null}
+                                cubriendo={destello !== null}
+                                onExplota={lanzaDestello}
+                                onCambia={() => sorteaExtra(true)}
+                                retraso={1}
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {/* 3 — al fondo: el paso que falta para seguir */}
                         <motion.div
                           initial={{ opacity: 0, y: 12 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.55, duration: 0.4 }}
-                          className="mt-12 w-full max-w-sm md:max-w-xl"
+                          className="w-full flex justify-center"
                         >
-                          <p className="font-serif italic text-[17px] leading-snug text-white mb-4">
-                            Elige tu tiempo y que comience la creatividad
-                          </p>
-                          {/* 5 opciones: 3 + 2 centradas en mobile, una sola fila
-                              en desktop. Con borde y relieve para que se lean
-                              como botones: son el paso obligatorio para avanzar. */}
-                          <div className="flex flex-wrap justify-center gap-2.5">
-                            {DURACIONES.map((d, i) => (
-                              <motion.button
-                                key={d.seg}
-                                type="button"
-                                onClick={() => eligeTiempo(d.seg)}
-                                aria-label={`Empezar con ${d.valor} ${d.unidad}`}
-                                initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                transition={{ delay: 0.62 + i * 0.07, type: "spring", stiffness: 260, damping: 20 }}
-                                whileHover={{ y: -3 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="group basis-[calc(33.333%-7px)] md:basis-[calc(20%-8px)] flex flex-col items-center gap-0.5 rounded-2xl border border-[rgba(255,255,255,0.55)] bg-[rgba(255,255,255,0.14)] hover:bg-white hover:border-white shadow-[0_8px_20px_rgba(0,0,0,0.14)] py-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                              >
-                                <span className="font-serif text-[26px] leading-none text-white group-hover:text-[#403C3C] transition-colors">
-                                  {d.valor}
-                                </span>
-                                <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-white/75 group-hover:text-[#403C3C]/70 transition-colors">
-                                  {d.unidad}
-                                </span>
-                              </motion.button>
-                            ))}
-                          </div>
+                          <SelectorTiempo valor={duracion} onCambia={setDuracion} onComienza={comienza} />
                         </motion.div>
                       </>
                     )}
 
                     {fase === "cronometro" && reto && (
                       <>
-                        <p className="font-serif text-[clamp(1.15rem,2.4vw,1.5rem)] leading-snug text-white max-w-xl mb-10">
-                          {reto.frase}
-                        </p>
+                        {/* Mismo formato EXACTO que la pantalla del reto (frase
+                            + etiqueta + reto, mismos tamaños): solo cambia lo
+                            de abajo, que pasa de tiempo/¡Comenzar! a aro/
+                            ¡Terminé!. Aquí ya no se anima nada del texto. */}
+                        <div className="my-auto w-full flex flex-col items-center py-6 md:py-4">
+                          <FraseReto reto={reto} estatica />
+                          {retoExtra && (
+                            <div className="mt-6 w-full flex flex-col items-center">
+                              <RetoExtraTexto texto={retoExtra.texto} animado={false} />
+                            </div>
+                          )}
+                        </div>
                         <Cronometro duracionSeg={duracion} onTermina={terminaReto} />
                       </>
                     )}
@@ -400,7 +519,7 @@ export default function DopaminaJuego() {
                         >
                           ¡Reto completado!
                         </motion.h1>
-                        <p className="font-sans text-[14px] leading-relaxed text-white/90 max-w-sm mb-6">
+                        <p className="font-sans text-[14px] leading-relaxed text-white max-w-sm mb-6">
                           Tómale foto a tu dibujo, súbela a Instagram y
                           etiquétanos — quienes lo hagan se llevan una sorpresa.
                         </p>

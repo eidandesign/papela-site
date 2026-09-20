@@ -7,7 +7,14 @@
 //   dopa_como_se_juega             — abrió el modal "¿Cómo se juega?"
 //   dopa_inicio_partida            — se repartieron burbujas (nueva partida)
 //   dopa_burbujas_completas        — explotó las 3 burbujas
-//   dopa_duracion_elegida {seg}    — eligió duración (arranca el cronómetro)
+//   dopa_parte_cambiada {categoria} — tocó una pieza de la frase para
+//                                    re-sortear solo esa (objeto|accion|cierre)
+//   dopa_reto_extra_agregado {categoria} — explotó la pompa del reto opcional
+//   dopa_reto_extra_cambiado {categoria} — pidió otro con "Cambiar reto"
+//   dopa_duracion_elegida {seg, reto_extra} — pulsó ¡Comenzar! con esa duración
+//                                    (arranca el cronómetro; elegir un tiempo
+//                                    en el selector NO emite nada;
+//                                    reto_extra=true si sumó reto)
 //   dopa_reto_terminado {antes}    — terminó (antes=true si pulsó "¡Terminé!")
 //   dopa_volver_jugar              — reinició partida desde el final
 //   dopa_ver_club                  — volvió a Club Creativo desde el final

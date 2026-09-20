@@ -1,9 +1,11 @@
 // Verificador de los bancos de Dopamina. Correr con: npx tsx scripts/verifica-bancos.ts
 // Revisa: conteos, duplicados exactos dentro de cada banco, y palabras
 // significativas repetidas ENTRE bancos (producían frases tipo
-// "una luna curiosa... en la luna"). Sale con código 1 si algo falla.
+// "una luna curiosa... en la luna"). Aparte revisa la biblioteca de retos
+// opcionales (retos-extra). Sale con código 1 si algo falla.
 
 import { OBJETOS, ACCIONES, CIERRES } from "../lib/dopamina/bancos";
+import { RETOS_EXTRA, type CategoriaRetoExtra } from "../lib/dopamina/retos-extra";
 
 const STOPWORDS = new Set([
   "un", "una", "unos", "unas", "el", "la", "los", "las", "lo",
@@ -79,6 +81,36 @@ for (let i = 0; i < porBanco.length; i++) {
     }
   }
 }
+
+// 4 · Retos opcionales: deben leerse como INSTRUCCIÓN después de "Reto:".
+// Un sustantivo suelto ("Puntillismo.") se lee como etiqueta y una narración
+// sin imperativo ("Algo acaba de salir mal.") como mensaje de error.
+const MAX_RETO = 64; // ~2 renglones en mobile
+const vistosRetos = new Set<string>();
+let totalRetos = 0;
+for (const cat of Object.keys(RETOS_EXTRA) as CategoriaRetoExtra[]) {
+  for (const reto of RETOS_EXTRA[cat].retos) {
+    totalRetos++;
+    if (vistosRetos.has(reto)) {
+      console.log(`❌ reto duplicado: "${reto}"`);
+      fallo = true;
+    }
+    vistosRetos.add(reto);
+    if (!reto.endsWith(".")) {
+      console.log(`❌ reto sin punto final: "${reto}"`);
+      fallo = true;
+    }
+    if (reto.split(/\s+/).length < 3) {
+      console.log(`❌ reto demasiado corto (¿sustantivo suelto?): "${reto}"`);
+      fallo = true;
+    }
+    if (reto.length > MAX_RETO) {
+      console.log(`❌ reto de ${reto.length} caracteres (máx ${MAX_RETO}): "${reto}"`);
+      fallo = true;
+    }
+  }
+}
+console.log(`RETOS_EXTRA: ${totalRetos} retos en ${Object.keys(RETOS_EXTRA).length} categorías`);
 
 if (!fallo) console.log("✓ Bancos limpios");
 process.exit(fallo ? 1 : 0);

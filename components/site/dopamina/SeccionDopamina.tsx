@@ -156,14 +156,14 @@ export default function SeccionDopamina() {
         </div>
 
         {/* Eyebrow arriba, como el "HAPPENING NOW" de la App Store */}
-        <p className="label text-white/80 absolute left-6 top-5 md:left-7 md:top-6">Juego creativo</p>
+        <p className="label text-white absolute left-6 top-5 md:left-7 md:top-6">Juego creativo</p>
 
         {/* Título + copy sobre el visual, con scrim para legibilidad */}
         <div className="absolute inset-x-0 bottom-0 px-6 md:px-7 pt-16 pb-5 md:pb-6 bg-gradient-to-t from-black/30 via-black/10 to-transparent">
           <h2 className="font-serif text-[clamp(2rem,3vw,2.6rem)] leading-none text-white mb-2">
             Dopamina
           </h2>
-          <p className="font-sans text-[14px] leading-[20px] text-white/90 max-w-sm">
+          <p className="font-sans text-[14px] leading-[20px] text-white max-w-sm">
             ¿Sin inspiración? Explota burbujas, descubre un reto y ponte a crear.
           </p>
         </div>
@@ -181,7 +181,7 @@ export default function SeccionDopamina() {
             ref={triggerRef}
             type="button"
             onClick={abreModal}
-            className="font-sans text-[12px] font-medium text-white/70 hover:text-white underline underline-offset-4 decoration-white/35 transition-colors"
+            className="font-sans text-[12px] font-medium text-white underline underline-offset-4 decoration-white/50 hover:decoration-white transition-colors"
           >
             ¿Cómo se juega?
           </button>

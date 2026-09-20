@@ -475,10 +475,44 @@ body {
 }
 .dopa-brillo { animation: dopa-brilla 3.2s ease-in-out infinite; }
 
+/* Pompa del reto extra: cambia de color fundiendo capas de tinte apiladas.
+   Se anima SOLO opacity (compositor) — animar el gradiente repintaría la
+   pompa en cada frame. Todas las capas comparten keyframes y se desfasan con
+   delay negativo (BloqueRetoExtra): cada una entra (0→10%), se sostiene hasta
+   que la siguiente ya está encima (35%) y entonces se va — así el cruce nunca
+   deja ver el vidrio pelón. --op-reposo = opacidad sin animación (la primera
+   capa vale 1: con reduced-motion la pompa se queda en dorado). */
+@keyframes dopa-reto-color {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  35%  { opacity: 1; }
+  45%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+.dopa-reto-color {
+  opacity: var(--op-reposo, 0);
+  animation: dopa-reto-color var(--ciclo, 10s) ease-in-out infinite;
+}
+
+/* Cursor de la máquina de escribir del reto extra. Es un inline SIN ancho
+   neto (borde de 2px compensado con margen negativo): un inline-block, aunque
+   mida 0, abriría una oportunidad de salto de línea a media palabra y movería
+   el texto mientras se escribe. steps(1) = parpadeo seco, de cursor real. */
+@keyframes dopa-cursor {
+  0%, 55%   { border-color: #fff; }
+  56%, 100% { border-color: transparent; }
+}
+.dopa-cursor {
+  border-right: 2px solid #fff;
+  margin-right: -2px;
+  animation: dopa-cursor 0.85s steps(1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dopa-flota, .dopa-deriva { animation: none; }
   .dopa-punto { display: none; } /* decorativos: sin movimiento no aportan */
   .dopa-brillo { animation: none; opacity: 0.7; }
+  .dopa-reto-color { animation: none; }
 }
 
 /* Confeti de celebración (pantalla final de Dopamina): cada pieza cae girando
