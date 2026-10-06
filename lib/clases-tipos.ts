@@ -47,6 +47,7 @@ export type PaqueteClasePublico = {
   precio: number;
   sesiones: number;
   vigenciaDias: number;
+  inscripcion: number; // inscripción anual (0 = no lleva)
   descripcion: string;
   imagen: string | null;
   incluye: string[];
@@ -59,6 +60,7 @@ interface PaqueteClaseRaw {
   precio?: number;
   sesiones?: number;
   vigenciaDias?: number;
+  inscripcion?: number;
   descripcion?: string;
   imagen?: string;
   incluye?: unknown;
@@ -131,6 +133,7 @@ export async function getPaquetesClase(claseId?: string): Promise<PaqueteClasePu
           precio: Number(p.precio) || 0,
           sesiones: Number(p.sesiones) || 0,
           vigenciaDias: Number(p.vigenciaDias) || 0,
+          inscripcion: Math.max(0, Number(p.inscripcion) || 0),
           descripcion: (p.descripcion ?? "").trim(),
           imagen: imagenSegura(p.imagen),
           incluye: listaTexto(p.incluye),

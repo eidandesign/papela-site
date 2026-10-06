@@ -67,6 +67,7 @@ function Tarjeta({
   chips,
   precio,
   precioNota,
+  precioExtra,
   descripcion,
   horarios,
   children,
@@ -77,6 +78,8 @@ function Tarjeta({
   chips: string[];
   precio: number;
   precioNota: string;
+  // Línea bajo el precio (ej. "+ Inscripción anual $350").
+  precioExtra?: string;
   descripcion: string;
   children?: React.ReactNode;
 }) {
@@ -103,6 +106,9 @@ function Tarjeta({
           <p className="font-sans text-[var(--color-verde)] text-[17px] font-semibold mt-1">
             {precioMx(precio)} <span className="font-normal text-[var(--color-muted)] text-[15px]">{precioNota}</span>
           </p>
+        )}
+        {precioExtra && (
+          <p className="font-sans text-[15px] text-[var(--color-terracota)] font-semibold mt-0.5">{precioExtra}</p>
         )}
 
         {horarios.length > 0 && (
@@ -168,6 +174,7 @@ export function PaqueteClaseCard({
       chips={chips}
       precio={paquete.precio}
       precioNota={`el paquete${porClase}`}
+      precioExtra={paquete.inscripcion > 0 ? `+ Inscripción anual ${precioMx(paquete.inscripcion)}` : undefined}
       descripcion={paquete.descripcion}
       horarios={horarios}
     >
