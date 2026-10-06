@@ -3,13 +3,15 @@
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import type { Horario } from "@/lib/clases";
 import type { TipoClasePublico } from "@/lib/clases-tipos";
-import { useReservaModalStore } from "@/lib/stores/reservaModalStore";
+import { useReservaModalStore, type PaqueteReserva } from "@/lib/stores/reservaModalStore";
 
 export default function ReservaButton({
   horarios,
   claseNombre,
   whatsapp,
   tipos,
+  tipoInicial = null,
+  paquete = null,
   label = "Reservar Clase",
   variant = "solid",
   size = "md",
@@ -20,6 +22,8 @@ export default function ReservaButton({
   claseNombre: string;
   whatsapp: string | null;
   tipos: TipoClasePublico[];
+  tipoInicial?: string | null;
+  paquete?: PaqueteReserva | null;
   label?: string;
   variant?: "solid" | "outline";
   size?: "md" | "sm";
@@ -39,7 +43,7 @@ export default function ReservaButton({
   return (
     <button
       type="button"
-      onClick={() => open({ horarios, claseNombre, whatsapp, tipos })}
+      onClick={() => open({ horarios, claseNombre, whatsapp, tipos, tipoInicial, paquete })}
       className={`${base} ${styles} ${className}`}
     >
       {variant === "outline" && (

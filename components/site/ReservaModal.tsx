@@ -40,15 +40,17 @@ export default function ReservaModal() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
-  // Al abrir (o cambiar de maestra) resetea a "Todas las clases" — así nunca
-  // se oculta un horario existente que aún no tiene tipo asignado en el admin.
-  // Ajuste de estado en render (recomendado por React) en vez de useEffect:
-  // evita un render extra y el flash de la selección anterior.
-  const claseKey = data?.claseNombre ?? null;
+  // Al abrir resetea la selección: a la clase elegida desde su tarjeta, o a
+  // "Todas las clases" (así nunca se oculta un horario que aún no tiene tipo
+  // asignado en el admin). Ajuste de estado en render (recomendado por React)
+  // en vez de useEffect: evita un render extra y el flash de la anterior.
+  const claseKey = data ? `${data.claseNombre}|${data.tipoInicial ?? ""}|${data.paquete?.id ?? ""}` : null;
   if (claseKey !== prevClase) {
     setPrevClase(claseKey);
-    setSelected(null);
+    setSelected(data?.tipoInicial ?? null);
   }
+  const paquete = data?.paquete ?? null;
+  const totalPaquete = paquete ? paquete.precio + paquete.inscripcion : 0;
 
   const tipoSeleccionado = data?.tipos.find((t) => t.id === selected) ?? null;
 
@@ -84,9 +86,11 @@ export default function ReservaModal() {
 
   const numero = data?.whatsapp || WHATSAPP_FALLBACK;
   const waText = encodeURIComponent(
-    tipoSeleccionado
-      ? `Hola Papela 🌿 me interesa reservar la clase de "${tipoSeleccionado.nombre}" con ${data?.claseNombre}.`
-      : `Hola Papela 🌿 me interesa reservar una clase con ${data?.claseNombre}.`
+    paquete
+      ? `Hola Papela 🌿 me interesa el "${paquete.nombre}"${tipoSeleccionado ? ` de ${tipoSeleccionado.nombre}` : ""} con ${data?.claseNombre}.`
+      : tipoSeleccionado
+        ? `Hola Papela 🌿 me interesa reservar la clase de "${tipoSeleccionado.nombre}" con ${data?.claseNombre}.`
+        : `Hola Papela 🌿 me interesa reservar una clase con ${data?.claseNombre}.`
   );
   const waHref = `https://wa.me/${numero}?text=${waText}`;
 
@@ -131,16 +135,40 @@ export default function ReservaModal() {
 
         <div className="text-center mb-6">
           <h2 className="font-serif font-extralight text-[clamp(2rem,5vw,3rem)] text-[#403c3c] leading-tight">
-            Elige tu horario
+            {paquete ? "Elige tu primera clase" : "Elige tu horario"}
           </h2>
           <p className="font-sans text-sm text-[var(--color-muted)] mt-2 max-w-md mx-auto">
-            Selecciona el día y la hora que más te acomode. Las reservas se cierran
-            dos horas antes de la clase.
+            {paquete
+              ? "Aparta el día y la hora de tu primera clase y paga tu paquete. Las siguientes clases las agendas con nosotros."
+              : "Selecciona el día y la hora que más te acomode. Las reservas se cierran dos horas antes de la clase."}
           </p>
         </div>
 
+        {/* Paquete elegido: qué se paga, sin sorpresas */}
+        {paquete && (
+          <div className="mb-6 mx-auto max-w-md rounded-2xl bg-[#f2f0e9] px-5 py-4 font-sans text-sm">
+            <p className="label text-[var(--color-terracota)] mb-2">
+              {paquete.nombre}{tipoSeleccionado ? ` · ${tipoSeleccionado.nombre}` : ""}
+            </p>
+            <div className="flex justify-between gap-3 text-[var(--color-text)]">
+              <span>Paquete{paquete.sesiones ? ` (${paquete.sesiones} clases)` : ""}</span>
+              <span>${paquete.precio.toLocaleString()}</span>
+            </div>
+            {paquete.inscripcion > 0 && (
+              <div className="flex justify-between gap-3 text-[var(--color-text)] mt-1">
+                <span>Inscripción anual</span>
+                <span>${paquete.inscripcion.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="flex justify-between gap-3 mt-2 pt-2 border-t border-[var(--color-border)] font-semibold text-[var(--color-verde)]">
+              <span>Total</span>
+              <span>${totalPaquete.toLocaleString()} MXN</span>
+            </div>
+          </div>
+        )}
+
         {/* Selector de tipo de clase: pills visibles con nombre + precio */}
-        {data.tipos.length > 0 && (
+        {data.tipos.length > 0 && !paquete && (
           <div className="mb-6 flex flex-col items-center gap-3">
             <span
               id="reserva-actividad-label"
@@ -218,6 +246,7 @@ export default function ReservaModal() {
             claseNombre={data.claseNombre}
             tipo={tipoSeleccionado ?? undefined}
             tipos={data.tipos}
+            paquete={paquete ?? undefined}
           />
         ) : (
           <div className="bg-[#f2f0e9] rounded-xl px-5 py-8 text-center">

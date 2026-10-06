@@ -133,7 +133,21 @@ function Tarjeta({
   );
 }
 
-export function TipoClaseCard({ tipo, horarios = [] }: { tipo: TipoClasePublico; horarios?: HorarioSemanal[] }) {
+/** Botones de la forma de venta (apartar en línea / WhatsApp), al pie de la tarjeta. */
+function Acciones({ children }: { children?: React.ReactNode }) {
+  if (!children) return null;
+  return <div className="mt-5 flex flex-wrap items-center gap-2.5">{children}</div>;
+}
+
+export function TipoClaseCard({
+  tipo,
+  horarios = [],
+  acciones,
+}: {
+  tipo: TipoClasePublico;
+  horarios?: HorarioSemanal[];
+  acciones?: React.ReactNode;
+}) {
   // Con horarios ligados, los días ya se leen en la lista: el chip sobraría.
   const chips = [duracionTexto(tipo.duracion), horarios.length ? null : diasTexto(tipo.dias)].filter(
     (x): x is string => !!x,
@@ -147,16 +161,31 @@ export function TipoClaseCard({ tipo, horarios = [] }: { tipo: TipoClasePublico;
       precioNota="por clase"
       descripcion={tipo.descripcion}
       horarios={horarios}
-    />
+    >
+      {tipo.sueltaDescripcion && (
+        <p className="font-sans text-[15px] leading-6 text-[var(--color-text)] mt-3 whitespace-pre-line">
+          {tipo.sueltaDescripcion}
+        </p>
+      )}
+      {(tipo.incluye.length > 0 || tipo.condiciones.length > 0) && (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Lista titulo="Incluye" items={tipo.incluye} tono="verde" />
+          <Lista titulo="Condiciones" items={tipo.condiciones} tono="muted" />
+        </div>
+      )}
+      <Acciones>{acciones}</Acciones>
+    </Tarjeta>
   );
 }
 
 export function PaqueteClaseCard({
   paquete,
   horarios = [],
+  acciones,
 }: {
   paquete: PaqueteClasePublico;
   horarios?: HorarioSemanal[];
+  acciones?: React.ReactNode;
 }) {
   const chips = [
     "Paquete",
@@ -185,6 +214,7 @@ export function PaqueteClaseCard({
           <Lista titulo="Condiciones" items={paquete.condiciones} tono="muted" />
         </div>
       )}
+      <Acciones>{acciones}</Acciones>
     </Tarjeta>
   );
 }

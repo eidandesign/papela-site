@@ -26,6 +26,10 @@ export type TipoClasePublico = {
   dias: number[];
   descripcion: string;
   imagen: string | null;
+  // Letra chica de la clase suelta (sus paquetes traen la suya).
+  sueltaDescripcion: string;
+  incluye: string[];
+  condiciones: string[];
 };
 
 interface TipoClaseRaw {
@@ -36,6 +40,9 @@ interface TipoClaseRaw {
   dias?: number[];
   descripcion?: string;
   imagen?: string;
+  sueltaDescripcion?: string;
+  incluye?: unknown;
+  condiciones?: unknown;
 }
 
 // Paquetes de varias clases (`clases.paquetes_clase`, misma columna privada y
@@ -105,6 +112,9 @@ export async function getTiposClase(): Promise<TipoClasePublico[]> {
           dias: t.dias ?? [],
           descripcion: (t.descripcion ?? "").trim(),
           imagen: imagenSegura(t.imagen),
+          sueltaDescripcion: (t.sueltaDescripcion ?? "").trim(),
+          incluye: listaTexto(t.incluye),
+          condiciones: listaTexto(t.condiciones),
         }));
     });
   } catch (err) {

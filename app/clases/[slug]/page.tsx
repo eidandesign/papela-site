@@ -11,6 +11,22 @@ import ReservaButton from "@/components/site/ReservaButton";
 import ActividadCard from "@/components/site/ActividadCard";
 import { PaqueteClaseCard, TipoClaseCard } from "@/components/site/ClaseOfertaCard";
 
+// Mismo número de respaldo que la ventana de reserva (ReservaModal).
+const WHATSAPP_PAPELA = "522211865590";
+
+function BotonWhatsApp({ href }: { href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-5 py-2.5 font-sans text-sm font-semibold text-[var(--color-text)] hover:border-[var(--color-verde)] hover:text-[var(--color-verde)] transition-colors"
+    >
+      Por WhatsApp
+    </a>
+  );
+}
+
 export const revalidate = 60;
 
 // Prerenderiza el detalle de cada maestra activa (son pocas); las nuevas
@@ -68,8 +84,11 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
   // Horario semanal de cada clase/paquete (horarios ligados en el admin).
   const horarioDe = (id: string) =>
     getHorariosSemanales(maestra.horarios.filter((h) => h.tipo_clase_id === id));
-  // En línea solo se apartan clases sueltas (los paquetes se venden en tienda).
+  // Solo horarios de una clase existente (o sin clase, los viejos): sus
+  // paquetes usan los mismos horarios de la clase.
   const horariosReservables = maestra.horarios.filter((h) => esReservable(h, tipos));
+  const waNumero = maestra.whatsapp || WHATSAPP_PAPELA;
+  const waHref = (texto: string) => `https://wa.me/${waNumero}?text=${encodeURIComponent(texto)}`;
   const horariosSemanales = getHorariosSemanales(maestra.horarios);
 
   const jsonLd = {
@@ -190,7 +209,24 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
                 const susPaquetes = paquetes.filter((p) => p.tipoId === t.id);
                 return (
                   <div key={t.id}>
-                    <TipoClaseCard tipo={t} horarios={horarioDe(t.id)} />
+                    <TipoClaseCard
+                      tipo={t}
+                      horarios={horarioDe(t.id)}
+                      acciones={
+                        <>
+                          <ReservaButton
+                            horarios={horariosReservables}
+                            claseNombre={maestra.nombre}
+                            whatsapp={maestra.whatsapp}
+                            tipos={tipos}
+                            tipoInicial={t.id}
+                            label="Apartar clase"
+                            size="sm"
+                          />
+                          <BotonWhatsApp href={waHref(`Hola Papela 🌿 me interesa la clase de "${t.nombre}" con ${maestra.nombre}.`)} />
+                        </>
+                      }
+                    />
                     {susPaquetes.length > 0 && (
                       <div className="mt-4">
                         <p className="label text-[var(--color-terracota)] mb-3">
@@ -198,7 +234,33 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
                         </p>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                           {susPaquetes.map((p) => (
-                            <PaqueteClaseCard key={p.id} paquete={p} />
+                            <PaqueteClaseCard
+                              key={p.id}
+                              paquete={p}
+                              acciones={
+                                <>
+                                  <ReservaButton
+                                    horarios={horariosReservables}
+                                    claseNombre={maestra.nombre}
+                                    whatsapp={maestra.whatsapp}
+                                    tipos={tipos}
+                                    tipoInicial={t.id}
+                                    paquete={{
+                                      id: p.id,
+                                      nombre: p.nombre,
+                                      precio: p.precio,
+                                      inscripcion: p.inscripcion,
+                                      sesiones: p.sesiones,
+                                    }}
+                                    label="Pagar en línea"
+                                    size="sm"
+                                  />
+                                  <BotonWhatsApp
+                                    href={waHref(`Hola Papela 🌿 me interesa el "${p.nombre}" de ${t.nombre} con ${maestra.nombre}.`)}
+                                  />
+                                </>
+                              }
+                            />
                           ))}
                         </div>
                       </div>

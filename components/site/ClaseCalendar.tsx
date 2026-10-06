@@ -65,11 +65,15 @@ export default function ClaseCalendar({
   claseNombre,
   tipo,
   tipos = [],
+  paquete,
 }: {
   horarios: Horario[];
   claseNombre: string;
   tipo?: TipoClasePublico;
   tipos?: TipoClasePublico[];
+  // Apartar un paquete: cada horario es "tu primera clase" y se cobra el
+  // paquete completo (+ inscripción). El checkout re-calcula el precio.
+  paquete?: { id: string; precio: number; inscripcion: number };
 }) {
   // Sin tipo elegido ("Todas las clases") se muestran todos los horarios.
   const horarios = tipo
@@ -84,6 +88,7 @@ export default function ClaseCalendar({
   // tiene tipos configurados (legado). Slot ambiguo → "Desde $mín" y el CTA
   // pide elegir clase en vez de cobrar un precio que no corresponde a ninguna.
   const precioTexto = (h: Horario, tipoSlot: TipoClasePublico | null) => {
+    if (paquete) return `${(paquete.precio + paquete.inscripcion).toLocaleString()}`;
     if (tipoSlot) return `$${precioDeSlot(h, tipoSlot).toLocaleString()}`;
     const posibles = tipos.filter((t) => calzaConTipo(h, t) && t.precio > 0);
     if (posibles.length > 0) {
@@ -162,6 +167,7 @@ export default function ClaseCalendar({
           claseNombre,
           actividad: tipoSlot?.nombre,
           tipoClaseId: tipoSlot?.id,
+          paqueteId: paquete?.id,
           fechaHora,
           duracion: duracionDeSlot(h, tipoSlot),
         }),
