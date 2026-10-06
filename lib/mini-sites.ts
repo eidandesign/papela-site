@@ -165,14 +165,44 @@ export const fetchMiniSite = cache(async (slug: string): Promise<MiniSiteLookup>
   }
 });
 
+// ── Analíticas (pestaña "Data" del admin) ───────────────────────────────────
+// Eventos que entiende POST /api/public/mini-sites/track del admin. Todo es
+// fire-and-forget: sendBeacon sobrevive a la navegación y nunca bloquea abrir
+// un link; cualquier fallo se traga en silencio.
+export type MiniSiteEvento =
+  | { type: "page_view" }
+  | { type: "block_click"; blockId: string; action?: BlockType | SocialType }
+  | { type: "menu_open"; blockId: string }
+  | { type: "item_view"; blockId: string; itemId: string; itemName: string; category: string }
+  | { type: "item_click"; blockId: string; itemId: string; itemName: string; category: string; action: "foto" | "agregar" | "opciones" }
+  | { type: "search"; blockId: string; term: string; results: number }
+  | { type: "order"; blockId: string; action: "pedido_whatsapp" | "pedido_copiado" };
+
+const VISITANTE_KEY = "papela-ms-visitante";
+
 /**
- * Analíticas ligeras (page_view / block_click). Fire-and-forget: sendBeacon
- * sobrevive a la navegación y nunca bloquea abrir el link. Falla en silencio.
+ * Id ANÓNIMO del navegador (uuid aleatorio en localStorage): solo sirve para
+ * estimar visitantes únicos y cuántos hicieron una acción. No identifica a
+ * nadie. Sin storage (modo privado) cada visita cuenta como alguien nuevo.
  */
-export function trackMiniSite(payload: { miniSiteId: string; blockId?: string; type: "page_view" | "block_click" }) {
+function visitante(): string | undefined {
+  try {
+    let v = window.localStorage.getItem(VISITANTE_KEY);
+    if (!v || !/^[0-9a-f-]{36}$/i.test(v)) {
+      v = crypto.randomUUID();
+      window.localStorage.setItem(VISITANTE_KEY, v);
+    }
+    return v;
+  } catch {
+    return undefined;
+  }
+}
+
+function enviar(miniSiteId: string, events: MiniSiteEvento[]) {
+  if (!events.length) return;
   try {
     const url = `${MINI_SITES_API}/track`;
-    const body = JSON.stringify(payload);
+    const body = JSON.stringify({ miniSiteId, visitorId: visitante(), events });
     if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
       // text/plain evita el preflight CORS y es lo que acepta sendBeacon cross-origin.
       if (navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }))) return;
@@ -181,4 +211,39 @@ export function trackMiniSite(payload: { miniSiteId: string; blockId?: string; t
   } catch {
     /* silencioso */
   }
+}
+
+/** Un evento suelto (visita, botón, abrir menú, pedido, búsqueda…). */
+export function trackMiniSite(miniSiteId: string, evento: MiniSiteEvento) {
+  enviar(miniSiteId, [evento]);
+}
+
+// Platillos vistos: pueden ser decenas por visita, así que se juntan y se
+// mandan de un jalón (cada pocos segundos, al llenar el lote o al salir de la
+// página) en vez de un request por platillo.
+const cola: { miniSiteId: string; evento: MiniSiteEvento }[] = [];
+let timer: ReturnType<typeof setTimeout> | null = null;
+
+export function vaciarColaMiniSite() {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  const porSitio = new Map<string, MiniSiteEvento[]>();
+  for (const { miniSiteId, evento } of cola.splice(0)) porSitio.set(miniSiteId, [...(porSitio.get(miniSiteId) ?? []), evento]);
+  for (const [id, evs] of porSitio) for (let i = 0; i < evs.length; i += 40) enviar(id, evs.slice(i, i + 40));
+}
+
+export function encolarMiniSite(miniSiteId: string, evento: MiniSiteEvento) {
+  cola.push({ miniSiteId, evento });
+  if (cola.length >= 40) vaciarColaMiniSite();
+  else if (!timer) timer = setTimeout(vaciarColaMiniSite, 5000);
+}
+
+if (typeof window !== "undefined") {
+  // pagehide/visibilitychange: el último momento seguro para mandar lo pendiente en móvil.
+  window.addEventListener("pagehide", vaciarColaMiniSite);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") vaciarColaMiniSite();
+  });
 }

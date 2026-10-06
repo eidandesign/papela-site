@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuExtraGrupo, MiniSiteMenuItem, MiniSiteMenuPaqueteGrupo, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
-import { trackMiniSite } from "@/lib/mini-sites";
+import { encolarMiniSite, trackMiniSite, vaciarColaMiniSite } from "@/lib/mini-sites";
 
 export type MiniSiteMode = "public" | "preview";
 
@@ -224,13 +224,15 @@ function estiloBoton(t: TemplateStyle, colors: MiniSitePublic["colors"]): CSSPro
  * Click de cualquier link de bloque: en preview no navega; en público registra
  * el click y deja que la navegación siga su curso normal.
  */
-function clickDeBloque(site: MiniSitePublic, blockId: string, mode: MiniSiteMode) {
+function clickDeBloque(site: MiniSitePublic, blockId: string, mode: MiniSiteMode, action: BlockType | SocialType) {
   return (e: MouseEvent<HTMLAnchorElement>) => {
     if (mode === "preview") {
       e.preventDefault();
       return;
     }
-    trackMiniSite({ miniSiteId: site.id, blockId, type: "block_click" });
+    // `action` = qué hizo (WhatsApp, llamar, cómo llegar, Instagram…): la
+    // pestaña Data del admin lo agrupa así, no solo por bloque.
+    trackMiniSite(site.id, { type: "block_click", blockId, action });
   };
 }
 
@@ -247,7 +249,7 @@ export function MiniSiteIconBlock({ block, site, mode }: { block: MiniSitePublic
       href={block.href ?? "#"}
       target={externo ? "_blank" : undefined}
       rel={externo ? "noopener noreferrer" : undefined}
-      onClick={clickDeBloque(site, block.id, mode)}
+      onClick={clickDeBloque(site, block.id, mode, block.type)}
       aria-label={block.title}
       title={block.title}
       className="w-14 h-14 flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
@@ -481,6 +483,20 @@ function whatsappDelSitio(site: MiniSitePublic): string | null {
 
 /** Cuántas veces eligió el cliente cada opción (id → veces). */
 type Cuentas = Record<string, number>;
+
+/** Mínimo de platillos + paquetes para mostrar el buscador (espejo de MENU_BUSCADOR_MIN del admin). */
+const BUSCADOR_MIN = 6;
+
+/** Igual que normalizarBusqueda() del admin: así lo buscado se agrupa igual allá. */
+function normalizaBusqueda(t: string): string {
+  return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim().slice(0, 60);
+}
+
+/** Todas las palabras buscadas aparecen en el texto (sin acentos, en cualquier orden). */
+function coincideBusqueda(texto: string, palabras: string[]): boolean {
+  const t = normalizaBusqueda(texto);
+  return palabras.every((p) => t.includes(p));
+}
 
 /** Grupos de extras con algo que elegir (los payloads viejos no traen la clave). */
 function extrasDe(item: MiniSiteMenuItem): MiniSiteMenuExtraGrupo[] {
@@ -1128,6 +1144,110 @@ function MenuVista({
   // Platillo con extras abierto en su hoja de opciones (antes de agregarlo).
   const [conExtras, setConExtras] = useState<MiniSiteMenuItem | null>(null);
 
+  // ── Analíticas del menú (pestaña "Data" del admin; solo en la página pública) ──
+  // Nombre y sección de cada platillo/paquete: viajan con el evento como
+  // snapshot, para que el ranking se lea aunque luego lo renombren o borren.
+  const infoItems = useMemo(() => {
+    const m = new Map<string, { nombre: string; categoria: string }>();
+    for (const sec of menu.secciones) for (const it of sec.items) m.set(it.id, { nombre: it.nombre, categoria: sec.nombre || "Menú" });
+    for (const g of paquetesDe(menu)) for (const it of g.items) m.set(it.id, { nombre: it.nombre, categoria: g.nombre || "Paquetes" });
+    return m;
+  }, [menu]);
+  function interaccion(itemId: string, action: "foto" | "agregar" | "opciones") {
+    const i = infoItems.get(itemId);
+    if (mode !== "public" || !i) return;
+    trackMiniSite(site.id, { type: "item_click", blockId: block.id, itemId, itemName: i.nombre, category: i.categoria, action });
+  }
+  function abrirFoto(f: FotoDialogItem & { id: string }) {
+    interaccion(f.id, "foto");
+    setFoto(f);
+  }
+  /** Contador desde la lista del menú: pasar de 0 a 1 cuenta como "lo agregó". */
+  function cambiarDesdeMenu(itemId: string, n: number) {
+    if (!(pedido[itemId] ?? 0) && n > 0) interaccion(itemId, "agregar");
+    setCantidad(itemId, n);
+  }
+
+  // Buscador: solo en menús con suficientes platillos para que valga la pena
+  // (mismo umbral que MENU_BUSCADOR_MIN del admin). Filtra en vivo por
+  // nombre, descripción, sección, etiquetas y extras; sin acentos.
+  const conBuscador = infoItems.size >= BUSCADOR_MIN;
+  const [busqueda, setBusqueda] = useState("");
+  const termino = normalizaBusqueda(busqueda);
+  const palabras = termino ? termino.split(" ") : [];
+  const seccionesVista = palabras.length
+    ? menu.secciones
+        .map((sec) => ({
+          ...sec,
+          items: sec.items.filter((it) =>
+            coincideBusqueda(
+              [it.nombre, it.descripcion, sec.nombre, ...it.tags.map((tg) => MENU_TAG_LABEL[tg].label), ...extrasDe(it).flatMap((g) => g.opciones.map((o) => o.nombre))].join(" "),
+              palabras,
+            ),
+          ),
+        }))
+        .filter((sec) => sec.items.length > 0)
+    : menu.secciones;
+  const paquetesVista = palabras.length
+    ? paquetes
+        .map((g) => ({ ...g, items: g.items.filter((pq) => coincideBusqueda([pq.nombre, pq.descripcion, g.nombre, ...pq.incluye].join(" "), palabras)) }))
+        .filter((g) => g.items.length > 0)
+    : paquetes;
+  const resultados = seccionesVista.reduce((n, s) => n + s.items.length, 0) + paquetesVista.reduce((n, g) => n + g.items.length, 0);
+  // Se registra lo que el cliente terminó de escribir (no cada tecla).
+  const ultimaBusqueda = useRef("");
+  useEffect(() => {
+    if (mode !== "public" || termino.length < 2 || termino === ultimaBusqueda.current) return;
+    const t = window.setTimeout(() => {
+      ultimaBusqueda.current = termino;
+      trackMiniSite(site.id, { type: "search", blockId: block.id, term: termino, results: resultados });
+    }, 1200);
+    return () => window.clearTimeout(t);
+  }, [mode, termino, resultados, site.id, block.id]);
+
+  // Platillo "visto" = al menos la mitad en pantalla durante 1 segundo; una vez
+  // por visita. Se encolan y se mandan en lote (pueden ser decenas).
+  const vistosRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (mode !== "public" || typeof IntersectionObserver === "undefined") return;
+    const timers = new Map<Element, number>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const id = (e.target as HTMLElement).dataset.msItem;
+          if (!id || vistosRef.current.has(id)) continue;
+          if (e.isIntersecting) {
+            if (timers.has(e.target)) continue;
+            timers.set(
+              e.target,
+              window.setTimeout(() => {
+                timers.delete(e.target);
+                io.unobserve(e.target);
+                const i = infoItems.get(id);
+                if (!i || vistosRef.current.has(id)) return;
+                vistosRef.current.add(id);
+                encolarMiniSite(site.id, { type: "item_view", blockId: block.id, itemId: id, itemName: i.nombre, category: i.categoria });
+              }, 1000),
+            );
+          } else {
+            const t = timers.get(e.target);
+            if (t) window.clearTimeout(t);
+            timers.delete(e.target);
+          }
+        }
+      },
+      { threshold: 0.5 },
+    );
+    document.querySelectorAll<HTMLElement>("[data-ms-item]").forEach((el) => {
+      if (!vistosRef.current.has(el.dataset.msItem ?? "")) io.observe(el);
+    });
+    return () => {
+      io.disconnect();
+      timers.forEach((t) => window.clearTimeout(t));
+    };
+  }, [mode, site.id, block.id, infoItems, termino]);
+  useEffect(() => () => vaciarColaMiniSite(), []);
+
   useEffect(() => {
     try {
       if (Object.keys(pedido).length === 0 && !nota) window.localStorage.removeItem(clavePedido);
@@ -1156,8 +1276,8 @@ function MenuVista({
     setNota("");
     setHojaAbierta(false);
   }
-  function enviado() {
-    if (mode === "public") trackMiniSite({ miniSiteId: site.id, blockId: block.id, type: "block_click" });
+  function enviado(via: "whatsapp" | "copiar") {
+    if (mode === "public") trackMiniSite(site.id, { type: "order", blockId: block.id, action: via === "whatsapp" ? "pedido_whatsapp" : "pedido_copiado" });
   }
   // El encabezado pegajoso se COMPACTA al hacer scroll (logo y título más
   // chicos, sin el nombre del negocio) y la sección visible marca su chip.
@@ -1236,6 +1356,13 @@ function MenuVista({
   }, [mode, foto, hojaAbierta, onVolver]);
 
   function irA(secId: string) {
+    // Con una búsqueda activa la sección puede no estar pintada: se limpia la
+    // búsqueda y se salta en el siguiente cuadro, ya con el menú completo.
+    if (busqueda) {
+      setBusqueda("");
+      requestAnimationFrame(() => irA(secId));
+      return;
+    }
     // Centrar el chip AL INSTANTE (no suave) antes de mover la página: dos
     // scrolls suaves a la vez se cancelan entre sí en Chrome.
     centrarChip(secId, "auto");
@@ -1367,7 +1494,52 @@ function MenuVista({
       </header>
 
       <main className="mx-auto w-full max-w-[520px] px-5 pt-5 pb-32 flex flex-1 flex-col">
-        {piezas === 0 && (
+        {conBuscador && (
+          <div className="ms-sec-in relative mb-5" role="search">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 opacity-50" aria-hidden="true">
+              <Svg size={18}>
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </Svg>
+            </span>
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value.slice(0, 60))}
+              placeholder="Buscar en el menú"
+              aria-label="Buscar en el menú"
+              enterKeyHint="search"
+              className="w-full h-12 rounded-full pl-11 pr-11 text-[15px] focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10 [&::-webkit-search-cancel-button]:hidden"
+              style={{ background: "rgba(127,127,127,.10)", color: site.colors.text, border: "1.5px solid rgba(127,127,127,.18)" }}
+            />
+            {busqueda && (
+              <button
+                type="button"
+                onClick={() => setBusqueda("")}
+                aria-label="Borrar búsqueda"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-60 hover:opacity-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+              >
+                <Svg size={16}>
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </Svg>
+              </button>
+            )}
+          </div>
+        )}
+        {palabras.length > 0 && (
+          <p className="mb-4 px-1 text-[13px] opacity-70" role="status">
+            {resultados === 0 ? (
+              <>
+                No encontramos <strong>“{busqueda.trim()}”</strong> en el menú.
+              </>
+            ) : (
+              <>
+                {resultados} {resultados === 1 ? "resultado" : "resultados"} para <strong>“{busqueda.trim()}”</strong>
+              </>
+            )}
+          </p>
+        )}
+        {piezas === 0 && !palabras.length && (
           <p className="ms-sec-in mb-5 flex items-center gap-2.5 rounded-2xl px-4 py-3 text-[13px] leading-snug" style={{ background: "rgba(127,127,127,.10)" }}>
             <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: primario, color: textoSobre(primario) }} aria-hidden="true">
               <Svg size={16}>
@@ -1380,7 +1552,7 @@ function MenuVista({
           </p>
         )}
         <div className="flex flex-col gap-8">
-          {menu.secciones.map((sec, i) => (
+          {seccionesVista.map((sec, i) => (
             <section key={sec.id} id={anclaDe(sec.id)} aria-label={sec.nombre || `Sección ${i + 1}`} className="ms-sec-in" style={{ animationDelay: `${Math.min(i, 3) * 0.08}s` }}>
               {(sec.nombre || varias) && (
                 <div className="flex items-center gap-3 mb-3 px-1">
@@ -1395,6 +1567,7 @@ function MenuVista({
                   return (
                     <li
                       key={item.id}
+                      data-ms-item={item.id}
                       className={`ms-rise px-4 py-4 border-b last:border-b-0 flex items-start gap-4 ${item.disponible ? "" : "opacity-50"}`}
                       style={{ animationDelay: `${0.1 + Math.min(orden, 8) * 0.05}s`, borderColor: "rgba(127,127,127,.14)" }}
                     >
@@ -1429,7 +1602,7 @@ function MenuVista({
                         {item.imagen && (
                           <button
                             type="button"
-                            onClick={() => setFoto(item)}
+                            onClick={() => abrirFoto(item)}
                             aria-label={`Ver foto de ${item.nombre}`}
                             className="ms-thumb block w-[96px] h-[96px] rounded-2xl overflow-hidden bg-white/40 cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
                             style={{ boxShadow: "0 0 0 1px rgba(127,127,127,.18), 0 8px 20px rgba(0,0,0,.14)" }}
@@ -1451,9 +1624,13 @@ function MenuVista({
                             {extrasDe(item).length > 0 ? (
                               // Con extras el + abre las opciones; las cantidades
                               // de cada combinación se ajustan en la hoja del pedido.
-                              <BotonConExtras cantidad={piezasDe(lineas, item.id)} nombre={item.nombre} primario={primario} onAbrir={() => setConExtras(item)} />
+                              <BotonConExtras cantidad={piezasDe(lineas, item.id)} nombre={item.nombre} primario={primario} onAbrir={() => {
+                                  interaccion(item.id, "opciones");
+                                  setConExtras(item);
+                                }}
+                              />
                             ) : (
-                              <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => setCantidad(item.id, n)} />
+                              <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => cambiarDesdeMenu(item.id, n)} />
                             )}
                           </div>
                         )}
@@ -1464,7 +1641,7 @@ function MenuVista({
               </ul>
             </section>
           ))}
-          {paquetes.map((g, gi) => (
+          {paquetesVista.map((g, gi) => (
             <section key={g.id} id={anclaDe(g.id)} aria-label={g.nombre || "Paquetes"} className="ms-sec-in" style={{ animationDelay: `${Math.min(gi, 3) * 0.08}s` }}>
               <div className="flex items-center gap-3 mb-3 px-1">
                 <h2 className={`leading-tight ${serif ? "font-serif font-normal text-[26px]" : "font-sans font-bold text-[21px]"}`}>{g.nombre || "Paquetes"}</h2>
@@ -1473,12 +1650,12 @@ function MenuVista({
               </div>
               <ul className="flex flex-col gap-4">
                 {g.items.map((pq, i) => (
-                  <li key={pq.id} className={`ms-rise overflow-hidden ${pq.disponible ? "" : "opacity-60"}`} style={{ animationDelay: `${0.1 + Math.min(i, 6) * 0.06}s`, borderRadius: radio, background: "rgba(127,127,127,.07)", boxShadow: "inset 0 0 0 1px rgba(127,127,127,.12)" }}>
+                  <li key={pq.id} data-ms-item={pq.id} className={`ms-rise overflow-hidden ${pq.disponible ? "" : "opacity-60"}`} style={{ animationDelay: `${0.1 + Math.min(i, 6) * 0.06}s`, borderRadius: radio, background: "rgba(127,127,127,.07)", boxShadow: "inset 0 0 0 1px rgba(127,127,127,.12)" }}>
                     {/* Foto ANCHA arriba (es una promo: la foto vende). */}
                     {pq.imagen && (
                       <button
                         type="button"
-                        onClick={() => setFoto({ ...pq, ancha: true })}
+                        onClick={() => abrirFoto({ ...pq, ancha: true })}
                         aria-label={`Ver foto de ${pq.nombre}`}
                         className="ms-thumb relative block w-full overflow-hidden cursor-zoom-in focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
                       >
@@ -1503,7 +1680,7 @@ function MenuVista({
                         ) : (
                           <span className="inline-flex items-center rounded-full border border-current px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">Agotado</span>
                         )}
-                        {pq.disponible && <AgregarControl cantidad={pedido[pq.id] ?? 0} nombre={pq.nombre} primario={primario} onCambiar={(n) => setCantidad(pq.id, n)} />}
+                        {pq.disponible && <AgregarControl cantidad={pedido[pq.id] ?? 0} nombre={pq.nombre} primario={primario} onCambiar={(n) => cambiarDesdeMenu(pq.id, n)} />}
                       </div>
                     </div>
                   </li>
@@ -1572,6 +1749,7 @@ function MenuVista({
           item={conExtras}
           site={site}
           onAgregar={(clave, n) => {
+            interaccion(conExtras.id, "agregar");
             sumar(clave, n);
             setConExtras(null);
           }}
@@ -1595,7 +1773,7 @@ export function MiniSiteBlockRenderer({
   onAbrirMenu?: (blockId: string) => void;
 }) {
   const t = templateDe(site.template);
-  const onClick = clickDeBloque(site, block.id, mode);
+  const onClick = clickDeBloque(site, block.id, mode, block.type);
 
   if (block.type === "menu") {
     if (!menuPublicable(block) || !onAbrirMenu) return null;
@@ -1633,7 +1811,7 @@ export function MiniSiteBlockRenderer({
               href={l.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={onClick}
+              onClick={clickDeBloque(site, block.id, mode, l.type)}
               aria-label={SOCIAL_LABEL[l.type]}
               className="w-12 h-12 flex items-center justify-center transition-transform hover:scale-105"
               style={estiloBoton({ ...t, radius: "999px" }, site.colors)}
@@ -1734,7 +1912,7 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
 
   useEffect(() => {
     if (mode !== "public") return;
-    trackMiniSite({ miniSiteId: site.id, type: "page_view" });
+    trackMiniSite(site.id, { type: "page_view" });
   }, [mode, site.id]);
 
   // Al abrir: arriba del todo. Al cerrar: de vuelta a donde iba el home.
@@ -1752,7 +1930,7 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
       if (mode === "public") {
         window.history.pushState({ papelaMenu: id }, "", `#menu-${id}`);
         avisarHash();
-        trackMiniSite({ miniSiteId: site.id, blockId: id, type: "block_click" });
+        trackMiniSite(site.id, { type: "menu_open", blockId: id });
         return;
       }
       setMenuPreview(id);
