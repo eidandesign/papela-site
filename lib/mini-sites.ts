@@ -47,7 +47,13 @@ export type MiniSiteMenuItem = {
   disponible: boolean;
   /** Foto del platillo (https). "" o ausente = sin foto. */
   imagen?: string;
+  /** Ingredientes adicionales / opciones a elegir. Ausente en payloads anteriores a los extras. */
+  extras?: MiniSiteMenuExtraGrupo[];
 };
+/** Opción de un grupo de extras: `precio` es lo que SUMA al platillo (null = sin costo). */
+export type MiniSiteMenuExtraOpcion = { id: string; nombre: string; precio: number | null; disponible: boolean };
+/** "¿Queso extra? Opcional · elige hasta 1". `max` ya viene acotado a 1..nº de opciones. */
+export type MiniSiteMenuExtraGrupo = { id: string; nombre: string; obligatorio: boolean; max: number; opciones: MiniSiteMenuExtraOpcion[] };
 export type MiniSiteMenuSeccion = { id: string; nombre: string; items: MiniSiteMenuItem[] };
 /** Subpaquete: varias cosas a un precio, con foto ancha y lista de lo que incluye. */
 export type MiniSiteMenuPaquete = {

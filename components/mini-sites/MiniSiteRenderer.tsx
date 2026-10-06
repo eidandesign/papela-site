@@ -10,7 +10,7 @@
 // navegación y las analíticas (el menú sí se abre, para revisarlo en el editor).
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react";
-import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuPaqueteGrupo, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
+import type { BlockType, MenuTag, MiniSiteMenu, MiniSiteMenuExtraGrupo, MiniSiteMenuItem, MiniSiteMenuPaqueteGrupo, MiniSitePublic, MiniSitePublicBlock, SocialType } from "@/lib/mini-sites";
 import { trackMiniSite } from "@/lib/mini-sites";
 
 export type MiniSiteMode = "public" | "preview";
@@ -470,35 +470,103 @@ function whatsappDelSitio(site: MiniSitePublic): string | null {
   return null;
 }
 
+// EXTRAS. Un platillo con extras ("Quesadilla + queso Oaxaca") es un renglón
+// DISTINTO de la misma quesadilla sola o con otro queso, así que la llave del
+// pedido es `<idPlatillo>~<idOpción>.<idOpción>` (opciones en el orden del
+// menú). Sin extras la llave sigue siendo el id pelón: los pedidos guardados
+// antes de los extras se leen igual. Los ids solo usan [a-z0-9_-], por eso
+// "~" y "." no chocan con nada.
+
+/** Grupos de extras con algo que elegir (los payloads viejos no traen la clave). */
+function extrasDe(item: MiniSiteMenuItem): MiniSiteMenuExtraGrupo[] {
+  return (item.extras ?? []).filter((g) => g.opciones.length > 0);
+}
+
+/** Opciones elegidas (ids) → llave del pedido. Ordena por el menú para que la misma elección dé la misma llave. */
+function claveConExtras(item: MiniSiteMenuItem, elegidas: Set<string>): string {
+  const ids = extrasDe(item).flatMap((g) => g.opciones.filter((o) => elegidas.has(o.id)).map((o) => o.id));
+  return ids.length ? `${item.id}~${ids.join(".")}` : item.id;
+}
+
+/** "¿Tipo de tortilla?" → "tipo de tortilla", para el botón "Elige …". */
+function nombreParaElegir(g: MiniSiteMenuExtraGrupo): string {
+  const t = g.nombre.replace(/[¿?]/g, "").trim();
+  return t ? t.charAt(0).toLowerCase() + t.slice(1) : "una opción";
+}
+
+/** Misma regla que el admin (lib/mini-sites/menu.ts → reglaExtras). */
+function reglaExtras(g: MiniSiteMenuExtraGrupo): string {
+  if (g.obligatorio) return g.max === 1 ? "Obligatorio · elige 1" : `Obligatorio · elige de 1 a ${g.max}`;
+  return `Opcional · elige hasta ${g.max}`;
+}
+
 /** Lo mínimo que el pedido necesita de un platillo o paquete (comparten el espacio de ids). */
 type Pedible = { id: string; nombre: string; precio: number | null };
-type LineaPedido = { item: Pedible; cantidad: number; seccion: string; paquete: boolean };
+type ExtraElegido = { nombre: string; precio: number | null };
+type LineaPedido = {
+  /** Llave en el pedido (id, o id~opciones si lleva extras). */
+  clave: string;
+  item: Pedible;
+  extras: ExtraElegido[];
+  /** Precio por pieza YA con extras. null = el platillo no tiene precio. */
+  unitario: number | null;
+  cantidad: number;
+  seccion: string;
+  paquete: boolean;
+};
+
+function unitarioCon(precio: number | null, extras: ExtraElegido[]): number | null {
+  return precio === null ? null : precio + extras.reduce((s, e) => s + (e.precio ?? 0), 0);
+}
 
 function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
   const out: LineaPedido[] = [];
   for (const sec of menu.secciones) {
     for (const item of sec.items) {
-      const n = pedido[item.id] ?? 0;
-      if (n > 0) out.push({ item, cantidad: n, seccion: sec.nombre, paquete: false });
+      const opciones = new Map(extrasDe(item).flatMap((g) => g.opciones.map((o) => [o.id, o] as const)));
+      for (const [clave, n] of Object.entries(pedido)) {
+        if (n <= 0) continue;
+        if (clave !== item.id && !clave.startsWith(`${item.id}~`)) continue;
+        const ids = clave === item.id ? [] : clave.slice(item.id.length + 1).split(".");
+        // Una opción que el restaurante quitó del menú invalida el renglón
+        // (cobrarla o quitarla en silencio cambiaría lo que el cliente pidió).
+        const elegidas = ids.map((id) => opciones.get(id));
+        if (elegidas.some((o) => !o)) continue;
+        const extras = elegidas.map((o) => ({ nombre: o!.nombre, precio: o!.precio }));
+        out.push({ clave, item, extras, unitario: unitarioCon(item.precio, extras), cantidad: n, seccion: sec.nombre, paquete: false });
+      }
     }
   }
   for (const g of paquetesDe(menu)) {
     for (const pq of g.items) {
       const n = pedido[pq.id] ?? 0;
-      if (n > 0) out.push({ item: pq, cantidad: n, seccion: g.nombre || "Paquetes", paquete: true });
+      if (n > 0) out.push({ clave: pq.id, item: pq, extras: [], unitario: pq.precio, cantidad: n, seccion: g.nombre || "Paquetes", paquete: true });
     }
   }
   return out;
 }
 
+/** Cuántas piezas de un platillo hay en el pedido, sumando todas sus combinaciones de extras. */
+function piezasDe(pedido: Pedido, itemId: string): number {
+  let n = 0;
+  for (const [clave, c] of Object.entries(pedido)) if (clave === itemId || clave.startsWith(`${itemId}~`)) n += c;
+  return n;
+}
+
+/** "+ Queso Oaxaca ($15)" — para la hoja del pedido y el mensaje. */
+function textoExtra(e: ExtraElegido): string {
+  return e.precio ? `+ ${e.nombre} (${fmtPrecio(e.precio)})` : `+ ${e.nombre}`;
+}
+
 /** Texto del pedido, listo para WhatsApp o el portapapeles. Los paquetes se marcan para que el restaurante no los confunda con un platillo. */
 function mensajePedido(site: MiniSitePublic, lineas: LineaPedido[], nota: string): string {
-  const renglones = lineas.map(({ item, cantidad, paquete }) => {
+  const renglones = lineas.map(({ item, cantidad, paquete, extras, unitario }) => {
     const nombre = paquete ? `Paquete ${item.nombre}` : item.nombre;
-    return item.precio !== null ? `• ${cantidad} × ${nombre} — ${fmtPrecio(item.precio * cantidad)}` : `• ${cantidad} × ${nombre}`;
+    const linea = unitario !== null ? `• ${cantidad} × ${nombre} — ${fmtPrecio(unitario * cantidad)}` : `• ${cantidad} × ${nombre}`;
+    return [linea, ...extras.map((e) => `   ${textoExtra(e)}`)].join("\n");
   });
-  const todasConPrecio = lineas.every((l) => l.item.precio !== null);
-  const total = lineas.reduce((s, l) => s + (l.item.precio ?? 0) * l.cantidad, 0);
+  const todasConPrecio = lineas.every((l) => l.unitario !== null);
+  const total = lineas.reduce((s, l) => s + (l.unitario ?? 0) * l.cantidad, 0);
   const partes = [`Hola, ${site.businessName} 👋 Quiero pedir:`, ...renglones];
   if (todasConPrecio && lineas.length > 0) partes.push(`Total: ${fmtPrecio(total)}`);
   if (nota.trim()) partes.push(`Nota: ${nota.trim()}`);
@@ -551,6 +619,227 @@ function AgregarControl({
   );
 }
 
+/** + de un platillo con extras: abre sus opciones. Con piezas en el pedido muestra cuántas lleva. */
+function BotonConExtras({ cantidad, nombre, primario, onAbrir }: { cantidad: number; nombre: string; primario: string; onAbrir: () => void }) {
+  const tinta = textoSobre(primario);
+  return (
+    <button
+      type="button"
+      onClick={onAbrir}
+      aria-label={cantidad ? `Agregar otro ${nombre} (llevas ${cantidad})` : `Elegir opciones de ${nombre}`}
+      className="relative w-9 h-9 flex items-center justify-center rounded-full shadow-md transition-transform active:scale-90 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+      style={{ background: primario, color: tinta }}
+    >
+      <Svg size={20}>
+        <path d="M12 5v14M5 12h14" />
+      </Svg>
+      {cantidad > 0 && (
+        <span
+          aria-hidden="true"
+          className="ms-pop absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[11px] font-bold tabular-nums"
+          style={{ background: tinta, color: primario, boxShadow: `0 0 0 2px ${primario}` }}
+        >
+          {cantidad}
+        </span>
+      )}
+    </button>
+  );
+}
+
+/**
+ * Hoja de opciones de un platillo con extras (patrón de las apps de comida):
+ * cada grupo con su regla ("Opcional · elige hasta 1"), opciones con lo que
+ * suman, cantidad y "Agregar · $total". Un grupo de máximo 1 se comporta como
+ * radio (elegir otra opción reemplaza la anterior); con máximo > 1, al llegar
+ * al tope se bloquean las demás. Mientras falte un obligatorio el botón dice
+ * cuál falta en vez de agregar.
+ */
+function ExtrasSheet({
+  item,
+  site,
+  onAgregar,
+  onClose,
+}: {
+  item: MiniSiteMenuItem;
+  site: MiniSitePublic;
+  onAgregar: (clave: string, cantidad: number) => void;
+  onClose: () => void;
+}) {
+  const primario = hexSeguro(site.colors.primary, "#12535C");
+  const fondo = hexSeguro(site.colors.background, "#FFFFFF");
+  const grupos = extrasDe(item);
+  const [elegidas, setElegidas] = useState<Set<string>>(() => new Set());
+  const [cantidad, setCantidad] = useState(1);
+  const cerrarRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const previo = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    cerrarRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      document.body.style.overflow = overflow;
+      previo?.focus?.();
+    };
+  }, [onClose]);
+
+  const cuantasEn = (g: MiniSiteMenuExtraGrupo) => g.opciones.filter((o) => elegidas.has(o.id)).length;
+  const falta = grupos.find((g) => g.obligatorio && cuantasEn(g) === 0 && g.opciones.some((o) => o.disponible));
+  const extras = grupos.flatMap((g) => g.opciones.filter((o) => elegidas.has(o.id)));
+  const unitario = unitarioCon(item.precio, extras);
+
+  function alternar(g: MiniSiteMenuExtraGrupo, opcionId: string) {
+    setElegidas((prev) => {
+      const next = new Set(prev);
+      if (next.has(opcionId)) {
+        // Un obligatorio de una sola opción se cambia eligiendo otra, no vaciándolo.
+        if (!(g.obligatorio && g.max === 1)) next.delete(opcionId);
+        return next;
+      }
+      if (g.max === 1) for (const o of g.opciones) next.delete(o.id);
+      else if (g.opciones.filter((o) => next.has(o.id)).length >= g.max) return prev;
+      next.add(opcionId);
+      return next;
+    });
+  }
+
+  const tinta = textoSobre(primario);
+  const btnCantidad = "w-10 h-10 flex items-center justify-center rounded-full transition-transform active:scale-90 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10 disabled:opacity-30";
+
+  return (
+    <div className="ms-fade fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Opciones de ${item.nombre}`}
+        className="ms-sheet-up w-full max-w-[520px] max-h-[90dvh] flex flex-col rounded-t-[28px] overflow-hidden"
+        style={{ background: fondo, color: site.colors.text, boxShadow: "0 -12px 40px rgba(0,0,0,.35)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3 px-5 pt-4 pb-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
+          {item.imagen && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.imagen} alt="" className="w-16 h-16 rounded-2xl object-cover shrink-0" />
+          )}
+          <div className="min-w-0 flex-1">
+            <h2 className="text-[20px] font-bold leading-tight">{item.nombre}</h2>
+            {item.precio !== null && <p className="mt-0.5 text-[15px] font-semibold tabular-nums" style={{ color: primario }}>{fmtPrecio(item.precio)}</p>}
+            {item.descripcion && <p className="mt-1 text-[13px] leading-snug opacity-70">{item.descripcion}</p>}
+          </div>
+          <button
+            ref={cerrarRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+            style={{ background: "rgba(127,127,127,.14)" }}
+          >
+            <Svg size={20}>
+              <path d="M18 6 6 18M6 6l12 12" />
+            </Svg>
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-5 flex-1">
+          {grupos.map((g) => {
+            const n = cuantasEn(g);
+            const lleno = g.max > 1 && n >= g.max;
+            const radio = g.obligatorio && g.max === 1;
+            const listo = g.obligatorio && n > 0;
+            return (
+              <fieldset key={g.id} className="py-4" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
+                <legend className="w-full">
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="text-[17px] font-bold leading-snug">{g.nombre}</span>
+                    {g.obligatorio && (
+                      <span
+                        className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                        style={listo ? { background: "rgba(127,127,127,.14)" } : { background: primario, color: tinta }}
+                      >
+                        {listo ? "Listo ✓" : "Obligatorio"}
+                      </span>
+                    )}
+                  </span>
+                  <span className="block mt-0.5 text-[13px] opacity-60">{reglaExtras(g)}</span>
+                </legend>
+                <ul className="mt-2 flex flex-col">
+                  {g.opciones.map((o) => {
+                    const marcada = elegidas.has(o.id);
+                    const bloqueada = !o.disponible || (lleno && !marcada);
+                    return (
+                      <li key={o.id}>
+                        <label className={`flex items-center gap-3 py-2.5 ${bloqueada ? "opacity-45 cursor-not-allowed" : "cursor-pointer"}`}>
+                          <span className="min-w-0 flex-1">
+                            <span className={`block text-[15px] leading-snug ${o.disponible ? "" : "line-through"}`}>{o.nombre}</span>
+                            <span className="block text-[13px] tabular-nums opacity-65">
+                              {!o.disponible ? "Agotado" : o.precio ? `+${fmtPrecio(o.precio)}` : "Sin costo"}
+                            </span>
+                          </span>
+                          <input
+                            type={radio ? "radio" : "checkbox"}
+                            name={radio ? `extra-${g.id}` : undefined}
+                            checked={marcada}
+                            disabled={bloqueada}
+                            onChange={() => alternar(g, o.id)}
+                            className="w-6 h-6 shrink-0 cursor-[inherit]"
+                            style={{ accentColor: primario }}
+                          />
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </fieldset>
+            );
+          })}
+        </div>
+
+        <div className="px-5 pt-3 flex items-center gap-3" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(127,127,127,.15)" }}>
+          <div className="shrink-0 inline-flex items-center gap-1 rounded-full p-0.5" style={{ background: "rgba(127,127,127,.12)" }} role="group" aria-label="Cantidad">
+            <button type="button" onClick={() => setCantidad((c) => Math.max(1, c - 1))} disabled={cantidad <= 1} aria-label="Uno menos" className={btnCantidad}>
+              <Svg size={18}>
+                <path d="M5 12h14" />
+              </Svg>
+            </button>
+            <span className="min-w-[1.5rem] text-center text-[16px] font-bold tabular-nums" aria-live="polite">
+              {cantidad}
+            </span>
+            <button type="button" onClick={() => setCantidad((c) => Math.min(99, c + 1))} aria-label="Uno más" className={btnCantidad}>
+              <Svg size={18}>
+                <path d="M12 5v14M5 12h14" />
+              </Svg>
+            </button>
+          </div>
+          <button
+            type="button"
+            disabled={!!falta}
+            onClick={() => onAgregar(claveConExtras(item, elegidas), cantidad)}
+            className="flex-1 min-w-0 h-12 px-4 rounded-full text-[15px] font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10 disabled:opacity-50 disabled:active:scale-100"
+            style={{ background: primario, color: tinta, boxShadow: "0 8px 22px rgba(0,0,0,.18)" }}
+          >
+            {falta ? (
+              <span className="truncate">Elige {nombreParaElegir(falta)}</span>
+            ) : (
+              <>
+                Agregar
+                {unitario !== null && <span className="tabular-nums opacity-90">· {fmtPrecio(unitario * cantidad)}</span>}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Hoja inferior con el pedido: cantidades, nota, copiar o mandar por WhatsApp. */
 function PedidoSheet({
   site,
@@ -579,8 +868,8 @@ function PedidoSheet({
   const fondo = hexSeguro(site.colors.background, "#FFFFFF");
   const [aviso, setAviso] = useState<string | null>(null);
   const cerrarRef = useRef<HTMLButtonElement>(null);
-  const todasConPrecio = lineas.every((l) => l.item.precio !== null);
-  const total = lineas.reduce((s, l) => s + (l.item.precio ?? 0) * l.cantidad, 0);
+  const todasConPrecio = lineas.every((l) => l.unitario !== null);
+  const total = lineas.reduce((s, l) => s + (l.unitario ?? 0) * l.cantidad, 0);
   const piezas = lineas.reduce((s, l) => s + l.cantidad, 0);
   const texto = mensajePedido(site, lineas, nota);
 
@@ -654,20 +943,27 @@ function PedidoSheet({
 
         <div className="overflow-y-auto px-5 pb-3 flex-1">
           <ul className="flex flex-col" style={{ borderTop: "1px solid rgba(127,127,127,.15)" }}>
-            {lineas.map(({ item, cantidad, paquete }) => (
-              <li key={item.id} className="flex items-center gap-3 py-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
+            {lineas.map(({ clave, item, cantidad, paquete, extras, unitario }) => (
+              <li key={clave} className="flex items-center gap-3 py-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold leading-snug truncate">
                     {paquete && <span className="mr-1.5 inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide align-middle" style={{ background: "rgba(127,127,127,.14)" }}>Paquete</span>}
                     {item.nombre}
                   </p>
-                  {item.precio !== null && (
+                  {extras.length > 0 && (
+                    <ul className="mt-0.5 text-[13px] leading-snug opacity-80">
+                      {extras.map((e, i) => (
+                        <li key={i}>{textoExtra(e)}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {unitario !== null && (
                     <p className="text-[13px] tabular-nums opacity-70">
-                      {fmtPrecio(item.precio)} c/u{cantidad > 1 ? ` · ${fmtPrecio(item.precio * cantidad)}` : ""}
+                      {fmtPrecio(unitario)} c/u{cantidad > 1 ? ` · ${fmtPrecio(unitario * cantidad)}` : ""}
                     </p>
                   )}
                 </div>
-                <AgregarControl cantidad={cantidad} nombre={item.nombre} primario={primario} onCambiar={(n) => onCambiar(item.id, n)} />
+                <AgregarControl cantidad={cantidad} nombre={item.nombre} primario={primario} onCambiar={(n) => onCambiar(clave, n)} />
               </li>
             ))}
           </ul>
@@ -776,7 +1072,9 @@ function MenuVista({
   const whatsapp = whatsappDelSitio(site);
   const lineas = lineasDe(menu, pedido);
   const piezas = lineas.reduce((n, l) => n + l.cantidad, 0);
-  const totalPedido = lineas.reduce((n, l) => n + (l.item.precio ?? 0) * l.cantidad, 0);
+  const totalPedido = lineas.reduce((n, l) => n + (l.unitario ?? 0) * l.cantidad, 0);
+  // Platillo con extras abierto en su hoja de opciones (antes de agregarlo).
+  const [conExtras, setConExtras] = useState<MiniSiteMenuItem | null>(null);
 
   useEffect(() => {
     try {
@@ -787,15 +1085,20 @@ function MenuVista({
     }
   }, [pedido, nota, clavePedido]);
 
-  function setCantidad(itemId: string, n: number) {
+  function setCantidad(clave: string, n: number) {
     setPedido((prev) => {
       const next = { ...prev };
-      if (n <= 0) delete next[itemId];
-      else next[itemId] = Math.min(99, n);
+      if (n <= 0) delete next[clave];
+      else next[clave] = Math.min(99, n);
       return next;
     });
   }
+  /** Suma piezas a una combinación (la misma elección dos veces = mismo renglón con más cantidad). */
+  function sumar(clave: string, n: number) {
+    setPedido((prev) => ({ ...prev, [clave]: Math.min(99, (prev[clave] ?? 0) + n) }));
+  }
   const cerrarHoja = useCallback(() => setHojaAbierta(false), []);
+  const cerrarExtras = useCallback(() => setConExtras(null), []);
   function vaciar() {
     setPedido({});
     setNota("");
@@ -1052,6 +1355,7 @@ function MenuVista({
                           </p>
                         )}
                         {item.descripcion && <p className="mt-1.5 text-[14px] leading-snug opacity-70">{item.descripcion}</p>}
+                        {item.disponible && extrasDe(item).length > 0 && <p className="mt-1.5 text-[12px] font-medium opacity-60">Personalizable</p>}
                         {(item.tags.length > 0 || !item.disponible) && (
                           <div className="mt-2.5 flex flex-wrap gap-1.5">
                             {!item.disponible && (
@@ -1092,7 +1396,13 @@ function MenuVista({
                         )}
                         {item.disponible && (
                           <div className={item.imagen ? "absolute -bottom-1.5 -right-1.5" : ""}>
-                            <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => setCantidad(item.id, n)} />
+                            {extrasDe(item).length > 0 ? (
+                              // Con extras el + abre las opciones; las cantidades
+                              // de cada combinación se ajustan en la hoja del pedido.
+                              <BotonConExtras cantidad={piezasDe(pedido, item.id)} nombre={item.nombre} primario={primario} onAbrir={() => setConExtras(item)} />
+                            ) : (
+                              <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => setCantidad(item.id, n)} />
+                            )}
                           </div>
                         )}
                       </div>
@@ -1205,6 +1515,17 @@ function MenuVista({
         />
       )}
       {foto && <FotoPlatilloDialog item={foto} site={site} onClose={() => setFoto(null)} />}
+      {conExtras && (
+        <ExtrasSheet
+          item={conExtras}
+          site={site}
+          onAgregar={(clave, n) => {
+            sumar(clave, n);
+            setConExtras(null);
+          }}
+          onClose={cerrarExtras}
+        />
+      )}
     </div>
   );
 }
