@@ -64,6 +64,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
   const actividades = getActividades(maestra.slug);
   const tipos = tiposClase.filter((t) => t.claseId === maestra.id);
   const paquetes = paquetesClase.filter((p) => p.claseId === maestra.id);
+  const paquetesSinClase = paquetes.filter((p) => !p.tipoId || !tipos.some((t) => t.id === p.tipoId));
   // Horario semanal de cada clase/paquete (horarios ligados en el admin).
   const horarioDe = (id: string) =>
     getHorariosSemanales(maestra.horarios.filter((h) => h.tipo_clase_id === id));
@@ -181,13 +182,37 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
               {paquetes.length > 0 ? "Clases y paquetes" : "Clases"}
             </h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {tipos.map((t) => (
-                <TipoClaseCard key={t.id} tipo={t} horarios={horarioDe(t.id)} />
-              ))}
-              {paquetes.map((p) => (
-                <PaqueteClaseCard key={p.id} paquete={p} horarios={horarioDe(p.id)} />
-              ))}
+            {/* Cada clase con sus formas de venta: la tarjeta de la clase (suelta)
+                y debajo sus paquetes — misma clase y mismos horarios, por eso
+                los paquetes no repiten el horario. */}
+            <div className="flex flex-col gap-10">
+              {tipos.map((t) => {
+                const susPaquetes = paquetes.filter((p) => p.tipoId === t.id);
+                return (
+                  <div key={t.id}>
+                    <TipoClaseCard tipo={t} horarios={horarioDe(t.id)} />
+                    {susPaquetes.length > 0 && (
+                      <div className="mt-4">
+                        <p className="label text-[var(--color-terracota)] mb-3">
+                          {t.nombre} también en paquete
+                        </p>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {susPaquetes.map((p) => (
+                            <PaqueteClaseCard key={p.id} paquete={p} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {paquetesSinClase.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {paquetesSinClase.map((p) => (
+                    <PaqueteClaseCard key={p.id} paquete={p} horarios={horarioDe(p.id)} />
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}

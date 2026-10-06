@@ -43,6 +43,9 @@ interface TipoClaseRaw {
 export type PaqueteClasePublico = {
   claseId: string;
   id: string;
+  // Clase (tipo) de la que es otra forma de venta: misma clase, mismos
+  // horarios. null = paquete suelto (anteriores a oct-2026).
+  tipoId: string | null;
   nombre: string;
   precio: number;
   sesiones: number;
@@ -56,6 +59,7 @@ export type PaqueteClasePublico = {
 
 interface PaqueteClaseRaw {
   id?: string;
+  tipoId?: string;
   nombre?: string;
   precio?: number;
   sesiones?: number;
@@ -129,6 +133,7 @@ export async function getPaquetesClase(claseId?: string): Promise<PaqueteClasePu
         .map((p) => ({
           claseId: c.id as string,
           id: p.id!,
+          tipoId: typeof p.tipoId === "string" && p.tipoId ? p.tipoId : null,
           nombre: p.nombre!.trim(),
           precio: Number(p.precio) || 0,
           sesiones: Number(p.sesiones) || 0,
