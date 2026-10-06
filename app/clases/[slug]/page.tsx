@@ -4,10 +4,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClaseBySlug, getClases, getHorariosSemanales } from "@/lib/clases";
 import { getActividades } from "@/lib/clases-actividades";
-import { getTiposClase } from "@/lib/clases-tipos";
+import { getPaquetesClase, getTiposClase } from "@/lib/clases-tipos";
 import { SITE_URL } from "@/lib/site";
 import ReservaButton from "@/components/site/ReservaButton";
 import ActividadCard from "@/components/site/ActividadCard";
+import { PaqueteClaseCard, TipoClaseCard } from "@/components/site/ClaseOfertaCard";
 
 export const revalidate = 60;
 
@@ -51,15 +52,17 @@ export async function generateMetadata({
 
 export default async function ClaseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [maestra, tiposClase] = await Promise.all([
+  const [maestra, tiposClase, paquetesClase] = await Promise.all([
     getClaseBySlug(slug),
     getTiposClase(),
+    getPaquetesClase(),
   ]);
 
   if (!maestra) notFound();
 
   const actividades = getActividades(maestra.slug);
   const tipos = tiposClase.filter((t) => t.claseId === maestra.id);
+  const paquetes = paquetesClase.filter((p) => p.claseId === maestra.id);
   const horariosSemanales = getHorariosSemanales(maestra.horarios);
 
   const jsonLd = {
@@ -164,6 +167,24 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
             </div>
           </div>
         </section>
+
+        {/* ── Clases y paquetes (se editan en el admin, perfil de la maestra) ── */}
+        {(tipos.length > 0 || paquetes.length > 0) && (
+          <section className="mt-16 md:mt-24">
+            <h2 className="text-center font-serif font-extralight text-[clamp(2rem,4.5vw,3.25rem)] text-[#403c3c] leading-tight mb-8 md:mb-12">
+              {paquetes.length > 0 ? "Clases y paquetes" : "Clases"}
+            </h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {tipos.map((t) => (
+                <TipoClaseCard key={t.id} tipo={t} />
+              ))}
+              {paquetes.map((p) => (
+                <PaqueteClaseCard key={p.id} paquete={p} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── Clases que imparte ── */}
         {actividades.length > 0 && (

@@ -24,6 +24,8 @@ export type TipoClasePublico = {
   precio: number;
   duracion: number;
   dias: number[];
+  descripcion: string;
+  imagen: string | null;
 };
 
 interface TipoClaseRaw {
@@ -32,7 +34,43 @@ interface TipoClaseRaw {
   precio?: number;
   duracion?: number;
   dias?: number[];
+  descripcion?: string;
+  imagen?: string;
 }
+
+// Paquetes de varias clases (`clases.paquetes_clase`, misma columna privada y
+// mismo filtro que los tipos: el reparto Papela/maestra NUNCA sale de aquí).
+export type PaqueteClasePublico = {
+  claseId: string;
+  id: string;
+  nombre: string;
+  precio: number;
+  sesiones: number;
+  vigenciaDias: number;
+  descripcion: string;
+  imagen: string | null;
+  incluye: string[];
+  condiciones: string[];
+};
+
+interface PaqueteClaseRaw {
+  id?: string;
+  nombre?: string;
+  precio?: number;
+  sesiones?: number;
+  vigenciaDias?: number;
+  descripcion?: string;
+  imagen?: string;
+  incluye?: unknown;
+  condiciones?: unknown;
+}
+
+// El admin ya sanea a https; se re-valida porque la foto termina en un <img>.
+const imagenSegura = (v: unknown): string | null =>
+  typeof v === "string" && /^https:\/\/\S+$/.test(v) ? v : null;
+
+const listaTexto = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : [];
 
 // Todos los tipos de clase de todas las maestras activas.
 export async function getTiposClase(): Promise<TipoClasePublico[]> {
@@ -59,10 +97,48 @@ export async function getTiposClase(): Promise<TipoClasePublico[]> {
           precio: Number(t.precio) || 0,
           duracion: Number(t.duracion) || 0,
           dias: t.dias ?? [],
+          descripcion: (t.descripcion ?? "").trim(),
+          imagen: imagenSegura(t.imagen),
         }));
     });
   } catch (err) {
     logger.error("Error fetching tipos_clase", {}, err);
+    return [];
+  }
+}
+
+// Paquetes de clases de las maestras activas (o de una sola, por id).
+export async function getPaquetesClase(claseId?: string): Promise<PaqueteClasePublico[]> {
+  try {
+    const supabase = createAdminClient();
+    let q = supabase.from("clases").select("id, paquetes_clase").eq("activa", true);
+    if (claseId) q = q.eq("id", claseId);
+    const { data, error } = await q;
+
+    if (error) {
+      logger.error("Error fetching paquetes_clase", {}, error);
+      return [];
+    }
+
+    return (data ?? []).flatMap((c) => {
+      const paquetes = (c.paquetes_clase ?? []) as PaqueteClaseRaw[];
+      return paquetes
+        .filter((p) => p.id && p.nombre?.trim())
+        .map((p) => ({
+          claseId: c.id as string,
+          id: p.id!,
+          nombre: p.nombre!.trim(),
+          precio: Number(p.precio) || 0,
+          sesiones: Number(p.sesiones) || 0,
+          vigenciaDias: Number(p.vigenciaDias) || 0,
+          descripcion: (p.descripcion ?? "").trim(),
+          imagen: imagenSegura(p.imagen),
+          incluye: listaTexto(p.incluye),
+          condiciones: listaTexto(p.condiciones),
+        }));
+    });
+  } catch (err) {
+    logger.error("Error fetching paquetes_clase", {}, err);
     return [];
   }
 }
