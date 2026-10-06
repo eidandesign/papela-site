@@ -515,6 +515,14 @@ function nombreParaElegir(g: MiniSiteMenuExtraGrupo): string {
   return t ? t.charAt(0).toLowerCase() + t.slice(1) : "una opción";
 }
 
+/** Llave del pedido → cuántas veces se eligió cada opción (para editar el renglón). */
+function cuentasDeClave(item: MiniSiteMenuItem, clave: string): Cuentas {
+  const out: Cuentas = {};
+  if (!clave.startsWith(`${item.id}~`)) return out;
+  for (const id of clave.slice(item.id.length + 1).split(".")) out[id] = (out[id] ?? 0) + 1;
+  return out;
+}
+
 /** Misma regla que el admin (lib/mini-sites/menu.ts → reglaExtras). */
 function reglaExtras(g: MiniSiteMenuExtraGrupo): string {
   if (g.obligatorio) return `Obligatorio · elige ${g.max}`;
@@ -689,19 +697,22 @@ function BotonConExtras({ cantidad, nombre, primario, onAbrir }: { cantidad: num
 function ExtrasSheet({
   item,
   site,
+  inicial,
   onAgregar,
   onClose,
 }: {
   item: MiniSiteMenuItem;
   site: MiniSitePublic;
+  /** Editar un renglón que ya está en el pedido: arranca con lo que eligió y su cantidad. */
+  inicial?: { cuentas: Cuentas; cantidad: number };
   onAgregar: (clave: string, cantidad: number) => void;
   onClose: () => void;
 }) {
   const primario = hexSeguro(site.colors.primary, "#12535C");
   const fondo = hexSeguro(site.colors.background, "#FFFFFF");
   const grupos = extrasDe(item);
-  const [cuentas, setCuentas] = useState<Cuentas>({});
-  const [cantidad, setCantidad] = useState(1);
+  const [cuentas, setCuentas] = useState<Cuentas>(() => ({ ...(inicial?.cuentas ?? {}) }));
+  const [cantidad, setCantidad] = useState(inicial?.cantidad ?? 1);
   const cerrarRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -797,10 +808,13 @@ function ExtrasSheet({
             const lleno = g.max > 1 && n >= g.max;
             const listo = g.obligatorio && n >= g.max;
             return (
-              <fieldset key={g.id} className="py-4" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
-                <legend className="w-full">
+              // div + role="group" y no <fieldset>/<legend>: el legend se dibuja
+              // SOBRE el borde del fieldset e ignora su padding (el título quedaba
+              // pegado a la línea de arriba).
+              <div key={g.id} role="group" aria-labelledby={`extra-${g.id}`} className="pt-5 pb-4" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
+                <div>
                   <span className="flex items-center justify-between gap-3">
-                    <span className="text-[17px] font-bold leading-snug">{g.nombre}</span>
+                    <span id={`extra-${g.id}`} className="text-[17px] font-bold leading-snug">{g.nombre}</span>
                     {g.obligatorio && (
                       <span
                         className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
@@ -811,10 +825,11 @@ function ExtrasSheet({
                     )}
                   </span>
                   <span className="block mt-0.5 text-[13px] opacity-60">
-                    {reglaExtras(g)}
+                    {/* El pill ya dice "Obligatorio": aquí solo cuántas. */}
+                    {g.obligatorio ? `Elige ${g.max}` : reglaExtras(g)}
                     {g.max > 1 && <span className="tabular-nums"> · llevas {n} de {g.max}</span>}
                   </span>
-                </legend>
+                </div>
                 <ul className="mt-2 flex flex-col">
                   {g.opciones.map((o) => {
                     const veces = cuentas[o.id] ?? 0;
@@ -862,7 +877,7 @@ function ExtrasSheet({
                     );
                   })}
                 </ul>
-              </fieldset>
+              </div>
             );
           })}
         </div>
@@ -897,7 +912,7 @@ function ExtrasSheet({
               </span>
             ) : (
               <>
-                Agregar
+                {inicial ? "Guardar cambios" : "Agregar"}
                 {unitario !== null && <span className="tabular-nums opacity-90">· {fmtPrecio(unitario * cantidad)}</span>}
               </>
             )}
@@ -916,6 +931,8 @@ function PedidoSheet({
   whatsapp,
   mode,
   onCambiar,
+  onEditar,
+  conOpciones,
   onNota,
   onVaciar,
   onEnviado,
@@ -927,6 +944,10 @@ function PedidoSheet({
   whatsapp: string | null;
   mode: MiniSiteMode;
   onCambiar: (itemId: string, n: number) => void;
+  /** Reabre las opciones de un renglón con extras. Ausente = no hay nada editable. */
+  onEditar?: (linea: LineaPedido) => void;
+  /** Ids de platillos que tienen extras (los únicos con "Editar"). */
+  conOpciones?: Set<string>;
   onNota: (v: string) => void;
   onVaciar: () => void;
   onEnviado: (via: "whatsapp" | "copiar") => void;
@@ -1011,7 +1032,9 @@ function PedidoSheet({
 
         <div className="overflow-y-auto px-5 pb-3 flex-1">
           <ul className="flex flex-col" style={{ borderTop: "1px solid rgba(127,127,127,.15)" }}>
-            {lineas.map(({ clave, item, cantidad, paquete, extras, unitario }) => (
+            {lineas.map((linea) => {
+              const { clave, item, cantidad, paquete, extras, unitario } = linea;
+              return (
               <li key={clave} className="flex items-center gap-3 py-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold leading-snug truncate">
@@ -1030,10 +1053,22 @@ function PedidoSheet({
                       {fmtPrecio(unitario)} c/u{cantidad > 1 ? ` · ${fmtPrecio(unitario * cantidad)}` : ""}
                     </p>
                   )}
+                  {!paquete && onEditar && conOpciones?.has(item.id) && (
+                    <button
+                      type="button"
+                      onClick={() => onEditar(linea)}
+                      aria-label={`Editar opciones de ${item.nombre}`}
+                      className="mt-1 inline-flex items-center gap-1 min-h-8 -ml-1 px-1 rounded text-[13px] font-semibold underline underline-offset-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
+                      style={{ color: primario }}
+                    >
+                      Editar
+                    </button>
+                  )}
                 </div>
                 <AgregarControl cantidad={cantidad} nombre={item.nombre} primario={primario} onCambiar={(n) => onCambiar(clave, n)} />
               </li>
-            ))}
+              );
+            })}
           </ul>
 
           <label className="block mt-4">
@@ -1142,7 +1177,16 @@ function MenuVista({
   const piezas = lineas.reduce((n, l) => n + l.cantidad, 0);
   const totalPedido = lineas.reduce((n, l) => n + (l.unitario ?? 0) * l.cantidad, 0);
   // Platillo con extras abierto en su hoja de opciones (antes de agregarlo).
-  const [conExtras, setConExtras] = useState<MiniSiteMenuItem | null>(null);
+  // `clave` = editando un renglón que ya está en el pedido (se reemplaza al guardar).
+  const [conExtras, setConExtras] = useState<{ item: MiniSiteMenuItem; clave?: string; cantidad?: number } | null>(null);
+  const itemsConOpciones = useMemo(() => new Set(menu.secciones.flatMap((s) => s.items.filter((it) => extrasDe(it).length > 0).map((it) => it.id))), [menu]);
+  function editarLinea(l: LineaPedido) {
+    const item = menu.secciones.flatMap((s) => s.items).find((it) => it.id === l.item.id);
+    if (!item) return;
+    // La hoja del pedido se cierra para no apilar dos hojas; se reabre al terminar.
+    setHojaAbierta(false);
+    setConExtras({ item, clave: l.clave, cantidad: l.cantidad });
+  }
 
   // ── Analíticas del menú (pestaña "Data" del admin; solo en la página pública) ──
   // Nombre y sección de cada platillo/paquete: viajan con el evento como
@@ -1270,7 +1314,16 @@ function MenuVista({
     setPedido((prev) => ({ ...prev, [clave]: Math.min(99, (prev[clave] ?? 0) + n) }));
   }
   const cerrarHoja = useCallback(() => setHojaAbierta(false), []);
-  const cerrarExtras = useCallback(() => setConExtras(null), []);
+  // Estable a propósito (la hoja corre su efecto de foco/scroll al cambiar
+  // onClose). Cerrar sin guardar desde "Editar" regresa al pedido, como estaba.
+  const editandoRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    editandoRef.current = conExtras?.clave;
+  });
+  const cerrarExtras = useCallback(() => {
+    if (editandoRef.current) setHojaAbierta(true);
+    setConExtras(null);
+  }, []);
   function vaciar() {
     setPedido({});
     setNota("");
@@ -1626,7 +1679,7 @@ function MenuVista({
                               // de cada combinación se ajustan en la hoja del pedido.
                               <BotonConExtras cantidad={piezasDe(lineas, item.id)} nombre={item.nombre} primario={primario} onAbrir={() => {
                                   interaccion(item.id, "opciones");
-                                  setConExtras(item);
+                                  setConExtras({ item });
                                 }}
                               />
                             ) : (
@@ -1737,6 +1790,8 @@ function MenuVista({
           whatsapp={whatsapp}
           mode={mode}
           onCambiar={setCantidad}
+          onEditar={editarLinea}
+          conOpciones={itemsConOpciones}
           onNota={setNota}
           onVaciar={vaciar}
           onEnviado={enviado}
@@ -1746,10 +1801,26 @@ function MenuVista({
       {foto && <FotoPlatilloDialog item={foto} site={site} onClose={() => setFoto(null)} />}
       {conExtras && (
         <ExtrasSheet
-          item={conExtras}
+          key={conExtras.clave ?? conExtras.item.id}
+          item={conExtras.item}
           site={site}
+          inicial={conExtras.clave ? { cuentas: cuentasDeClave(conExtras.item, conExtras.clave), cantidad: conExtras.cantidad ?? 1 } : undefined}
           onAgregar={(clave, n) => {
-            interaccion(conExtras.id, "agregar");
+            const anterior = conExtras.clave;
+            if (anterior) {
+              // Editar = quitar el renglón viejo y poner el nuevo. Si la nueva
+              // elección ya existía en otro renglón, se suman.
+              setPedido((prev) => {
+                const next = { ...prev };
+                delete next[anterior];
+                next[clave] = Math.min(99, (next[clave] ?? 0) + n);
+                return next;
+              });
+              setConExtras(null);
+              setHojaAbierta(true);
+              return;
+            }
+            interaccion(conExtras.item.id, "agregar");
             sumar(clave, n);
             setConExtras(null);
           }}
