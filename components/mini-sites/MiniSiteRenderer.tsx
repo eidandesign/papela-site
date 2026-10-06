@@ -473,18 +473,23 @@ function whatsappDelSitio(site: MiniSitePublic): string | null {
 // EXTRAS. Un platillo con extras ("Quesadilla + queso Oaxaca") es un renglón
 // DISTINTO de la misma quesadilla sola o con otro queso, así que la llave del
 // pedido es `<idPlatillo>~<idOpción>.<idOpción>` (opciones en el orden del
-// menú). Sin extras la llave sigue siendo el id pelón: los pedidos guardados
-// antes de los extras se leen igual. Los ids solo usan [a-z0-9_-], por eso
-// "~" y "." no chocan con nada.
+// menú). Una opción se puede REPETIR (orden de 3 tlacoyos: queso ×2, frijol
+// ×1) y entonces su id va repetido en la llave: `t1~queso.queso.frijol`. Sin
+// extras la llave sigue siendo el id pelón: los pedidos guardados antes de los
+// extras se leen igual. Los ids solo usan [a-z0-9_-], por eso "~" y "." no
+// chocan con nada.
+
+/** Cuántas veces eligió el cliente cada opción (id → veces). */
+type Cuentas = Record<string, number>;
 
 /** Grupos de extras con algo que elegir (los payloads viejos no traen la clave). */
 function extrasDe(item: MiniSiteMenuItem): MiniSiteMenuExtraGrupo[] {
   return (item.extras ?? []).filter((g) => g.opciones.length > 0);
 }
 
-/** Opciones elegidas (ids) → llave del pedido. Ordena por el menú para que la misma elección dé la misma llave. */
-function claveConExtras(item: MiniSiteMenuItem, elegidas: Set<string>): string {
-  const ids = extrasDe(item).flatMap((g) => g.opciones.filter((o) => elegidas.has(o.id)).map((o) => o.id));
+/** Opciones elegidas → llave del pedido. Ordena por el menú para que la misma elección dé la misma llave. */
+function claveConExtras(item: MiniSiteMenuItem, cuentas: Cuentas): string {
+  const ids = extrasDe(item).flatMap((g) => g.opciones.flatMap((o) => Array<string>(cuentas[o.id] ?? 0).fill(o.id)));
   return ids.length ? `${item.id}~${ids.join(".")}` : item.id;
 }
 
@@ -496,13 +501,14 @@ function nombreParaElegir(g: MiniSiteMenuExtraGrupo): string {
 
 /** Misma regla que el admin (lib/mini-sites/menu.ts → reglaExtras). */
 function reglaExtras(g: MiniSiteMenuExtraGrupo): string {
-  if (g.obligatorio) return g.max === 1 ? "Obligatorio · elige 1" : `Obligatorio · elige de 1 a ${g.max}`;
+  if (g.obligatorio) return `Obligatorio · elige ${g.max}`;
   return `Opcional · elige hasta ${g.max}`;
 }
 
 /** Lo mínimo que el pedido necesita de un platillo o paquete (comparten el espacio de ids). */
 type Pedible = { id: string; nombre: string; precio: number | null };
-type ExtraElegido = { nombre: string; precio: number | null };
+/** Una opción elegida y cuántas veces (precio por vez). */
+type ExtraElegido = { nombre: string; precio: number | null; veces: number };
 type LineaPedido = {
   /** Llave en el pedido (id, o id~opciones si lleva extras). */
   clave: string;
@@ -516,7 +522,7 @@ type LineaPedido = {
 };
 
 function unitarioCon(precio: number | null, extras: ExtraElegido[]): number | null {
-  return precio === null ? null : precio + extras.reduce((s, e) => s + (e.precio ?? 0), 0);
+  return precio === null ? null : precio + extras.reduce((s, e) => s + (e.precio ?? 0) * e.veces, 0);
 }
 
 function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
@@ -530,9 +536,20 @@ function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
         const ids = clave === item.id ? [] : clave.slice(item.id.length + 1).split(".");
         // Una opción que el restaurante quitó del menú invalida el renglón
         // (cobrarla o quitarla en silencio cambiaría lo que el cliente pidió).
-        const elegidas = ids.map((id) => opciones.get(id));
-        if (elegidas.some((o) => !o)) continue;
-        const extras = elegidas.map((o) => ({ nombre: o!.nombre, precio: o!.precio }));
+        if (ids.some((id) => !opciones.has(id))) continue;
+        // Tampoco vale un renglón que no completa un grupo obligatorio (p. ej.
+        // guardado antes de que el restaurante agregara el grupo).
+        const incompleto = extrasDe(item).some(
+          (g) => g.obligatorio && g.opciones.some((o) => o.disponible) && ids.filter((id) => g.opciones.some((o) => o.id === id)).length < g.max,
+        );
+        if (incompleto) continue;
+        const extras: ExtraElegido[] = [];
+        for (const id of ids) {
+          const o = opciones.get(id)!;
+          const previo = extras.find((e) => e.nombre === o.nombre && e.precio === o.precio);
+          if (previo) previo.veces++;
+          else extras.push({ nombre: o.nombre, precio: o.precio, veces: 1 });
+        }
         out.push({ clave, item, extras, unitario: unitarioCon(item.precio, extras), cantidad: n, seccion: sec.nombre, paquete: false });
       }
     }
@@ -546,16 +563,15 @@ function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
   return out;
 }
 
-/** Cuántas piezas de un platillo hay en el pedido, sumando todas sus combinaciones de extras. */
-function piezasDe(pedido: Pedido, itemId: string): number {
-  let n = 0;
-  for (const [clave, c] of Object.entries(pedido)) if (clave === itemId || clave.startsWith(`${itemId}~`)) n += c;
-  return n;
+/** Cuántas piezas de un platillo hay en el pedido, sumando todas sus combinaciones de extras (solo los renglones válidos). */
+function piezasDe(lineas: LineaPedido[], itemId: string): number {
+  return lineas.reduce((n, l) => (!l.paquete && l.item.id === itemId ? n + l.cantidad : n), 0);
 }
 
-/** "+ Queso Oaxaca ($15)" — para la hoja del pedido y el mensaje. */
+/** "+ Queso ×2 ($30)" — para la hoja del pedido y el mensaje. */
 function textoExtra(e: ExtraElegido): string {
-  return e.precio ? `+ ${e.nombre} (${fmtPrecio(e.precio)})` : `+ ${e.nombre}`;
+  const nombre = e.veces > 1 ? `${e.nombre} ×${e.veces}` : e.nombre;
+  return e.precio ? `+ ${nombre} (${fmtPrecio(e.precio * e.veces)})` : `+ ${nombre}`;
 }
 
 /** Texto del pedido, listo para WhatsApp o el portapapeles. Los paquetes se marcan para que el restaurante no los confunda con un platillo. */
@@ -668,7 +684,7 @@ function ExtrasSheet({
   const primario = hexSeguro(site.colors.primary, "#12535C");
   const fondo = hexSeguro(site.colors.background, "#FFFFFF");
   const grupos = extrasDe(item);
-  const [elegidas, setElegidas] = useState<Set<string>>(() => new Set());
+  const [cuentas, setCuentas] = useState<Cuentas>({});
   const [cantidad, setCantidad] = useState(1);
   const cerrarRef = useRef<HTMLButtonElement>(null);
 
@@ -691,28 +707,39 @@ function ExtrasSheet({
     };
   }, [onClose]);
 
-  const cuantasEn = (g: MiniSiteMenuExtraGrupo) => g.opciones.filter((o) => elegidas.has(o.id)).length;
-  const falta = grupos.find((g) => g.obligatorio && cuantasEn(g) === 0 && g.opciones.some((o) => o.disponible));
-  const extras = grupos.flatMap((g) => g.opciones.filter((o) => elegidas.has(o.id)));
+  const cuantasEn = (g: MiniSiteMenuExtraGrupo) => g.opciones.reduce((n, o) => n + (cuentas[o.id] ?? 0), 0);
+  // Obligatorio = completar el máximo (3 tlacoyos = 3 ingredientes). Si todo
+  // el grupo está agotado no se puede completar y no bloquea.
+  const falta = grupos.find((g) => g.obligatorio && cuantasEn(g) < g.max && g.opciones.some((o) => o.disponible));
+  const extras: ExtraElegido[] = grupos.flatMap((g) =>
+    g.opciones.filter((o) => cuentas[o.id]).map((o) => ({ nombre: o.nombre, precio: o.precio, veces: cuentas[o.id] })),
+  );
   const unitario = unitarioCon(item.precio, extras);
 
-  function alternar(g: MiniSiteMenuExtraGrupo, opcionId: string) {
-    setElegidas((prev) => {
-      const next = new Set(prev);
-      if (next.has(opcionId)) {
-        // Un obligatorio de una sola opción se cambia eligiendo otra, no vaciándolo.
-        if (!(g.obligatorio && g.max === 1)) next.delete(opcionId);
-        return next;
-      }
-      if (g.max === 1) for (const o of g.opciones) next.delete(o.id);
-      else if (g.opciones.filter((o) => next.has(o.id)).length >= g.max) return prev;
-      next.add(opcionId);
+  /** + de una opción. Con el grupo lleno: si es de máximo 1 reemplaza la elección (como un radio); si no, no hace nada. */
+  function sumarOpcion(g: MiniSiteMenuExtraGrupo, opcionId: string) {
+    setCuentas((prev) => {
+      const total = g.opciones.reduce((n, o) => n + (prev[o.id] ?? 0), 0);
+      if (total < g.max) return { ...prev, [opcionId]: (prev[opcionId] ?? 0) + 1 };
+      if (g.max !== 1) return prev;
+      const next = { ...prev };
+      for (const o of g.opciones) delete next[o.id];
+      next[opcionId] = 1;
+      return next;
+    });
+  }
+  function restarOpcion(opcionId: string) {
+    setCuentas((prev) => {
+      const next = { ...prev };
+      if ((next[opcionId] ?? 0) <= 1) delete next[opcionId];
+      else next[opcionId]--;
       return next;
     });
   }
 
   const tinta = textoSobre(primario);
-  const btnCantidad = "w-10 h-10 flex items-center justify-center rounded-full transition-transform active:scale-90 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10 disabled:opacity-30";
+  const btnBase = "flex items-center justify-center rounded-full transition-transform active:scale-90 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10 disabled:opacity-30";
+  const btnCantidad = `${btnBase} w-10 h-10`;
 
   return (
     <div className="ms-fade fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
@@ -752,8 +779,7 @@ function ExtrasSheet({
           {grupos.map((g) => {
             const n = cuantasEn(g);
             const lleno = g.max > 1 && n >= g.max;
-            const radio = g.obligatorio && g.max === 1;
-            const listo = g.obligatorio && n > 0;
+            const listo = g.obligatorio && n >= g.max;
             return (
               <fieldset key={g.id} className="py-4" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
                 <legend className="w-full">
@@ -768,31 +794,54 @@ function ExtrasSheet({
                       </span>
                     )}
                   </span>
-                  <span className="block mt-0.5 text-[13px] opacity-60">{reglaExtras(g)}</span>
+                  <span className="block mt-0.5 text-[13px] opacity-60">
+                    {reglaExtras(g)}
+                    {g.max > 1 && <span className="tabular-nums"> · llevas {n} de {g.max}</span>}
+                  </span>
                 </legend>
                 <ul className="mt-2 flex flex-col">
                   {g.opciones.map((o) => {
-                    const marcada = elegidas.has(o.id);
-                    const bloqueada = !o.disponible || (lleno && !marcada);
+                    const veces = cuentas[o.id] ?? 0;
+                    const sinMas = !o.disponible || n >= g.max;
                     return (
-                      <li key={o.id}>
-                        <label className={`flex items-center gap-3 py-2.5 ${bloqueada ? "opacity-45 cursor-not-allowed" : "cursor-pointer"}`}>
-                          <span className="min-w-0 flex-1">
-                            <span className={`block text-[15px] leading-snug ${o.disponible ? "" : "line-through"}`}>{o.nombre}</span>
-                            <span className="block text-[13px] tabular-nums opacity-65">
-                              {!o.disponible ? "Agotado" : o.precio ? `+${fmtPrecio(o.precio)}` : "Sin costo"}
-                            </span>
+                      <li key={o.id} className={`flex items-center gap-3 py-2 ${!o.disponible || (lleno && !veces) ? "opacity-45" : ""}`}>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block text-[15px] leading-snug ${o.disponible ? "" : "line-through"}`}>{o.nombre}</span>
+                          <span className="block text-[13px] tabular-nums opacity-65">
+                            {!o.disponible ? "Agotado" : o.precio ? `+${fmtPrecio(o.precio)}` : "Sin costo"}
                           </span>
-                          <input
-                            type={radio ? "radio" : "checkbox"}
-                            name={radio ? `extra-${g.id}` : undefined}
-                            checked={marcada}
-                            disabled={bloqueada}
-                            onChange={() => alternar(g, o.id)}
-                            className="w-6 h-6 shrink-0 cursor-[inherit]"
-                            style={{ accentColor: primario }}
-                          />
-                        </label>
+                        </span>
+                        {/* Mismo control del menú: + solo, o − n + cuando ya lleva. */}
+                        {veces === 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => sumarOpcion(g, o.id)}
+                            disabled={!o.disponible || (lleno && g.max !== 1)}
+                            aria-label={`Agregar ${o.nombre}`}
+                            className={`${btnBase} w-9 h-9 border-2`}
+                            style={{ borderColor: primario, color: primario }}
+                          >
+                            <Svg size={18}>
+                              <path d="M12 5v14M5 12h14" />
+                            </Svg>
+                          </button>
+                        ) : (
+                          <div className="ms-pop inline-flex items-center gap-1 rounded-full p-0.5" style={{ background: primario, color: tinta }} role="group" aria-label={`${o.nombre}: ${veces}`}>
+                            <button type="button" onClick={() => restarOpcion(o.id)} aria-label={`Quitar uno de ${o.nombre}`} className={`${btnBase} w-8 h-8`}>
+                              <Svg size={16}>
+                                <path d="M5 12h14" />
+                              </Svg>
+                            </button>
+                            <span className="min-w-[1.1rem] text-center text-[14px] font-bold tabular-nums" aria-live="polite">
+                              {veces}
+                            </span>
+                            <button type="button" onClick={() => sumarOpcion(g, o.id)} disabled={sinMas} aria-label={`Agregar otro ${o.nombre}`} className={`${btnBase} w-8 h-8`}>
+                              <Svg size={16}>
+                                <path d="M12 5v14M5 12h14" />
+                              </Svg>
+                            </button>
+                          </div>
+                        )}
                       </li>
                     );
                   })}
@@ -821,12 +870,15 @@ function ExtrasSheet({
           <button
             type="button"
             disabled={!!falta}
-            onClick={() => onAgregar(claveConExtras(item, elegidas), cantidad)}
+            onClick={() => onAgregar(claveConExtras(item, cuentas), cantidad)}
             className="flex-1 min-w-0 h-12 px-4 rounded-full text-[15px] font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10 disabled:opacity-50 disabled:active:scale-100"
             style={{ background: primario, color: tinta, boxShadow: "0 8px 22px rgba(0,0,0,.18)" }}
           >
             {falta ? (
-              <span className="truncate">Elige {nombreParaElegir(falta)}</span>
+              <span className="truncate">
+                Elige {nombreParaElegir(falta)}
+                {falta.max > 1 ? ` (${cuantasEn(falta)} de ${falta.max})` : ""}
+              </span>
             ) : (
               <>
                 Agregar
@@ -1399,7 +1451,7 @@ function MenuVista({
                             {extrasDe(item).length > 0 ? (
                               // Con extras el + abre las opciones; las cantidades
                               // de cada combinación se ajustan en la hoja del pedido.
-                              <BotonConExtras cantidad={piezasDe(pedido, item.id)} nombre={item.nombre} primario={primario} onAbrir={() => setConExtras(item)} />
+                              <BotonConExtras cantidad={piezasDe(lineas, item.id)} nombre={item.nombre} primario={primario} onAbrir={() => setConExtras(item)} />
                             ) : (
                               <AgregarControl cantidad={pedido[item.id] ?? 0} nombre={item.nombre} primario={primario} onCambiar={(n) => setCantidad(item.id, n)} />
                             )}
