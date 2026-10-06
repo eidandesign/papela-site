@@ -48,7 +48,7 @@ function templateDe(id: string): TemplateStyle {
 // autoplay del navegador al parsear ve un video CON audio y lo bloquea. Y si la
 // página se cargó en segundo plano (Chrome pausa el video para ahorrar batería
 // y rechaza el play), se reintenta al volver a ser visible.
-function CoverMedia({ url, type, radius }: { url: string; type: "image" | "video"; radius: string }) {
+function CoverMedia({ url, type, radius, entrada }: { url: string; type: "image" | "video"; radius: string; entrada: boolean }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = ref.current;
@@ -67,12 +67,30 @@ function CoverMedia({ url, type, radius }: { url: string; type: "image" | "video
     };
   }, [url]);
 
-  const style = { aspectRatio: "5 / 2", borderRadius: radius } as const;
-  if (type === "video") {
-    return <video ref={ref} src={url} className="w-full object-cover" style={style} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" />;
-  }
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={url} alt="" className="w-full object-cover" style={style} />;
+  // El marco recorta (overflow-hidden + radio) para que la foto pueda
+  // "asentarse" desde un zoom ligero en la entrada sin salirse de sus bordes.
+  const media = entrada ? "ms-entra-cover" : "";
+  return (
+    <div className={`w-full overflow-hidden ${entrada ? "ms-entra-marco" : ""}`} style={{ aspectRatio: "5 / 2", borderRadius: radius }}>
+      {type === "video" ? (
+        <video ref={ref} src={url} className={`w-full h-full object-cover ${media}`} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className={`w-full h-full object-cover ${media}`} />
+      )}
+    </div>
+  );
+}
+
+// ── Entrada del home ─────────────────────────────────────────────────────────
+// Coreografía de llegada: la portada se asienta desde un zoom suave, el logo
+// brota, y título, descripción y botones suben enfocándose (blur → nítido) en
+// cascada. Cada pieza recibe su retraso por la variable --ms-d; el tope de 8
+// botones es para que un sitio largo no tarde en estar completo. Solo corre en
+// la PRIMERA llegada: regresar del menú al home no la repite.
+const ENTRADA_PASO = 0.07;
+function retraso(seg: number): CSSProperties {
+  return { "--ms-d": `${seg.toFixed(2)}s` } as CSSProperties;
 }
 
 // El color va a parar DENTRO de un bloque <style>, donde un valor con "}" o
@@ -186,11 +204,11 @@ const SOCIAL_LABEL: Record<SocialType, string> = { instagram: "Instagram", faceb
 
 // ── Branding "Creado en Papela Atelier" (componente aparte: en el futuro se apaga por plan) ──
 
-export function PapelaBranding({ color }: { color: string }) {
+export function PapelaBranding({ color, entrada }: { color: string; entrada?: number }) {
   return (
     // mt-auto: con poco contenido el crédito se va hasta abajo del viewport
     // (el <main> es flex-1); con mucho, queda después de los botones.
-    <footer className="mt-auto pt-10 text-center">
+    <footer className={`mt-auto pt-10 text-center ${entrada != null ? "ms-entra-suave" : ""}`} style={entrada != null ? retraso(entrada) : undefined}>
       <a
         href="https://www.papela-atelier.com"
         target="_blank"
@@ -2029,6 +2047,9 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
   const menuAbierto = mode === "public" ? menuDelHash(site, hash) : menuPreview;
   // Dónde iba el scroll del home al abrir el menú, para regresar al mismo lugar.
   const scrollHome = useRef(0);
+  // La animación de entrada es para la llegada, no para volver del menú: el
+  // home se vuelve a montar al cerrarlo y, sin esto, la repetiría cada vez.
+  const [conEntrada, setConEntrada] = useState(true);
 
   useEffect(() => {
     if (mode !== "public") return;
@@ -2047,6 +2068,7 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
   const abrirMenu = useCallback(
     (id: string) => {
       scrollHome.current = window.scrollY;
+      setConEntrada(false);
       if (mode === "public") {
         window.history.pushState({ papelaMenu: id }, "", `#menu-${id}`);
         avisarHash();
@@ -2084,6 +2106,14 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
   // min-h-screen queda de respaldo para navegadores sin dvh.
   const fondo = hexSeguro(site.colors.background, "#FCFAF7");
 
+  // Tiempos de la entrada: con portada, el logo espera a que la foto asome.
+  const conCover = Boolean(site.coverUrl);
+  const tLogo = conCover ? 0.22 : 0.05;
+  const tTitulo = tLogo + 0.16;
+  const tBloques = tTitulo + (site.description ? 0.18 : 0.1);
+  const filas = agruparEnFilas(site.blocks);
+  const entra = (seg: number) => (conEntrada ? { className: "ms-entra", style: retraso(seg) } : { className: "", style: undefined });
+
   return (
     <div className="min-h-screen w-full font-sans flex flex-col" style={{ background: fondo, color: site.colors.text, minHeight: "100dvh" }}>
       {/* El fondo también en html/body: si no, el rebote del scroll en iOS y
@@ -2095,11 +2125,11 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
               (por eso el margen negativo y el z-10). Sin portada, el encabezado
               queda exactamente como antes. */}
           {site.coverUrl && (
-            <CoverMedia url={site.coverUrl} type={site.coverType ?? "image"} radius={t.radius === "999px" ? "24px" : t.radius} />
+            <CoverMedia url={site.coverUrl} type={site.coverType ?? "image"} radius={t.radius === "999px" ? "24px" : t.radius} entrada={conEntrada} />
           )}
           <div
-            className="relative z-10 flex flex-col items-center"
-            style={site.coverUrl ? { marginTop: -t.logoSize / 2 } : undefined}
+            className={`relative z-10 flex flex-col items-center ${conEntrada ? "ms-entra-logo" : ""}`}
+            style={{ ...(site.coverUrl ? { marginTop: -t.logoSize / 2 } : {}), ...(conEntrada ? retraso(tLogo) : {}) }}
           >
           {site.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -2135,30 +2165,45 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
             </div>
           )}
           </div>
-          <h1 className={`${t.headingFont === "serif" ? "font-serif font-normal" : "font-sans font-bold"} leading-tight`} style={{ fontSize: t.titleSize }}>
+          <h1
+            className={`${t.headingFont === "serif" ? "font-serif font-normal" : "font-sans font-bold"} leading-tight ${entra(tTitulo).className}`}
+            style={{ fontSize: t.titleSize, ...entra(tTitulo).style }}
+          >
             {site.businessName}
           </h1>
-          {site.description && <p className="mt-2 text-[15px] leading-relaxed opacity-80 max-w-[400px] whitespace-pre-line">{site.description}</p>}
+          {site.description && (
+            <p
+              className={`mt-2 text-[15px] leading-relaxed opacity-80 max-w-[400px] whitespace-pre-line ${entra(tTitulo + 0.1).className}`}
+              style={entra(tTitulo + 0.1).style}
+            >
+              {site.description}
+            </p>
+          )}
         </header>
 
         <div className="w-full flex flex-col gap-3">
-          {agruparEnFilas(site.blocks).map((fila) =>
-            fila.kind === "bloque" ? (
-              <MiniSiteBlockRenderer key={fila.block.id} block={fila.block} site={site} mode={mode} onAbrirMenu={abrirMenu} />
+          {filas.map((fila, i) => {
+            const e = entra(tBloques + Math.min(i, 8) * ENTRADA_PASO);
+            return fila.kind === "bloque" ? (
+              <div key={fila.block.id} className={e.className} style={e.style}>
+                <MiniSiteBlockRenderer block={fila.block} site={site} mode={mode} onAbrirMenu={abrirMenu} />
+              </div>
             ) : (
-              <div key={`iconos-${fila.blocks[0].id}`} className="flex flex-wrap items-center justify-center gap-3 py-1">
+              <div key={`iconos-${fila.blocks[0].id}`} className={`flex flex-wrap items-center justify-center gap-3 py-1 ${e.className}`} style={e.style}>
                 {fila.blocks.map((b) => (
                   <MiniSiteIconBlock key={b.id} block={b} site={site} mode={mode} />
                 ))}
               </div>
-            ),
-          )}
+            );
+          })}
           {site.blocks.length === 0 && mode === "preview" && (
             <p className="text-center text-sm opacity-60 py-6">Agrega bloques para ver aquí los botones.</p>
           )}
         </div>
 
-        {site.showPapelaBranding && <PapelaBranding color={site.colors.text} />}
+        {site.showPapelaBranding && (
+          <PapelaBranding color={site.colors.text} entrada={conEntrada ? tBloques + Math.min(filas.length, 8) * ENTRADA_PASO + 0.15 : undefined} />
+        )}
       </main>
     </div>
   );
