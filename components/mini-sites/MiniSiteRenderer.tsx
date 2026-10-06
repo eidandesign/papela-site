@@ -532,7 +532,7 @@ function reglaExtras(g: MiniSiteMenuExtraGrupo): string {
 /** Lo mínimo que el pedido necesita de un platillo o paquete (comparten el espacio de ids). */
 type Pedible = { id: string; nombre: string; precio: number | null };
 /** Una opción elegida y cuántas veces (precio por vez). */
-type ExtraElegido = { nombre: string; precio: number | null; veces: number };
+type ExtraElegido = { grupo: string; nombre: string; precio: number | null; veces: number };
 type LineaPedido = {
   /** Llave en el pedido (id, o id~opciones si lleva extras). */
   clave: string;
@@ -554,6 +554,7 @@ function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
   for (const sec of menu.secciones) {
     for (const item of sec.items) {
       const opciones = new Map(extrasDe(item).flatMap((g) => g.opciones.map((o) => [o.id, o] as const)));
+      const grupoDe = new Map(extrasDe(item).flatMap((g) => g.opciones.map((o) => [o.id, g.nombre] as const)));
       for (const [clave, n] of Object.entries(pedido)) {
         if (n <= 0) continue;
         if (clave !== item.id && !clave.startsWith(`${item.id}~`)) continue;
@@ -570,9 +571,10 @@ function lineasDe(menu: MiniSiteMenu, pedido: Pedido): LineaPedido[] {
         const extras: ExtraElegido[] = [];
         for (const id of ids) {
           const o = opciones.get(id)!;
-          const previo = extras.find((e) => e.nombre === o.nombre && e.precio === o.precio);
+          const grupo = grupoDe.get(id) ?? "";
+          const previo = extras.find((e) => e.grupo === grupo && e.nombre === o.nombre && e.precio === o.precio);
           if (previo) previo.veces++;
-          else extras.push({ nombre: o.nombre, precio: o.precio, veces: 1 });
+          else extras.push({ grupo, nombre: o.nombre, precio: o.precio, veces: 1 });
         }
         out.push({ clave, item, extras, unitario: unitarioCon(item.precio, extras), cantidad: n, seccion: sec.nombre, paquete: false });
       }
@@ -592,24 +594,69 @@ function piezasDe(lineas: LineaPedido[], itemId: string): number {
   return lineas.reduce((n, l) => (!l.paquete && l.item.id === itemId ? n + l.cantidad : n), 0);
 }
 
-/** "+ Queso ×2 ($30)" — para la hoja del pedido y el mensaje. */
-function textoExtra(e: ExtraElegido): string {
-  const nombre = e.veces > 1 ? `${e.nombre} ×${e.veces}` : e.nombre;
-  return e.precio ? `+ ${nombre} (${fmtPrecio(e.precio * e.veces)})` : `+ ${nombre}`;
+/** Texto limpio para el mensaje: sin espacios dobles, invisibles ni al final. */
+function limpio(t: string): string {
+  return t.replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\s+/g, " ").trim();
 }
 
-/** Texto del pedido, listo para WhatsApp o el portapapeles. Los paquetes se marcan para que el restaurante no los confunda con un platillo. */
+/** Un extra: "Queso ×2", "Bistec de cerdo (+$20)". */
+function textoOpcion(e: ExtraElegido): string {
+  const nombre = e.veces > 1 ? `${limpio(e.nombre)} ×${e.veces}` : limpio(e.nombre);
+  return e.precio ? `${nombre} (+${fmtPrecio(e.precio * e.veces)})` : nombre;
+}
+
+/**
+ * Extras agrupados bajo el nombre de su grupo, para que el restaurante sepa
+ * QUÉ es cada cosa: "Ingrediente: Queso, Chicharrón, Bistec de cerdo (+$20)".
+ * Para la hoja del pedido y el mensaje.
+ */
+function extrasPorGrupo(extras: ExtraElegido[]): { grupo: string; texto: string }[] {
+  const out: { grupo: string; opciones: string[] }[] = [];
+  for (const e of extras) {
+    const grupo = limpio(e.grupo);
+    const previo = out.find((g) => g.grupo === grupo);
+    if (previo) previo.opciones.push(textoOpcion(e));
+    else out.push({ grupo, opciones: [textoOpcion(e)] });
+  }
+  return out.map((g) => ({ grupo: g.grupo, texto: g.opciones.join(", ") }));
+}
+
+/** Encabezado de sección en el mensaje: el nombre de la sección, o de qué promoción es el paquete. */
+function encabezadoDe(l: LineaPedido): string {
+  const seccion = limpio(l.seccion);
+  if (l.paquete) return seccion && seccion !== "Paquetes" ? `Paquete · ${seccion}` : "Paquetes";
+  return seccion || "Menú";
+}
+
+/**
+ * Texto del pedido, listo para WhatsApp o el portapapeles. Agrupado por
+ * SECCIÓN del menú (un "Frijol" suelto no dice si es gordita, sope o
+ * quesadilla) y con los extras bajo su grupo. Los *asteriscos* son negritas
+ * de WhatsApp.
+ */
 function mensajePedido(site: MiniSitePublic, lineas: LineaPedido[], nota: string): string {
-  const renglones = lineas.map(({ item, cantidad, paquete, extras, unitario }) => {
-    const nombre = paquete ? `Paquete ${item.nombre}` : item.nombre;
-    const linea = unitario !== null ? `• ${cantidad} × ${nombre} — ${fmtPrecio(unitario * cantidad)}` : `• ${cantidad} × ${nombre}`;
-    return [linea, ...extras.map((e) => `   ${textoExtra(e)}`)].join("\n");
-  });
+  const partes = [`Hola, ${limpio(site.businessName)} 👋`, "Quiero hacer este pedido:"];
+  let seccionActual: string | null = null;
+  for (const l of lineas) {
+    const encabezado = encabezadoDe(l);
+    if (encabezado !== seccionActual) {
+      partes.push("", `*${encabezado}*`);
+      seccionActual = encabezado;
+    }
+    const nombre = limpio(l.item.nombre);
+    let precio = "";
+    if (l.unitario !== null) precio = l.cantidad > 1 ? ` — ${fmtPrecio(l.unitario * l.cantidad)} (${fmtPrecio(l.unitario)} c/u)` : ` — ${fmtPrecio(l.unitario)}`;
+    partes.push(`• ${l.cantidad} × ${nombre}${precio}`);
+    for (const g of extrasPorGrupo(l.extras)) partes.push(`   ${g.grupo ? `${g.grupo}: ` : ""}${g.texto}`);
+  }
+  const piezas = lineas.reduce((s, l) => s + l.cantidad, 0);
   const todasConPrecio = lineas.every((l) => l.unitario !== null);
   const total = lineas.reduce((s, l) => s + (l.unitario ?? 0) * l.cantidad, 0);
-  const partes = [`Hola, ${site.businessName} 👋 Quiero pedir:`, ...renglones];
-  if (todasConPrecio && lineas.length > 0) partes.push(`Total: ${fmtPrecio(total)}`);
-  if (nota.trim()) partes.push(`Nota: ${nota.trim()}`);
+  partes.push("");
+  if (lineas.length > 0 && total > 0) {
+    partes.push(`*Total${todasConPrecio ? "" : " (sin lo que no tiene precio)"}: ${fmtPrecio(total)}* · ${piezas} ${piezas === 1 ? "platillo" : "platillos"}`);
+  } else partes.push(`${piezas} ${piezas === 1 ? "platillo" : "platillos"}`);
+  if (nota.trim()) partes.push("", `Nota: ${limpio(nota)}`);
   return partes.join("\n");
 }
 
@@ -739,7 +786,7 @@ function ExtrasSheet({
   // el grupo está agotado no se puede completar y no bloquea.
   const falta = grupos.find((g) => g.obligatorio && cuantasEn(g) < g.max && g.opciones.some((o) => o.disponible));
   const extras: ExtraElegido[] = grupos.flatMap((g) =>
-    g.opciones.filter((o) => cuentas[o.id]).map((o) => ({ nombre: o.nombre, precio: o.precio, veces: cuentas[o.id] })),
+    g.opciones.filter((o) => cuentas[o.id]).map((o) => ({ grupo: g.nombre, nombre: o.nombre, precio: o.precio, veces: cuentas[o.id] })),
   );
   const unitario = unitarioCon(item.precio, extras);
 
@@ -774,11 +821,11 @@ function ExtrasSheet({
         role="dialog"
         aria-modal="true"
         aria-label={`Opciones de ${item.nombre}`}
-        className="ms-sheet-up w-full max-w-[520px] max-h-[90dvh] flex flex-col rounded-t-[28px] overflow-hidden"
+        className="ms-sheet-up w-full min-w-0 max-w-[520px] max-h-[90dvh] flex flex-col rounded-t-[28px] overflow-hidden"
         style={{ background: fondo, color: site.colors.text, boxShadow: "0 -12px 40px rgba(0,0,0,.35)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start gap-3 px-5 pt-4 pb-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
+        <div className="flex items-start gap-3 px-4 sm:px-5 pt-4 pb-3" style={{ borderBottom: "1px solid rgba(127,127,127,.15)" }}>
           {item.imagen && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={item.imagen} alt="" className="w-16 h-16 rounded-2xl object-cover shrink-0" />
@@ -802,7 +849,7 @@ function ExtrasSheet({
           </button>
         </div>
 
-        <div className="overflow-y-auto px-5 flex-1">
+        <div className="overflow-y-auto overflow-x-hidden px-4 sm:px-5 flex-1 min-w-0">
           {grupos.map((g) => {
             const n = cuantasEn(g);
             const lleno = g.max > 1 && n >= g.max;
@@ -882,7 +929,7 @@ function ExtrasSheet({
           })}
         </div>
 
-        <div className="px-5 pt-3 flex items-center gap-3" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(127,127,127,.15)" }}>
+        <div className="px-4 sm:px-5 pt-3 flex items-center gap-3 min-w-0" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(127,127,127,.15)" }}>
           <div className="shrink-0 inline-flex items-center gap-1 rounded-full p-0.5" style={{ background: "rgba(127,127,127,.12)" }} role="group" aria-label="Cantidad">
             <button type="button" onClick={() => setCantidad((c) => Math.max(1, c - 1))} disabled={cantidad <= 1} aria-label="Uno menos" className={btnCantidad}>
               <Svg size={18}>
@@ -906,7 +953,7 @@ function ExtrasSheet({
             style={{ background: primario, color: tinta, boxShadow: "0 8px 22px rgba(0,0,0,.18)" }}
           >
             {falta ? (
-              <span className="truncate">
+              <span className="truncate min-w-0">
                 Elige {nombreParaElegir(falta)}
                 {falta.max > 1 ? ` (${cuantasEn(falta)} de ${falta.max})` : ""}
               </span>
@@ -1005,11 +1052,11 @@ function PedidoSheet({
         role="dialog"
         aria-modal="true"
         aria-label="Tu pedido"
-        className="ms-sheet-up w-full max-w-[520px] max-h-[86dvh] flex flex-col rounded-t-[28px] overflow-hidden"
+        className="ms-sheet-up w-full min-w-0 max-w-[520px] max-h-[86dvh] flex flex-col rounded-t-[28px] overflow-hidden"
         style={{ background: fondo, color: site.colors.text, boxShadow: "0 -12px 40px rgba(0,0,0,.35)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        <div className="flex items-center justify-between px-4 sm:px-5 pt-4 pb-2">
           <div>
             <p className="text-[11px] uppercase tracking-[.2em] opacity-60">Tu pedido</p>
             <h2 className="text-[20px] font-bold leading-tight">
@@ -1030,7 +1077,7 @@ function PedidoSheet({
           </button>
         </div>
 
-        <div className="overflow-y-auto px-5 pb-3 flex-1">
+        <div className="overflow-y-auto overflow-x-hidden px-4 sm:px-5 pb-3 flex-1 min-w-0">
           <ul className="flex flex-col" style={{ borderTop: "1px solid rgba(127,127,127,.15)" }}>
             {lineas.map((linea) => {
               const { clave, item, cantidad, paquete, extras, unitario } = linea;
@@ -1039,20 +1086,22 @@ function PedidoSheet({
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold leading-snug truncate">
                     {paquete && <span className="mr-1.5 inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide align-middle" style={{ background: "rgba(127,127,127,.14)" }}>Paquete</span>}
-                    {item.nombre}
+                    {limpio(item.nombre)}
                   </p>
                   {extras.length > 0 && (
                     <ul className="mt-0.5 text-[13px] leading-snug opacity-80">
-                      {extras.map((e, i) => (
-                        <li key={i}>{textoExtra(e)}</li>
+                      {extrasPorGrupo(extras).map((g, i) => (
+                        <li key={i}>
+                          {g.grupo && <span className="opacity-70">{g.grupo}: </span>}
+                          {g.texto}
+                        </li>
                       ))}
                     </ul>
                   )}
-                  {unitario !== null && (
-                    <p className="text-[13px] tabular-nums opacity-70">
-                      {fmtPrecio(unitario)} c/u{cantidad > 1 ? ` · ${fmtPrecio(unitario * cantidad)}` : ""}
-                    </p>
-                  )}
+                  {/* La sección dice QUÉ es ("Frijol" de Gorditas vs de Quesadillas). */}
+                  <p className="text-[13px] tabular-nums opacity-70">
+                    {[!paquete && limpio(linea.seccion), unitario !== null && `${fmtPrecio(unitario)} c/u${cantidad > 1 ? ` · ${fmtPrecio(unitario * cantidad)}` : ""}`].filter(Boolean).join(" · ")}
+                  </p>
                   {!paquete && onEditar && conOpciones?.has(item.id) && (
                     <button
                       type="button"
@@ -1096,7 +1145,7 @@ function PedidoSheet({
           </p>
         </div>
 
-        <div className="px-5 pt-3 flex flex-col gap-2" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(127,127,127,.15)" }}>
+        <div className="px-4 sm:px-5 pt-3 flex flex-col gap-2 min-w-0" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))", borderTop: "1px solid rgba(127,127,127,.15)" }}>
           {aviso && (
             <p role="status" className="text-[13px] font-medium text-center rounded-xl px-3 py-2" style={{ background: "rgba(127,127,127,.12)" }}>
               {aviso}
