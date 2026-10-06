@@ -170,7 +170,8 @@ export function PaqueteClaseCard({
   return (
     <Tarjeta
       nombre={paquete.nombre}
-      imagen={paquete.imagen}
+      // Dentro de su clase no repite foto: la de la clase ya está arriba.
+      imagen={paquete.tipoId ? null : paquete.imagen}
       chips={chips}
       precio={paquete.precio}
       precioNota={`el paquete${porClase}`}
