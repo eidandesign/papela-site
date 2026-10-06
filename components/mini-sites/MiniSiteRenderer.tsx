@@ -88,7 +88,7 @@ function CoverMedia({ url, type, radius, entrada }: { url: string; type: "image"
 // cascada. Cada pieza recibe su retraso por la variable --ms-d; el tope de 8
 // botones es para que un sitio largo no tarde en estar completo. Solo corre en
 // la PRIMERA llegada: regresar del menú al home no la repite.
-const ENTRADA_PASO = 0.07;
+const ENTRADA_PASO = 0.12;
 function retraso(seg: number): CSSProperties {
   return { "--ms-d": `${seg.toFixed(2)}s` } as CSSProperties;
 }
@@ -2108,11 +2108,12 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
 
   // Tiempos de la entrada: con portada, el logo espera a que la foto asome.
   const conCover = Boolean(site.coverUrl);
-  const tLogo = conCover ? 0.22 : 0.05;
-  const tTitulo = tLogo + 0.16;
-  const tBloques = tTitulo + (site.description ? 0.18 : 0.1);
+  const tLogo = conCover ? 0.45 : 0.1;
+  const tTitulo = tLogo + 0.35;
+  const tDescripcion = tTitulo + 0.2;
+  const tBloques = (site.description ? tDescripcion : tTitulo) + 0.3;
   const filas = agruparEnFilas(site.blocks);
-  const entra = (seg: number) => (conEntrada ? { className: "ms-entra", style: retraso(seg) } : { className: "", style: undefined });
+  const entra = (seg: number, clase = "ms-entra") => (conEntrada ? { className: clase, style: retraso(seg) } : { className: "", style: undefined });
 
   return (
     <div className="min-h-screen w-full font-sans flex flex-col" style={{ background: fondo, color: site.colors.text, minHeight: "100dvh" }}>
@@ -2166,15 +2167,15 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
           )}
           </div>
           <h1
-            className={`${t.headingFont === "serif" ? "font-serif font-normal" : "font-sans font-bold"} leading-tight ${entra(tTitulo).className}`}
-            style={{ fontSize: t.titleSize, ...entra(tTitulo).style }}
+            className={`${t.headingFont === "serif" ? "font-serif font-normal" : "font-sans font-bold"} leading-tight ${entra(tTitulo, "ms-entra-texto").className}`}
+            style={{ fontSize: t.titleSize, ...entra(tTitulo, "ms-entra-texto").style }}
           >
             {site.businessName}
           </h1>
           {site.description && (
             <p
-              className={`mt-2 text-[15px] leading-relaxed opacity-80 max-w-[400px] whitespace-pre-line ${entra(tTitulo + 0.1).className}`}
-              style={entra(tTitulo + 0.1).style}
+              className={`mt-2 text-[15px] leading-relaxed opacity-80 max-w-[400px] whitespace-pre-line ${entra(tDescripcion, "ms-entra-texto").className}`}
+              style={entra(tDescripcion, "ms-entra-texto").style}
             >
               {site.description}
             </p>
@@ -2202,7 +2203,7 @@ export default function MiniSiteRenderer({ site, mode = "public" }: { site: Mini
         </div>
 
         {site.showPapelaBranding && (
-          <PapelaBranding color={site.colors.text} entrada={conEntrada ? tBloques + Math.min(filas.length, 8) * ENTRADA_PASO + 0.15 : undefined} />
+          <PapelaBranding color={site.colors.text} entrada={conEntrada ? tBloques + Math.min(filas.length, 8) * ENTRADA_PASO + 0.4 : undefined} />
         )}
       </main>
     </div>

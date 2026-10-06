@@ -336,39 +336,46 @@ body {
 .ms-thumb img { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
 .ms-thumb:hover img { transform: scale(1.06); }
 /* Entrada del home de un Mini Site (la primera llegada). La portada aparece y
-   se "asienta" desde un zoom ligero; el logo brota con un rebote corto; título,
-   descripción y botones suben ENFOCÁNDOSE (blur → nítido) en cascada, y el
-   crédito de Papela llega al final con un fundido. El retraso de cada pieza
-   viene en --ms-d (lo calcula el renderer).
+   se "asienta" desde un zoom ligero; el logo brota con un rebote apenas
+   perceptible; título y descripción suben ENFOCÁNDOSE (blur → nítido); los
+   botones suben con un fundido en cascada, y el crédito de Papela llega al
+   final. El retraso de cada pieza viene en --ms-d (lo calcula el renderer).
+   ⚠️ Blur SOLO en texto: en Safari un `filter` recorta la sombra de sus hijos
+   al rectángulo del elemento — el aro y la sombra del logo (y la de los
+   botones en los templates con sombra) se veían cortados durante la entrada.
    Los keyframes solo declaran el `from`: el destino es el valor natural del
    elemento (la descripción vive en opacity .8 — terminar en 1 la haría brincar).
    Fill-mode `backwards`, nunca `both`: al terminar no queda ni transform ni
    filter en el elemento (un ancestro con transform/filter se vuelve el
    contenedor de lo `position: fixed`; ver .page-enter). */
 @keyframes ms-entra {
-  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  from { opacity: 0; transform: translateY(12px); }
+}
+@keyframes ms-entra-texto {
+  from { opacity: 0; transform: translateY(10px); filter: blur(4px); }
 }
 @keyframes ms-entra-logo {
-  0%   { opacity: 0; transform: scale(0.72); filter: blur(4px); }
-  65%  { opacity: 1; transform: scale(1.04); filter: blur(0); }
+  0%   { opacity: 0; transform: scale(0.86); }
+  60%  { opacity: 1; transform: scale(1.015); }
 }
 @keyframes ms-entra-marco {
   from { opacity: 0; }
 }
 @keyframes ms-entra-cover {
-  from { transform: scale(1.08); filter: saturate(0.7) brightness(1.06); }
+  from { transform: scale(1.06); filter: saturate(0.75) brightness(1.05); }
 }
 @keyframes ms-entra-suave {
   from { opacity: 0; }
 }
-.ms-entra { animation: ms-entra 0.75s cubic-bezier(0.22, 1, 0.36, 1) var(--ms-d, 0s) backwards; }
-.ms-entra-logo { animation: ms-entra-logo 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--ms-d, 0s) backwards; }
-.ms-entra-marco { animation: ms-entra-marco 0.7s ease-out backwards; }
-.ms-entra-cover { animation: ms-entra-cover 1.6s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
-.ms-entra-suave { animation: ms-entra-suave 0.9s ease-out var(--ms-d, 0s) backwards; }
+.ms-entra { animation: ms-entra 1.1s cubic-bezier(0.22, 1, 0.36, 1) var(--ms-d, 0s) backwards; }
+.ms-entra-texto { animation: ms-entra-texto 1.2s cubic-bezier(0.22, 1, 0.36, 1) var(--ms-d, 0s) backwards; }
+.ms-entra-logo { animation: ms-entra-logo 1.3s cubic-bezier(0.22, 1, 0.36, 1) var(--ms-d, 0s) backwards; }
+.ms-entra-marco { animation: ms-entra-marco 1.1s ease-out backwards; }
+.ms-entra-cover { animation: ms-entra-cover 2.4s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+.ms-entra-suave { animation: ms-entra-suave 1.2s ease-out var(--ms-d, 0s) backwards; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ms-entra, .ms-entra-logo, .ms-entra-marco, .ms-entra-cover, .ms-entra-suave { animation: none !important; }
+  .ms-entra, .ms-entra-texto, .ms-entra-logo, .ms-entra-marco, .ms-entra-cover, .ms-entra-suave { animation: none !important; }
   .ms-rise { animation: none !important; opacity: 1 !important; }
   .ms-fade, .ms-pop, .ms-view, .ms-hero-logo, .ms-hero-line, .ms-chip-in, .ms-sec-in { animation: none !important; opacity: 1 !important; }
   .ms-back-in, .ms-sheet-up { animation: none !important; opacity: 1 !important; }
