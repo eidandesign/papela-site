@@ -5,6 +5,7 @@ import { MapPinIcon } from "@heroicons/react/24/solid";
 import { getClasesConHorarios } from "@/lib/clases";
 import { getPublico } from "@/lib/clases-actividades";
 import { getTiposClase } from "@/lib/clases-tipos";
+import { esReservable } from "@/lib/clases-matching";
 import HeroSection from "@/components/site/HeroSection";
 import ReservaButton from "@/components/site/ReservaButton";
 
@@ -116,7 +117,7 @@ export default async function ClasesPage() {
                         Ver más detalles
                       </Link>
                       <ReservaButton
-                        horarios={maestra.horarios}
+                        horarios={maestra.horarios.filter((h) => esReservable(h, tipos))}
                         claseNombre={maestra.nombre}
                         whatsapp={maestra.whatsapp}
                         tipos={tipos}

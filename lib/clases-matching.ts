@@ -46,3 +46,11 @@ export function precioDeSlot(h: Horario, tipo: TipoClasePublico | null): number 
 export function duracionDeSlot(h: Horario, tipo: TipoClasePublico | null): number {
   return tipo && tipo.duracion > 0 ? tipo.duracion : h.duracion_minutos;
 }
+
+// ¿Se puede apartar en línea este horario? En línea solo se apartan clases
+// sueltas: un horario ligado a un PAQUETE (o a una clase que ya no existe)
+// tiene `tipo_clase_id` que no está entre los tipos → no entra al calendario.
+// Sin id (horarios viejos) sigue entrando y se empata por días.
+export function esReservable(h: Horario, tipos: TipoClasePublico[]): boolean {
+  return !h.tipo_clase_id || tipos.some((t) => t.id === h.tipo_clase_id);
+}

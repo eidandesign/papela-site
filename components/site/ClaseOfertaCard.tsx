@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { PaqueteClasePublico, TipoClasePublico } from "@/lib/clases-tipos";
+import type { HorarioSemanal } from "@/lib/clases";
 
 // Tarjetas de "Clases y paquetes" en la página de la maestra. Todo el contenido
 // (nombre, precio, foto, descripción, qué incluye, condiciones) se edita en el
@@ -67,8 +68,10 @@ function Tarjeta({
   precio,
   precioNota,
   descripcion,
+  horarios,
   children,
 }: {
+  horarios: HorarioSemanal[];
   nombre: string;
   imagen: string | null;
   chips: string[];
@@ -102,6 +105,16 @@ function Tarjeta({
           </p>
         )}
 
+        {horarios.length > 0 && (
+          <ul className="mt-3 flex flex-col gap-1" aria-label="Horario">
+            {horarios.map((h) => (
+              <li key={`${h.dia}-${h.rango}`} className="font-sans text-[15px] leading-6 text-[var(--color-text)]">
+                <span className="font-semibold text-[#664917]">{h.dia}</span> {h.rango}
+              </li>
+            ))}
+          </ul>
+        )}
+
         {descripcion && (
           <p className="font-sans text-[var(--color-text)] text-[17px] leading-7 mt-3 whitespace-pre-line">
             {descripcion}
@@ -114,8 +127,11 @@ function Tarjeta({
   );
 }
 
-export function TipoClaseCard({ tipo }: { tipo: TipoClasePublico }) {
-  const chips = [duracionTexto(tipo.duracion), diasTexto(tipo.dias)].filter((x): x is string => !!x);
+export function TipoClaseCard({ tipo, horarios = [] }: { tipo: TipoClasePublico; horarios?: HorarioSemanal[] }) {
+  // Con horarios ligados, los días ya se leen en la lista: el chip sobraría.
+  const chips = [duracionTexto(tipo.duracion), horarios.length ? null : diasTexto(tipo.dias)].filter(
+    (x): x is string => !!x,
+  );
   return (
     <Tarjeta
       nombre={tipo.nombre}
@@ -124,11 +140,18 @@ export function TipoClaseCard({ tipo }: { tipo: TipoClasePublico }) {
       precio={tipo.precio}
       precioNota="por clase"
       descripcion={tipo.descripcion}
+      horarios={horarios}
     />
   );
 }
 
-export function PaqueteClaseCard({ paquete }: { paquete: PaqueteClasePublico }) {
+export function PaqueteClaseCard({
+  paquete,
+  horarios = [],
+}: {
+  paquete: PaqueteClasePublico;
+  horarios?: HorarioSemanal[];
+}) {
   const chips = [
     "Paquete",
     paquete.sesiones > 0 ? `${paquete.sesiones} ${paquete.sesiones === 1 ? "clase" : "clases"}` : null,
@@ -146,6 +169,7 @@ export function PaqueteClaseCard({ paquete }: { paquete: PaqueteClasePublico }) 
       precio={paquete.precio}
       precioNota={`el paquete${porClase}`}
       descripcion={paquete.descripcion}
+      horarios={horarios}
     >
       {(paquete.incluye.length > 0 || paquete.condiciones.length > 0) && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">

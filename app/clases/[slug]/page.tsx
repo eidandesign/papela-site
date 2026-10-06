@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getClaseBySlug, getClases, getHorariosSemanales } from "@/lib/clases";
 import { getActividades } from "@/lib/clases-actividades";
 import { getPaquetesClase, getTiposClase } from "@/lib/clases-tipos";
+import { esReservable } from "@/lib/clases-matching";
 import { SITE_URL } from "@/lib/site";
 import ReservaButton from "@/components/site/ReservaButton";
 import ActividadCard from "@/components/site/ActividadCard";
@@ -63,6 +64,11 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
   const actividades = getActividades(maestra.slug);
   const tipos = tiposClase.filter((t) => t.claseId === maestra.id);
   const paquetes = paquetesClase.filter((p) => p.claseId === maestra.id);
+  // Horario semanal de cada clase/paquete (horarios ligados en el admin).
+  const horarioDe = (id: string) =>
+    getHorariosSemanales(maestra.horarios.filter((h) => h.tipo_clase_id === id));
+  // En línea solo se apartan clases sueltas (los paquetes se venden en tienda).
+  const horariosReservables = maestra.horarios.filter((h) => esReservable(h, tipos));
   const horariosSemanales = getHorariosSemanales(maestra.horarios);
 
   const jsonLd = {
@@ -158,7 +164,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
 
             <div className="mt-7">
               <ReservaButton
-                horarios={maestra.horarios}
+                horarios={horariosReservables}
                 claseNombre={maestra.nombre}
                 whatsapp={maestra.whatsapp}
                 tipos={tipos}
@@ -177,10 +183,10 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {tipos.map((t) => (
-                <TipoClaseCard key={t.id} tipo={t} />
+                <TipoClaseCard key={t.id} tipo={t} horarios={horarioDe(t.id)} />
               ))}
               {paquetes.map((p) => (
-                <PaqueteClaseCard key={p.id} paquete={p} />
+                <PaqueteClaseCard key={p.id} paquete={p} horarios={horarioDe(p.id)} />
               ))}
             </div>
           </section>
@@ -202,7 +208,7 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
             {/* CTA inferior para reservar */}
             <div className="flex justify-center mt-12">
               <ReservaButton
-                horarios={maestra.horarios}
+                horarios={horariosReservables}
                 claseNombre={maestra.nombre}
                 whatsapp={maestra.whatsapp}
                 tipos={tipos}
