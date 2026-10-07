@@ -55,7 +55,7 @@ type Opcion = {
   nombre: string | null; // nombre del paquete (la suelta no lleva)
   detalle: string; // "1 clase" / "4 clases · vigencia 30 días"
   precio: number;
-  precioNota: string; // "por clase" / "el paquete · $300 por clase"
+  precioNota: string; // "por clase" en la suelta; vacío en paquetes (solo el precio)
   inscripcion: number;
   notas: string;
   incluye: string[];
@@ -85,14 +85,13 @@ function opcionDePaquete(p: PaqueteClasePublico): Opcion {
     p.sesiones > 0 ? `${p.sesiones} ${p.sesiones === 1 ? "clase" : "clases"}` : "",
     p.vigenciaDias > 0 ? `vigencia ${p.vigenciaDias} días` : "",
   ].filter(Boolean);
-  const porClase = p.sesiones > 1 && p.precio > 0 ? ` · ${precioMx(Math.round((p.precio / p.sesiones) * 100) / 100)} por clase` : "";
   return {
     key: `paquete-${p.id}`,
     etiqueta: "Paquete",
     nombre: p.nombre,
     detalle: partes.join(" · "),
     precio: p.precio,
-    precioNota: `el paquete${porClase}`,
+    precioNota: "", // el paquete solo muestra su precio
     inscripcion: p.inscripcion,
     notas: p.descripcion,
     incluye: p.incluye,
@@ -334,7 +333,7 @@ export function ClaseBloque({
                         <span className="text-sm text-[var(--color-muted)]">{o.precioNota}</span>
                       </p>
                       {o.inscripcion > 0 && (
-                        <p className="mt-0.5 text-sm font-semibold text-[var(--color-terracota)]">+ Inscripción anual {precioMx(o.inscripcion)} (se paga en Papela)</p>
+                        <p className="mt-0.5 text-sm font-semibold text-[var(--color-terracota)]">Inscripción {precioMx(o.inscripcion)} (se paga en Papela)</p>
                       )}
                     </div>
                     <button
