@@ -168,7 +168,15 @@ export default function ReservaModal() {
         )}
 
         {/* Selector de tipo de clase: pills visibles con nombre + precio */}
-        {data.tipos.length > 0 && !paquete && (
+        {/* Llegó desde la tarjeta de una clase: ya eligió, no se vuelve a preguntar */}
+        {!paquete && data.tipoInicial && tipoSeleccionado && (
+          <p className="mb-6 text-center font-sans text-sm text-[var(--color-muted)]">
+            <span className="font-semibold text-[var(--color-text)]">{tipoSeleccionado.nombre}</span> · clase suelta ·{" "}
+            <span className="font-semibold text-[var(--color-verde)]">${tipoSeleccionado.precio.toLocaleString()} MXN</span>
+          </p>
+        )}
+
+        {data.tipos.length > 0 && !paquete && !data.tipoInicial && (
           <div className="mb-6 flex flex-col items-center gap-3">
             <span
               id="reserva-actividad-label"

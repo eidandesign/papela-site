@@ -2,30 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getClaseBySlug, getClases, getHorariosSemanales } from "@/lib/clases";
+import { getClaseBySlug, getClases } from "@/lib/clases";
 import { getActividades } from "@/lib/clases-actividades";
-import { getPaquetesClase, getTiposClase } from "@/lib/clases-tipos";
-import { esReservable } from "@/lib/clases-matching";
 import { SITE_URL } from "@/lib/site";
-import ReservaButton from "@/components/site/ReservaButton";
-import ActividadCard from "@/components/site/ActividadCard";
-import { PaqueteClaseCard, TipoClaseCard } from "@/components/site/ClaseOfertaCard";
-
-// Mismo número de respaldo que la ventana de reserva (ReservaModal).
-const WHATSAPP_PAPELA = "522211865590";
-
-function BotonWhatsApp({ href }: { href: string }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-5 py-2.5 font-sans text-sm font-semibold text-[var(--color-text)] hover:border-[var(--color-verde)] hover:text-[var(--color-verde)] transition-colors"
-    >
-      Por WhatsApp
-    </a>
-  );
-}
+import ActividadesGrid from "@/components/site/ActividadesGrid";
 
 export const revalidate = 60;
 
@@ -55,11 +35,11 @@ export async function generateMetadata({
   const url = `${SITE_URL}/clases/${maestra.slug}`;
 
   return {
-    title: { absolute: `Clases de ${tecnicas} con ${maestra.nombre} — Puebla` },
+    title: { absolute: `${maestra.nombre}, maestra de ${tecnicas} — Papela Atelier` },
     description: desc,
     alternates: { canonical: url },
     openGraph: {
-      title: `Clases de ${tecnicas} con ${maestra.nombre}`,
+      title: `${maestra.nombre}, maestra en Papela Atelier`,
       description: desc,
       url,
       images: maestra.foto ? [{ url: maestra.foto, alt: maestra.nombre }] : undefined,
@@ -67,52 +47,26 @@ export async function generateMetadata({
   };
 }
 
+// Perfil de la maestra (oct-2026, a petición del dueño): SOLO quién es — foto,
+// nombre, lo que enseña, descripción y experiencia — y abajo "Más
+// información" (sus actividades con imágenes). Las clases, horarios y precios
+// viven en /clases: la clase es de Papela, no depende de quién la da.
 export default async function ClaseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [maestra, tiposClase, paquetesClase] = await Promise.all([
-    getClaseBySlug(slug),
-    getTiposClase(),
-    getPaquetesClase(),
-  ]);
-
+  const maestra = await getClaseBySlug(slug);
   if (!maestra) notFound();
 
   const actividades = getActividades(maestra.slug);
-  const tipos = tiposClase.filter((t) => t.claseId === maestra.id);
-  const paquetes = paquetesClase.filter((p) => p.claseId === maestra.id);
-  const paquetesSinClase = paquetes.filter((p) => !p.tipoId || !tipos.some((t) => t.id === p.tipoId));
-  // Horario semanal de cada clase/paquete (horarios ligados en el admin).
-  const horarioDe = (id: string) =>
-    getHorariosSemanales(maestra.horarios.filter((h) => h.tipo_clase_id === id));
-  // Solo horarios de una clase existente (o sin clase, los viejos): sus
-  // paquetes usan los mismos horarios de la clase.
-  const horariosReservables = maestra.horarios.filter((h) => esReservable(h, tipos));
-  const waNumero = maestra.whatsapp || WHATSAPP_PAPELA;
-  const waHref = (texto: string) => `https://wa.me/${waNumero}?text=${encodeURIComponent(texto)}`;
-  const horariosSemanales = getHorariosSemanales(maestra.horarios);
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Course",
-    name: `Clases de ${maestra.tecnicas?.join(", ") || "arte"} con ${maestra.nombre}`,
+    "@type": "Person",
+    name: maestra.nombre,
     description: maestra.descripcion ?? undefined,
     image: maestra.foto ?? undefined,
-    inLanguage: "es-MX",
-    provider: {
-      "@type": "Organization",
-      name: "Papela Atelier",
-      url: SITE_URL,
-    },
-    offers: {
-      "@type": "Offer",
-      category: "Clases de arte",
-      priceCurrency: "MXN",
-      availability:
-        maestra.horarios.length > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/SoldOut",
-      url: `${SITE_URL}/clases/${maestra.slug}`,
-    },
+    knowsAbout: maestra.tecnicas?.length ? maestra.tecnicas : undefined,
+    worksFor: { "@type": "Organization", name: "Papela Atelier", url: SITE_URL },
+    url: `${SITE_URL}/clases/${maestra.slug}`,
   };
 
   return (
@@ -123,9 +77,8 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
       />
 
       <div className="w-[90%] mx-auto pt-40 md:pt-[200px] pb-16">
-        {/* ── Hero: foto + perfil de la maestra ── */}
+        {/* ── Perfil ── */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-          {/* Foto */}
           <div className="relative w-full aspect-[4/3] md:aspect-[624/520] rounded-2xl overflow-hidden">
             {maestra.foto ? (
               <Image
@@ -141,167 +94,47 @@ export default async function ClaseDetailPage({ params }: { params: Promise<{ sl
             )}
           </div>
 
-          {/* Info */}
           <div className="flex flex-col">
             <h1 className="font-serif italic text-[#664917] text-[clamp(2.5rem,5.5vw,4.5rem)] leading-[1.05]">
               {maestra.nombre}
             </h1>
 
             {maestra.tecnicas?.length > 0 && (
-              <p className="font-sans text-[var(--color-muted)] text-[clamp(0.95rem,1.5vw,1.05rem)] leading-7 mt-3">
-                {maestra.tecnicas.join(" · ")}
-              </p>
-            )}
-
-            {maestra.descripcion && (
-              <p className="font-sans text-[var(--color-text)] text-[17px] leading-7 mt-5">
-                {maestra.descripcion}
-              </p>
-            )}
-
-            {maestra.experiencia && (
-              <p className="font-sans text-[var(--color-muted)] text-[15px] leading-7 mt-3">
-                {maestra.experiencia}
-              </p>
-            )}
-
-            {horariosSemanales.length > 0 && (
-              <div className="mt-7">
-                <p className="label text-[var(--color-terracota)]">Horarios disponibles</p>
-                <ul className="mt-3 flex flex-col gap-1.5">
-                  {horariosSemanales.map((h) => (
-                    <li
-                      key={`${h.dia}-${h.rango}`}
-                      className="font-sans text-[var(--color-text)] text-[15px] leading-6"
-                    >
-                      <span className="font-semibold text-[#664917]">{h.dia}</span>{" "}
-                      {h.rango}
-                    </li>
-                  ))}
-                </ul>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {maestra.tecnicas.map((t) => (
+                  <span key={t} className="rounded-full bg-[#f2f0e9] px-3 py-1.5 font-sans text-sm text-[var(--color-muted)]">
+                    {t}
+                  </span>
+                ))}
               </div>
             )}
 
-            <div className="mt-7">
-              <ReservaButton
-                horarios={horariosReservables}
-                claseNombre={maestra.nombre}
-                whatsapp={maestra.whatsapp}
-                tipos={tipos}
-                label="Reservar Clase"
-              />
+            {maestra.descripcion && (
+              <p className="font-sans text-[var(--color-text)] text-[17px] leading-7 mt-6 whitespace-pre-line">{maestra.descripcion}</p>
+            )}
+
+            {maestra.experiencia && (
+              <p className="font-sans text-[var(--color-muted)] text-[15px] leading-7 mt-3 whitespace-pre-line">{maestra.experiencia}</p>
+            )}
+
+            <div className="mt-8">
+              <Link
+                href="/clases"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-verde)] px-7 py-3.5 font-sans text-sm font-semibold text-[var(--color-cremita)] hover:opacity-90 transition-opacity"
+              >
+                Ver clases de Papela
+              </Link>
             </div>
           </div>
         </section>
 
-        {/* ── Clases y paquetes (se editan en el admin, perfil de la maestra) ── */}
-        {(tipos.length > 0 || paquetes.length > 0) && (
-          <section className="mt-16 md:mt-24">
-            <h2 className="text-center font-serif font-extralight text-[clamp(2rem,4.5vw,3.25rem)] text-[#403c3c] leading-tight mb-8 md:mb-12">
-              {paquetes.length > 0 ? "Clases y paquetes" : "Clases"}
-            </h2>
-
-            {/* Cada clase con sus formas de venta: la tarjeta de la clase (suelta)
-                y debajo sus paquetes — misma clase y mismos horarios, por eso
-                los paquetes no repiten el horario. */}
-            <div className="flex flex-col gap-10">
-              {tipos.map((t) => {
-                const susPaquetes = paquetes.filter((p) => p.tipoId === t.id);
-                return (
-                  <div key={t.id}>
-                    <TipoClaseCard
-                      tipo={t}
-                      horarios={horarioDe(t.id)}
-                      acciones={
-                        <>
-                          <ReservaButton
-                            horarios={horariosReservables}
-                            claseNombre={maestra.nombre}
-                            whatsapp={maestra.whatsapp}
-                            tipos={tipos}
-                            tipoInicial={t.id}
-                            label="Apartar clase"
-                            size="sm"
-                          />
-                          <BotonWhatsApp href={waHref(`Hola Papela 🌿 me interesa la clase de "${t.nombre}" con ${maestra.nombre}.`)} />
-                        </>
-                      }
-                    />
-                    {susPaquetes.length > 0 && (
-                      <div className="mt-4">
-                        <p className="label text-[var(--color-terracota)] mb-3">
-                          {t.nombre} también en paquete
-                        </p>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                          {susPaquetes.map((p) => (
-                            <PaqueteClaseCard
-                              key={p.id}
-                              paquete={p}
-                              acciones={
-                                <>
-                                  <ReservaButton
-                                    horarios={horariosReservables}
-                                    claseNombre={maestra.nombre}
-                                    whatsapp={maestra.whatsapp}
-                                    tipos={tipos}
-                                    tipoInicial={t.id}
-                                    paquete={{
-                                      id: p.id,
-                                      nombre: p.nombre,
-                                      precio: p.precio,
-                                      inscripcion: p.inscripcion,
-                                      sesiones: p.sesiones,
-                                    }}
-                                    label="Pagar en línea"
-                                    size="sm"
-                                  />
-                                  <BotonWhatsApp
-                                    href={waHref(`Hola Papela 🌿 me interesa el "${p.nombre}" de ${t.nombre} con ${maestra.nombre}.`)}
-                                  />
-                                </>
-                              }
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {paquetesSinClase.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {paquetesSinClase.map((p) => (
-                    <PaqueteClaseCard key={p.id} paquete={p} horarios={horarioDe(p.id)} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* ── Clases que imparte ── */}
+        {/* ── Más información: lo que se trabaja con ella ── */}
         {actividades.length > 0 && (
           <section className="mt-16 md:mt-24">
             <h2 className="text-center font-serif font-extralight text-[clamp(2rem,4.5vw,3.25rem)] text-[#403c3c] leading-tight mb-8 md:mb-12">
-              Clases de {maestra.nombre}
+              Más información
             </h2>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {actividades.map((a) => (
-                <ActividadCard key={a.titulo} actividad={a} />
-              ))}
-            </div>
-
-            {/* CTA inferior para reservar */}
-            <div className="flex justify-center mt-12">
-              <ReservaButton
-                horarios={horariosReservables}
-                claseNombre={maestra.nombre}
-                whatsapp={maestra.whatsapp}
-                tipos={tipos}
-                label="Reservar Clase"
-              />
-            </div>
+            <ActividadesGrid actividades={actividades} />
           </section>
         )}
 
