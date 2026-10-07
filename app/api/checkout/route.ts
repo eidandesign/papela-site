@@ -87,18 +87,6 @@ export async function POST(req: NextRequest) {
             unit_price: paquete.precio,
             currency_id: "MXN",
           },
-          ...(paquete.inscripcion > 0
-            ? [
-                {
-                  id: `inscripcion:${paquete.id}`,
-                  title: `Inscripción anual — ${claseNombre}`,
-                  description: "Se paga una vez al año",
-                  quantity: 1,
-                  unit_price: paquete.inscripcion,
-                  currency_id: "MXN",
-                },
-              ]
-            : []),
         ]
       : [
           {
@@ -125,7 +113,8 @@ export async function POST(req: NextRequest) {
                 paquete_id: paquete.id,
                 paquete_nombre: paquete.nombre,
                 paquete_sesiones: paquete.sesiones,
-                inscripcion: paquete.inscripcion,
+                // La inscripción se paga en Papela: solo se avisa para la nota.
+                inscripcion_por_pagar: paquete.inscripcion,
               },
             }
           : {}),

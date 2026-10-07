@@ -50,7 +50,8 @@ export default function ReservaModal() {
     setSelected(data?.tipoInicial ?? null);
   }
   const paquete = data?.paquete ?? null;
-  const totalPaquete = paquete ? paquete.precio + paquete.inscripcion : 0;
+  // La inscripción anual NO se cobra en línea: se paga directamente en Papela.
+  const totalPaquete = paquete ? paquete.precio : 0;
 
   const tipoSeleccionado = data?.tipos.find((t) => t.id === selected) ?? null;
 
@@ -154,16 +155,15 @@ export default function ReservaModal() {
               <span>Paquete{paquete.sesiones ? ` (${paquete.sesiones} clases)` : ""}</span>
               <span>${paquete.precio.toLocaleString()}</span>
             </div>
-            {paquete.inscripcion > 0 && (
-              <div className="flex justify-between gap-3 text-[var(--color-text)] mt-1">
-                <span>Inscripción anual</span>
-                <span>${paquete.inscripcion.toLocaleString()}</span>
-              </div>
-            )}
             <div className="flex justify-between gap-3 mt-2 pt-2 border-t border-[var(--color-border)] font-semibold text-[var(--color-verde)]">
-              <span>Total</span>
+              <span>Total a pagar en línea</span>
               <span>${totalPaquete.toLocaleString()} MXN</span>
             </div>
+            {paquete.inscripcion > 0 && (
+              <p className="mt-2 text-sm text-[var(--color-terracota)]">
+                La inscripción anual de ${paquete.inscripcion.toLocaleString()} se paga directamente en Papela.
+              </p>
+            )}
           </div>
         )}
 

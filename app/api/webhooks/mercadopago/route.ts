@@ -178,20 +178,20 @@ export async function POST(req: NextRequest) {
       paquete_id?: string;
       paquete_nombre?: string;
       paquete_sesiones?: number;
-      inscripcion?: number;
+      inscripcion_por_pagar?: number;
     };
     const esPaquete = typeof meta.paquete_id === "string" && meta.paquete_id.length > 0;
-    const inscripcion = esPaquete ? Math.max(0, Number(meta.inscripcion) || 0) : 0;
+    // La inscripción anual se paga en Papela (no en línea): solo se anota.
+    const inscripcionPorPagar = esPaquete ? Math.max(0, Number(meta.inscripcion_por_pagar) || 0) : 0;
     const alumnoNombre = [payment.payer?.first_name, payment.payer?.last_name].filter(Boolean).join(" ").trim();
     const alumnoTel = payment.payer?.phone?.number ?? null;
 
     const { data: horarioRow } = await supabase
       .from("clases_horarios")
-      .select("clase_id, clases(nombre)")
+      .select("clase_id")
       .eq("id", horarioId)
       .single();
     const claseId = (horarioRow?.clase_id as string | undefined) ?? null;
-    const maestro = (horarioRow?.clases as { nombre?: string } | null)?.nombre ?? null;
 
     // Persistir la reserva
     await supabase.from("clases_reservas").insert({
@@ -203,42 +203,9 @@ export async function POST(req: NextRequest) {
       alumno_email: payment.payer?.email ?? "",
       alumno_telefono: alumnoTel,
       notas: esPaquete
-        ? `Paquete en línea: ${meta.paquete_nombre ?? ""}${meta.paquete_sesiones ? ` (${meta.paquete_sesiones} clases)` : ""} — primera clase en este horario${inscripcion > 0 ? ` · incluye inscripción anual ${inscripcion}` : ""} · MercadoPago #${paymentId}`
+        ? `Paquete en línea: ${meta.paquete_nombre ?? ""}${meta.paquete_sesiones ? ` (${meta.paquete_sesiones} clases)` : ""} — primera clase en este horario${inscripcionPorPagar > 0 ? ` · inscripción anual $${inscripcionPorPagar} por pagar en Papela` : ""} · MercadoPago #${paymentId}`
         : null,
     });
-
-    // Inscripción anual pagada en línea: se registra como pago de Papela
-    // (tipo 'inscripcion') para que el admin sepa que la tiene vigente al
-    // cobrarle su siguiente paquete en mostrador. Idempotente por payment id
-    // (MercadoPago puede reintentar el webhook).
-    if (inscripcion > 0 && maestro) {
-      const nota = `Pagada en línea (MercadoPago #${paymentId})`;
-      const { data: yaExiste } = await supabase
-        .from("pagos_talleres")
-        .select("id")
-        .eq("tipo", "inscripcion")
-        .eq("nota", nota)
-        .limit(1);
-      if (!yaExiste?.length) {
-        const hoyMx = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City" }).format(new Date());
-        const { error: inscError } = await supabase.from("pagos_talleres").insert({
-          maestro,
-          clase_id: claseId,
-          concepto: `Inscripción anual — ${maestro}`,
-          alumno: alumnoNombre || payment.payer?.email || "Alumno en línea",
-          telefono: alumnoTel,
-          nota,
-          fecha_pago: hoyMx,
-          precio: inscripcion,
-          comision: inscripcion,
-          estado: "pagado",
-          pagado: inscripcion,
-          comision_prevista: inscripcion,
-          tipo: "inscripcion",
-        });
-        if (inscError) logger.error("webhook: no se registró la inscripción", { paymentId }, inscError);
-      }
-    }
   }
 
   return NextResponse.json({ ok: true });

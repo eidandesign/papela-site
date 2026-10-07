@@ -151,6 +151,12 @@ export function ClaseBloque({
   const abrirReserva = useReservaModalStore((s) => s.open);
   const opciones = opcionesDe(tipo, paquetes);
   const cuando = diasYHorario(horarioSemanal);
+  // Pestañas del drawer: Paquetes primero si la clase tiene; si no, solo la suelta.
+  const pestanas: { id: "paquetes" | "suelta"; label: string }[] = [
+    ...(paquetes.length ? [{ id: "paquetes" as const, label: paquetes.length === 1 ? "Paquete" : "Paquetes" }] : []),
+    { id: "suelta", label: "Clase suelta" },
+  ];
+  const [pestana, setPestana] = useState<"paquetes" | "suelta">(paquetes.length ? "paquetes" : "suelta");
 
   const waNumero = whatsapp || WHATSAPP_PAPELA;
   const waHref = (o: Opcion) => {
@@ -163,6 +169,7 @@ export function ClaseBloque({
   function cerrar() {
     setAbierto(false);
     setElegida(null);
+    setPestana(paquetes.length ? "paquetes" : "suelta");
   }
 
   function pagarEnLinea(o: Opcion) {
@@ -270,44 +277,78 @@ export function ClaseBloque({
         }
       >
         {!elegida ? (
-          /* Paso 1: las formas de venta, una tarjeta por opción */
+          /* Paso 1: pestañas por forma de venta — Paquetes primero (es lo que
+             más conviene y trae más letra chica), luego Clase suelta. Una
+             pestaña a la vez: con la descripción completa de cada opción, la
+             hoja crecería demasiado si se apilaran todas. */
           <div className="flex flex-col gap-4">
             {tipo.descripcion && (
               <p className="font-sans text-[15px] leading-6 text-[var(--color-text)] whitespace-pre-line">{tipo.descripcion}</p>
             )}
-            <p className="font-sans text-sm font-semibold text-[var(--color-text)]">Elige cómo quieres tomar tu clase:</p>
-            {opciones.map((o) => (
-              <div key={o.key} className="rounded-2xl border border-[var(--color-border)] p-5">
-                <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-terracota)]">{o.etiqueta}</p>
-                {o.nombre && <p className="mt-1 font-serif text-xl leading-tight text-[#403c3c]">{o.nombre}</p>}
-                <p className="mt-1 font-sans text-sm text-[var(--color-muted)]">{o.detalle}</p>
-                {o.incluye.length > 0 && (
-                  <div className="mt-4">
-                    <p className="font-sans text-xs font-semibold text-[var(--color-text)] mb-2">Incluye</p>
-                    <ListaPuntos items={o.incluye} tono="verde" />
-                  </div>
-                )}
-                <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-                  <div className="font-sans">
-                    <p>
-                      <span className="text-2xl font-semibold text-[var(--color-verde)]">{precioMx(o.precio)}</span>{" "}
-                      <span className="text-sm text-[var(--color-muted)]">{o.precioNota}</span>
-                    </p>
-                    {o.inscripcion > 0 && (
-                      <p className="mt-0.5 text-sm font-semibold text-[var(--color-terracota)]">+ Inscripción anual {precioMx(o.inscripcion)}</p>
-                    )}
-                  </div>
+            {pestanas.length > 1 && (
+              <div role="tablist" aria-label="Formas de tomar la clase" className="grid grid-cols-2 rounded-full bg-[#f2f0e9] p-1">
+                {pestanas.map((t) => (
                   <button
+                    key={t.id}
                     type="button"
-                    onClick={() => setElegida(o)}
-                    className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-verde)] px-5 py-2.5 font-sans text-sm font-semibold text-[var(--color-cremita)] hover:opacity-90 transition-opacity"
+                    role="tab"
+                    aria-selected={pestana === t.id}
+                    onClick={() => setPestana(t.id)}
+                    className={`rounded-full px-4 py-2.5 font-sans text-sm font-semibold transition-colors ${
+                      pestana === t.id ? "bg-white text-[var(--color-verde)] shadow-sm" : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                    }`}
                   >
-                    Apartar clase
-                    <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    {t.label}
                   </button>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
+            <div role="tabpanel" className="flex flex-col gap-4">
+              {(pestana === "paquetes" ? opciones.slice(1) : opciones.slice(0, 1)).map((o) => (
+                <div key={o.key} className="rounded-2xl border border-[var(--color-border)] p-5">
+                  {o.nombre ? (
+                    <p className="font-serif text-xl leading-tight text-[#403c3c]">{o.nombre}</p>
+                  ) : (
+                    <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-terracota)]">{o.etiqueta}</p>
+                  )}
+                  <p className="mt-1 font-sans text-sm text-[var(--color-muted)]">{o.detalle}</p>
+                  {o.notas && (
+                    <p className="mt-3 font-sans text-[15px] leading-6 text-[var(--color-text)] whitespace-pre-line">{o.notas}</p>
+                  )}
+                  {o.incluye.length > 0 && (
+                    <div className="mt-4">
+                      <p className="font-sans text-xs font-semibold text-[var(--color-text)] mb-2">Incluye</p>
+                      <ListaPuntos items={o.incluye} tono="verde" />
+                    </div>
+                  )}
+                  {o.condiciones.length > 0 && (
+                    <div className="mt-4">
+                      <p className="font-sans text-xs font-semibold text-[var(--color-text)] mb-2">Condiciones</p>
+                      <ListaPuntos items={o.condiciones} tono="muted" />
+                    </div>
+                  )}
+                  <div className="mt-5 pt-4 border-t border-[var(--color-border)] flex flex-wrap items-end justify-between gap-3">
+                    <div className="font-sans">
+                      <p>
+                        <span className="text-2xl font-semibold text-[var(--color-verde)]">{precioMx(o.precio)}</span>{" "}
+                        <span className="text-sm text-[var(--color-muted)]">{o.precioNota}</span>
+                      </p>
+                      {o.inscripcion > 0 && (
+                        <p className="mt-0.5 text-sm font-semibold text-[var(--color-terracota)]">+ Inscripción anual {precioMx(o.inscripcion)} (se paga en Papela)</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setElegida(o)}
+                      className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-verde)] px-5 py-2.5 font-sans text-sm font-semibold text-[var(--color-cremita)] hover:opacity-90 transition-opacity"
+                    >
+                      Apartar clase
+                      <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           /* Paso 2: resumen de lo elegido + lo que se paga */
@@ -353,16 +394,15 @@ export function ClaseBloque({
                 <span>{elegida.paquete ? `Paquete${elegida.paquete.sesiones ? ` (${elegida.paquete.sesiones} clases)` : ""}` : "Clase suelta"}</span>
                 <span>{precioMx(elegida.precio)}</span>
               </div>
-              {elegida.inscripcion > 0 && (
-                <div className="flex justify-between gap-3 mt-1 text-[var(--color-text)]">
-                  <span>Inscripción anual</span>
-                  <span>{precioMx(elegida.inscripcion)}</span>
-                </div>
-              )}
               <div className="flex justify-between gap-3 mt-2 pt-2 border-t border-[var(--color-border)] font-semibold text-[var(--color-verde)]">
                 <span>Total</span>
-                <span>{precioMx(elegida.precio + elegida.inscripcion)} MXN</span>
+                <span>{precioMx(elegida.precio)} MXN</span>
               </div>
+              {elegida.inscripcion > 0 && (
+                <p className="mt-2 rounded-xl bg-[#fdeee8] px-3 py-2 text-sm text-[var(--color-terracota)]">
+                  La inscripción anual de {precioMx(elegida.inscripcion)} se paga directamente en Papela.
+                </p>
+              )}
               {elegida.paquete && (
                 <p className="mt-2 text-sm text-[var(--color-muted)]">
                   Al pagar en línea eliges el día de tu primera clase; las siguientes las agendas con nosotros.

@@ -88,7 +88,7 @@ export default function ClaseCalendar({
   // tiene tipos configurados (legado). Slot ambiguo → "Desde $mín" y el CTA
   // pide elegir clase en vez de cobrar un precio que no corresponde a ninguna.
   const precioTexto = (h: Horario, tipoSlot: TipoClasePublico | null) => {
-    if (paquete) return `${(paquete.precio + paquete.inscripcion).toLocaleString()}`;
+    if (paquete) return `$${paquete.precio.toLocaleString()}`;
     if (tipoSlot) return `$${precioDeSlot(h, tipoSlot).toLocaleString()}`;
     const posibles = tipos.filter((t) => calzaConTipo(h, t) && t.precio > 0);
     if (posibles.length > 0) {
