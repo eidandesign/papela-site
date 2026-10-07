@@ -26,6 +26,7 @@ export type TipoClasePublico = {
   dias: number[];
   descripcion: string;
   imagen: string | null;
+  mediaTipo: "image" | "video"; // `imagen` puede ser un video (bucket taller-videos)
   // Letra chica de la clase suelta (sus paquetes traen la suya).
   sueltaDescripcion: string;
   incluye: string[];
@@ -40,6 +41,7 @@ interface TipoClaseRaw {
   dias?: number[];
   descripcion?: string;
   imagen?: string;
+  mediaTipo?: string;
   sueltaDescripcion?: string;
   incluye?: unknown;
   condiciones?: unknown;
@@ -112,6 +114,7 @@ export async function getTiposClase(): Promise<TipoClasePublico[]> {
           dias: t.dias ?? [],
           descripcion: (t.descripcion ?? "").trim(),
           imagen: imagenSegura(t.imagen),
+          mediaTipo: t.mediaTipo === "video" ? "video" : "image",
           sueltaDescripcion: (t.sueltaDescripcion ?? "").trim(),
           incluye: listaTexto(t.incluye),
           condiciones: listaTexto(t.condiciones),

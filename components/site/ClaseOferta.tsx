@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "@heroicons/react/24/solid";
 import HojaInferior from "@/components/site/HojaInferior";
@@ -46,6 +46,35 @@ function diasYHorario(horarios: HorarioSemanal[]): { dias: string; horario: stri
     dias: listaDias,
     horario: rangos.length === 1 ? rangos : horarios.map((h) => `${h.dia} ${rangoCorto(h.rango)}`),
   };
+}
+
+/**
+ * Video de la clase: silencioso, en bucle y sin controles, como la portada en
+ * video de Mini Sites. El play() se dispara desde un efecto (React no escribe
+ * el atributo `muted` en el HTML y el autoplay del navegador lo bloquearía);
+ * con prefers-reduced-motion se queda quieto en su primer cuadro.
+ */
+function VideoClase({ src, titulo }: { src: string; titulo: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    v.play().catch(() => {});
+  }, [src]);
+  return (
+    <video
+      ref={ref}
+      src={src}
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      aria-label={titulo}
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  );
 }
 
 /** Forma de venta: la clase suelta o uno de sus paquetes. */
@@ -189,7 +218,9 @@ export function ClaseBloque({
     <article className="flex flex-col bg-white rounded-[28px] overflow-hidden shadow-[0_4px_20px_rgba(64,60,60,0.08)]">
       {/* Tarjeta: foto arriba, info abajo y el botón al pie (todas alinean su CTA) */}
       <div className="relative w-full aspect-[4/3] bg-[#e7d6cf]">
-        {tipo.imagen && (
+        {tipo.imagen && tipo.mediaTipo === "video" ? (
+          <VideoClase src={tipo.imagen} titulo={tipo.nombre} />
+        ) : tipo.imagen ? (
           <Image
             src={tipo.imagen}
             alt={tipo.nombre}
@@ -197,7 +228,7 @@ export function ClaseBloque({
             sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
             className="object-cover"
           />
-        )}
+        ) : null}
         {tipo.duracion > 0 && (
           <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-terracota)] backdrop-blur-sm">
             {duracionTexto(tipo.duracion)}
