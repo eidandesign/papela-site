@@ -20,6 +20,16 @@
 | `--color-muted` | `rgb(110,100,95)` | Secondary text |
 | `--color-border` | `rgb(232,220,200)` | Borders |
 
+**Paleta extendida (Brand Book 2026)**: 4 pares profundo + luminoso, en `globals.css` (`:root` + `@theme inline` → `bg-pistache`, `text-cacao`, etc.). Se usan **de par en par, nunca todos a la vez**:
+| Par | Profundo | Luminoso | Contraste | Uso |
+|---|---|---|---|---|
+| Raíz | `--color-verde` #12535C | `--color-pistache` #8AB25A | 3.6:1 (solo titulares grandes) | materiales, regreso a clases, básicos, tienda |
+| Barro | `--color-barro` #D07C62 | `--color-durazno-vivo` #FFBE9E | 1.9:1 (decorativo, nunca texto sobre el otro) | talleres, clases, actividades |
+| Tinta | `--color-tinta` #014375 | `--color-agua` #7DBBC9 | 4.8:1 (texto ok) | impresión, personalización, proyectos |
+| Cacao | `--color-cacao` #422526 | `--color-rosa-papel` #EEC3D7 | 8.8:1 (texto ok) | artistas invitados, colaboraciones, regalos, fechas especiales |
+
+⚠️ `--color-durazno-vivo` (#FFBE9E, brand book) ≠ `--color-durazno` (#F0D9CC, relleno suave usado en `CotizacionDoc`). No unificarlos sin revisar la Cotización.
+
 **Info cards colors:** `#F0D9CC` (talleres), `#C9D3C0` (clases), `#CED8D9` (personaliza)
 
 ## Typography

@@ -56,6 +56,18 @@
   --color-text: rgb(64, 60, 60);
   --color-muted: rgb(110, 100, 95);
   --color-border: rgb(232, 220, 200);
+
+  /* Paleta extendida (Brand Book 2026): 4 pares profundo + luminoso para
+     campañas, temporadas y territorios. Se usan de par en par, nunca todos a
+     la vez. Raíz = verde + pistache · Barro = barro + durazno-vivo ·
+     Tinta = tinta + agua · Cacao = cacao + rosa-papel. */
+  --color-pistache: #8AB25A;
+  --color-barro: #D07C62;
+  --color-durazno-vivo: #FFBE9E;
+  --color-tinta: #014375;
+  --color-agua: #7DBBC9;
+  --color-cacao: #422526;
+  --color-rosa-papel: #EEC3D7;
 }
 
 @theme inline {
@@ -71,6 +83,13 @@
   --color-text: var(--color-text);
   --color-muted: var(--color-muted);
   --color-border: var(--color-border);
+  --color-pistache: var(--color-pistache);
+  --color-barro: var(--color-barro);
+  --color-durazno-vivo: var(--color-durazno-vivo);
+  --color-tinta: var(--color-tinta);
+  --color-agua: var(--color-agua);
+  --color-cacao: var(--color-cacao);
+  --color-rosa-papel: var(--color-rosa-papel);
 
   --font-serif: 'PP Editorial New', Georgia, serif;
   --font-sans: 'Satoshi', system-ui, sans-serif;

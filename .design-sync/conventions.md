@@ -20,6 +20,17 @@ Style your own layout with Tailwind classes. Brand colors are tokens, used eithe
 | `--color-border` | rgb(232,220,200) | `border-border` | hairlines, inputs |
 | `--color-bg` | #F0EFEB | `bg-bg` | page background |
 
+**Extended palette (Brand Book 2026):** four pairs, each a deep tone plus a bright one, for campaigns, seasons and themes. Use them **one pair at a time, never all together**, and always alongside the base palette above (`bg`, `cremita`, `text`).
+
+| Pair | Deep / bright | Utilities | Contrast rule | Use for |
+|---|---|---|---|---|
+| **Raíz** | `--color-verde` #12535C / `--color-pistache` #8AB25A | `bg-verde` `text-pistache` `bg-pistache` | 3.6:1 → pistache on verde only for **large headlines**; body text in cremita or `text` | materials, back to school, basics, the everyday shop |
+| **Barro** | `--color-barro` #D07C62 / `--color-durazno-vivo` #FFBE9E | `bg-barro` `bg-durazno-vivo` `text-barro` | 1.9:1 → **decorative only**, never text of one on the other | talleres, clases, actividades, life inside Papela |
+| **Tinta** | `--color-tinta` #014375 / `--color-agua` #7DBBC9 | `bg-tinta` `text-agua` `bg-agua` | 4.8:1 → fine for reading text | printing, personalization, projects, techniques |
+| **Cacao** | `--color-cacao` #422526 / `--color-rosa-papel` #EEC3D7 | `bg-cacao` `text-rosa-papel` `bg-rosa-papel` | 8.8:1 → fine for reading text | guest artists, collaborations, gifts, special dates |
+
+The pattern: a deep-color hero or card, a serif italic headline in the bright tone, a swatch or block of the bright tone, and the rest of the page on the base palette. Note that `--color-durazno` (#F0D9CC, a soft card fill) is a **different** color from `--color-durazno-vivo`.
+
 Info-card fills: `#F0D9CC` (talleres), `#C9D3C0` (clases), `#CED8D9` (personaliza). Hero colors by page: verde (default), `#5E7E86` personaliza, `#C4846A` talleres, `#4F8674` clases.
 
 Typography (only two families):

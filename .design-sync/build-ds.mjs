@@ -110,7 +110,7 @@ writeFileSync(
 // -- 3. CSS ----------------------------------------------------------------
 // Safelist: the vocabulary the conventions header teaches the design agent.
 // Tailwind v4 `@source inline()` with brace expansion.
-const colors = "verde,verde-light,cremita,cremita-2,cremita-3,terracota,durazno,text,muted,border,bg,white,black,transparent";
+const colors = "verde,verde-light,cremita,cremita-2,cremita-3,terracota,durazno,text,muted,border,bg,white,black,transparent,pistache,barro,durazno-vivo,tinta,agua,cacao,rosa-papel";
 const sp = "0,0.5,1,1.5,2,2.5,3,4,5,6,8,10,12,14,16,20,24,28,32";
 const safelist = [
   `{hover:,}{bg,text,border}-{${colors}}`,
