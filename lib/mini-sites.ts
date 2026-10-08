@@ -135,6 +135,7 @@ export const SITE_ROOT_SEGMENTS = new Set([
   "talleres",
   "terminos",
   "tienda",
+  "whoweare",
 ]);
 
 /** "/cocina-lorena" → true · "/talleres" → false · "/talleres/x" → false */

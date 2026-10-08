@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Papela — Brand Book 2026</title>
+<meta name="robots" content="noindex">
+<!-- Papela: React antes del runtime para que _ds_bundle.js no truene al evaluarse (mismas URL/SRI que support.js) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#12535C"/><text x="50" y="64" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="40" fill="#F3E6CF">Pa</text></svg></template>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/ds/fonts/fonts.css">
+<link rel="stylesheet" href="_ds/ds/_ds_bundle.css">
+<link rel="stylesheet" href="_ds/ds/styles.css">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;display=swap">
+<script src="_ds/ds/_ds_bundle.js"></script>
+<style>
+:root{--type-display:150px;--type-title:84px;--type-subtitle:50px;--type-body:32px;--type-small:27px;--type-label:24px;--pad-top:80px;--pad-bottom:80px;--pad-x:110px}
+html,body{margin:0;background:#12535C}
+a{color:#12535C}a:hover{color:#8C482A}
+@keyframes pa-up{from{opacity:0;transform:translateY(46px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+@keyframes pa-num{from{opacity:0;transform:translateY(28%)}to{opacity:1;transform:none}}
+@keyframes pa-wipe{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes pa-wipex{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes pa-zoom{from{transform:scale(1.22)}to{transform:scale(1)}}
+@keyframes pa-line{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes pa-fade{from{opacity:0}to{opacity:1}}
+@keyframes pa-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes pa-page{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:no-preference){
+[data-motion="on"] [data-deck-active]{animation:pa-page .7s ease both}
+[data-motion="on"] [data-deck-active] [data-a="up"]{animation:pa-up 1.1s cubic-bezier(.16,1,.3,1) both}
+[data-motion="on"] [data-deck-active] [data-a="num"]{animation:pa-num 1.5s cubic-bezier(.16,1,.3,1) both}
+[data-motion="on"] [data-deck-active] [data-a="wipe"]{animation:pa-wipe 1.4s cubic-bezier(.77,0,.18,1) both}
+[data-motion="on"] [data-deck-active] [data-a="wipex"]{animation:pa-wipex 1.4s cubic-bezier(.77,0,.18,1) both}
+[data-motion="on"] [data-deck-active] [data-a="zoom"]{animation:pa-zoom 2.4s cubic-bezier(.16,1,.3,1) both}
+[data-motion="on"] [data-deck-active] [data-a="line"]{animation:pa-line 1.3s cubic-bezier(.77,0,.18,1) both;transform-origin:left center}
+[data-motion="on"] [data-deck-active] [data-a="draw"]{animation:pa-draw 2.2s cubic-bezier(.65,0,.35,1) both}
+[data-motion="on"] [data-deck-active] [data-a="fade"]{animation:pa-fade 1.4s ease both}
+}
+[data-hdr="off"] [data-hdr-el]{visibility:hidden}
+/* Papela: modo stack (celular vertical) — lo animado espera oculto hasta que su slide entra en pantalla */
+@media (prefers-reduced-motion:no-preference){
+[data-motion="on"] deck-stage[data-stack] section:not([data-deck-active]) [data-a]{opacity:0}
+}
+/* Papela: reacomodo en vertical (lienzo de 900px de ancho, ver STACK_W en deck-stage.js) */
+deck-stage[data-stack]{--type-display:120px;--type-title:76px;--type-subtitle:46px;--type-body:36px;--type-small:31px;--type-label:24px;--pad-top:90px;--pad-bottom:90px;--pad-x:64px}
+deck-stage[data-stack] > section{padding-left:var(--pad-x)!important;padding-right:var(--pad-x)!important}
+deck-stage[data-stack] [data-pc="1col"]{grid-template-columns:minmax(0,1fr)!important;row-gap:56px!important}
+deck-stage[data-stack] [data-pc="2col"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;row-gap:24px!important}
+deck-stage[data-stack] [data-pc="3col"]{grid-template-columns:repeat(3,minmax(0,1fr))!important;row-gap:24px!important}
+deck-stage[data-stack] [data-pc-w]{width:auto!important;max-width:100%!important;height:auto!important}
+deck-stage[data-stack] [data-pc-nowrap]{white-space:normal!important}
+deck-stage[data-stack] [data-pc-indent]{padding-left:12%!important}
+deck-stage[data-stack] [data-pc-stack]{flex-direction:column!important;align-items:flex-start!important;justify-content:flex-start!important;gap:14px!important}
+deck-stage[data-stack] section img{max-width:100%}
+deck-stage[data-stack] section [data-a="wipe"],deck-stage[data-stack] section [data-a="wipex"]{min-height:520px}
+</style>
+</helmet>
+<div data-motion="{{ motion }}" data-hdr="{{ header }}" style="position:fixed;inset:0">
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" no-rail="" width="1920" height="1080" hint-size="100%,100%" data-uneditable="">
+
+<section data-label="Portada" data-speaker-notes="Brand Book 2026: el manual estratégico y verbal para el equipo de marketing de Papela." style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:90px var(--pad-x) 90px;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-a="fade" style="display:flex;align-items:center;justify-content:space-between">
+    <div style="width:150px;height:150px"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="150px,150px"></x-import></div>
+    <span style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Brand Book · 2026</span>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div><div data-a="num" style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:230px;line-height:1;letter-spacing:-.025em;animation-delay:.2s">Lo que imaginas</div></div>
+    <div><div data-a="num" style="font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 230px; line-height: 1; letter-spacing: -.025em; text-align: right; animation-delay: .38s; font-style: italic">comienza aquí.</div></div>
+  </div>
+  <div data-a="line" style="height:1px;background:rgba(243,230,207,.45);margin-bottom:30px;animation-delay:.6s"></div>
+  <div data-a="up" style="display:flex;justify-content:space-between;align-items:baseline;animation-delay:.7s">
+    <span style="font-size:var(--type-small)">Estrategia, esencia y comunicación de marca</span>
+    <span style="font-size:var(--type-small);opacity:.8">Manual estratégico y verbal para el equipo de marketing</span>
+  </div>
+</section>
+<section data-label="Nuestro manifiesto (volante)" data-speaker-notes="El manifiesto del volante: cinco síes y un no que resumen cómo queremos que se sienta Papela." style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:60px var(--pad-x) 80px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;overflow:hidden;position:relative">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"></span></div>
+  <svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -40px; width: 2000px; height: 260px; top: -30px; pointer-events: none; opacity: 1; stroke: var(--color-red-50)"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#F3E6CF" stroke-opacity="0.8" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+  
+  
+  
+<div style="position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; width: 1529px">
+    <h2 data-a="up" style="position: relative; margin: 0; font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-weight: 400; font-size: 152px; line-height: 1.15; letter-spacing: -.02em; color: var(--color-cremita); white-space: nowrap; opacity: 0.63">Nuestro Manifiesto</h2><div data-a="up" style="display:flex;flex-direction:column;align-items:center;gap:4px;animation-delay:0.25s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:26px;opacity:.8">1</span><span style="font-family:'PP Editorial New',Georgia,serif;font-size:34px;line-height:1.25">No a las papelerías grises donde todo se siente urgente; comprar una cartulina también puede sentirse bonito.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;align-items:center;gap:4px;animation-delay:0.35s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:26px;opacity:.8">2</span><span style="font-family:'PP Editorial New',Georgia,serif;font-size:34px;line-height:1.25">Sí a la #PapePorGusto; porque venir por una copia, un plumón o un sticker también puede alegrarte el día.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;align-items:center;gap:4px;animation-delay:0.45s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:26px;opacity:.8">3</span><span style="font-family:'PP Editorial New',Georgia,serif;font-size:34px;line-height:1.25">Sí a ir un ratito a la terracita a pintar cerámica; porque entre libretas, café y solecito también nacen buenas ideas.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;align-items:center;gap:4px;animation-delay:0.55s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:26px;opacity:.8">4</span><span style="font-family:'PP Editorial New',Georgia,serif;font-size:34px;line-height:1.25">Sí a regalarte un ratito para ti; entre pinceles, barro y lienzos también se descansa.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;align-items:center;gap:4px;animation-delay:0.65s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:26px;opacity:.8">5</span><span style="font-family:'PP Editorial New',Georgia,serif;font-size:34px;line-height:1.25">Sí a las libretas que inspiran, a los papeles bonitos y a las pequeñas cosas que hacen grande un día.</span></div>
+  </div></section>
+
+<section data-label="Contenido" data-speaker-notes="Siete capítulos, de la esencia a la identidad visual." style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Contenido</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.8fr 1.2fr;column-gap:120px;padding-top:70px">
+    <div style="display:flex;flex-direction:column;justify-content:space-between">
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-display);line-height:.95;letter-spacing:-.02em">Contenido</h2>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);max-width:560px;animation-delay:.2s">Por qué existe Papela, cómo se organiza, cómo habla y hacia dónde va.</p>
+    </div>
+    <div style="display:flex;flex-direction:column">
+      <div data-a="up" style="display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;padding:18px 0;border-top:1px solid rgb(225,212,190);animation-delay:0.10s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px;color:#8C482A">01</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:42px">Nuestra esencia</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">04–09</span></div>
+      <div data-a="up" style="display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;padding:18px 0;border-top:1px solid rgb(225,212,190);animation-delay:0.18s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px;color:#8C482A">02</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:42px">Nuestro universo</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">10–17</span></div>
+      <div data-a="up" style="display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;padding:18px 0;border-top:1px solid rgb(225,212,190);animation-delay:0.26s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px;color:#8C482A">03</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:42px">Nuestra identidad</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">18–22</span></div>
+      <div data-a="up" style="display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;padding:18px 0;border-top:1px solid rgb(225,212,190);animation-delay:0.34s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px;color:#8C482A">04</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:42px">Nuestra voz y comunicación</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">23–27</span></div>
+      <div data-a="up" style="display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;padding:18px 0;border-top:1px solid rgb(225,212,190);animation-delay:0.42s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px;color:#8C482A">05</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:42px">Nuestra estrategia de contenido</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">28–33</span></div>
+      <div data-a="up" style="display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;padding:18px 0;border-top:1px solid rgb(225,212,190);animation-delay:0.50s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px;color:#8C482A">06</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:42px">Nuestro futuro</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">34–37</span></div>
+      <div data-a="up" style="display:grid;grid-template-columns:90px 1fr auto;align-items:baseline;padding:18px 0;border-top:1px solid rgb(225,212,190);border-bottom:1px solid rgb(225,212,190);animation-delay:0.58s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px;color:#8C482A">07</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:42px">Identidad visual</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">38–44</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Capítulo 01" data-speaker-notes="Capítulo 01: por qué existe Papela y qué representa." style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) 150px;box-sizing:border-box;display:grid;grid-template-columns:1.25fr 1fr;column-gap:140px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:36px">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Capítulo</span>
+    <div>
+      <div><div data-a="num" style="font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 440px; line-height: 1.05; letter-spacing: -.04em; width: 867px; height: 383px">01</div></div>
+      <h2 data-a="up" style="margin:30px 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;animation-delay:.25s">Nuestra esencia</h2>
+    </div>
+  </div><div style="display:flex;flex-direction:column;justify-content:flex-end;font-size:var(--type-small)">
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.4s"><span style="opacity:.75">04</span><span>Todo comienza con una creencia</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.47s"><span style="opacity:.75">05</span><span>¿Por qué existe Papela?</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.54s"><span style="opacity:.75">06</span><span>¿Qué es Papela?</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.61s"><span style="opacity:.75">07</span><span>Nuestro propósito</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);border-bottom:1px solid rgba(243,230,207,.35);animation-delay:.68s"><span style="opacity:.75">08</span><span>Nuestra misión y visión</span></div>
+  </div>
+  
+<svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -41px; width: 1984px; height: 259px; top: 54px; pointer-events: none"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#F3E6CF" stroke-opacity="0.8" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+</section>
+
+<section data-label="Todo comienza con una creencia" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>01 — Nuestra esencia</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:1.2fr .8fr;column-gap:110px;padding-top:60px;min-height:0">
+    <div style="display: flex; flex-direction: column; gap: 40px; width: 714px; height: 799px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Nuestra creencia</span>
+      
+      <p data-a="up" style="margin:10px 0 0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:56px;line-height:1.18;color:#12535C;animation-delay:.2s">Creemos que <i style="font-weight: 500">la creatividad</i> no es un talento reservado para unos cuantos.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);max-width:880px;animation-delay:.3s">Todos tenemos ideas, curiosidad y la capacidad de imaginar algo nuevo. A veces solo necesitamos una hoja, un color, las herramientas adecuadas o alguien que nos anime a intentarlo.</p>
+      <p data-a="up" style="margin: auto 0 0; font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 37px; color: #8C482A; animation-delay: .45s">En Papela creemos que todos podemos crear.</p>
+    </div>
+    <div data-a="wipe" style="border-radius:16px;overflow:hidden;animation-delay:.1s">
+      <img data-a="zoom" src="assets/trazo.jpg" alt="Mano trazando con lápiz" style="width:100%;height:100%;object-fit:cover;display:block">
+    </div>
+  </div>
+</section>
+
+<section data-label="¿Por qué existe Papela?" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>01 — Nuestra esencia</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Nuestra razón de ser</span>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">¿Por qué existe Papela?</h2>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:1.15fr .85fr;column-gap:120px;align-items:end">
+    <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:132px;line-height:.98;letter-spacing:-.015em;color:#12535C;animation-delay:.2s">Acercar la creatividad a las personas.</p>
+    <div style="display:flex;flex-direction:column;gap:28px;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95)">
+      <p data-a="up" style="margin:0;animation-delay:.35s">Facilitamos el acceso a materiales, herramientas, productos e inspiración para que cualquier persona pueda transformar sus ideas en algo real.</p>
+      <p data-a="up" style="margin:0;animation-delay:.45s">Desde quien necesita una cartulina para una tarea hasta quien busca materiales especializados para su siguiente proyecto.</p>
+      <div data-a="line" style="height:1px;background:rgb(200,186,162);animation-delay:.55s"></div>
+      <p data-a="up" style="margin:0;color:#403C3C;animation-delay:.6s">Porque la creatividad puede comenzar con algo tan sencillo como una hoja en blanco.</p>
+    </div>
+  </div>
+</section>
+
+<section data-label="¿Qué es Papela?" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;display:grid;grid-template-columns:.92fr 1.08fr;overflow:hidden">
+  <div data-a="wipex" style="overflow:hidden">
+    <img data-a="zoom" src="assets/tienda.jpg" alt="Interior de papelería creativa" style="width:100%;height:100%;object-fit:cover;object-position:62% center;display:block">
+  </div>
+  <div style="padding:var(--pad-top) var(--pad-x) var(--pad-bottom) 100px;display:flex;flex-direction:column">
+    <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span style="text-align: right">01 — Nuestra esencia</span></div>
+    <div style="padding-top:60px;display:flex;flex-direction:column;gap:36px;flex:1">
+      
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">¿Qué es Papela?</h2>
+      
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.3s">Un espacio donde encuentras desde los materiales más esenciales hasta productos extraordinarios, y que invita a explorar, aprender, experimentar y conectar con otras personas creativas.</p>
+      <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div data-a="up" style="background: #F0D9CC; border-radius: 16px; padding: 34px 36px; display: flex; flex-direction: column; gap: 14px; animation-delay: .45s; width: 408px; height: 423px"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:46px">Papelería</span><span style="font-size:var(--type-small)">por lo que ofrecemos</span></div>
+        <div data-a="up" style="background:#CED8D9;border-radius:16px;padding:34px 36px;display:flex;flex-direction:column;gap:14px;animation-delay:.55s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:46px">Marca creativa</span><span style="font-size:var(--type-small)">por lo que nos mueve</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Nuestro propósito" style="background:#F7F3EC;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>01 — Nuestra esencia</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:44px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Nuestro propósito</span>
+    <h2 data-a="up" style="margin: 0; font-family: 'PP Editorial New',Georgia,serif; font-weight: 500; font-size: 136px; line-height: 1; letter-spacing: -.02em; max-width: 1500px; animation-delay: .12s">Acercar <i>la creatividad</i> a la vida cotidiana.</h2>
+    <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);max-width:1100px;animation-delay:.3s">Crear no debería sentirse complicado, lejano o exclusivo de quienes tienen experiencia artística.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgb(225,212,190)">
+    <p data-a="up" style="margin: 0; padding: 36px 40px 0 0; font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 37px; color: rgb(110,100,95); animation-delay: .45s; text-align: center">No buscamos que todos se conviertan en artistas.</p>
+    <p data-a="up" style="margin: 0; padding: 36px 0 0 40px; border-left: 1px solid rgb(225,212,190); font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 35px; color: #12535C; animation-delay: .6s; text-align: center">Buscamos que todos tengan la posibilidad de crear.</p>
+  </div>
+</section>
+
+<section data-label="Nuestra misión y visión" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>01 — Nuestra esencia</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Hoy y mañana</span>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Nuestra misión y visión</h2>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:30px">
+      <div data-a="line" style="height:2px;background:#12535C;animation-delay:.2s"></div>
+      <span data-a="up" style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:96px;line-height:1;color:#12535C;animation-delay:.25s">Misión</span>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.5;animation-delay:.35s">Inspirar y facilitar la creatividad a través de una selección de materiales, artículos de papelería, productos especiales y experiencias que ayuden a las personas a transformar sus ideas en realidad.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:30px">
+      <div data-a="line" style="height:2px;background:#8C482A;animation-delay:.4s"></div>
+      <span data-a="up" style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:96px;line-height:1;color:#8C482A;animation-delay:.45s">Visión</span>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.5;animation-delay:.55s">Ser una marca referente de papelería creativa, que combina productos esenciales con una selección extraordinaria, impulsa el talento artístico y, con el tiempo, desarrolla sus propias colecciones.</p>
+    </div>
+  </div>
+</section>
+
+<section data-label="Capítulo 02" data-speaker-notes="Capítulo 02: los cinco pilares, actuales y futuros." style="background:#D07C62;color:#422526;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) 150px;box-sizing:border-box;display:grid;grid-template-columns:1.25fr 1fr;column-gap:140px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#422526" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:36px">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Capítulo</span>
+    <div>
+      <div><div data-a="num" style="font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 440px; line-height: 1.05; letter-spacing: -.04em; width: 867px; height: 383px; color: #FFBE9E">02</div></div>
+      <h2 data-a="up" style="margin:30px 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;animation-delay:.25s;color:#422526">Nuestro universo</h2>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;font-size:var(--type-small)">
+    <div data-a="up" style="display:flex;gap:28px;padding:18px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.4s"><span style="opacity:.75">10</span><span>Una papelería, muchas posibilidades</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:18px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.46s"><span style="opacity:.75">11</span><span>Nuestros cinco pilares</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:18px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.52s"><span style="opacity:.75">12</span><span>Lo esencial para crear</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:18px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.58s"><span style="opacity:.75">13</span><span>Descubrir algo extraordinario</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:18px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.64s"><span style="opacity:.75">14</span><span>Aprender y experimentar</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:18px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.7s"><span style="opacity:.75">15</span><span>Impulsar a quienes crean</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:18px 0;border-top:1px solid rgba(66,37,38,.3);border-bottom:1px solid rgba(66,37,38,.3);animation-delay:.76s"><span style="opacity:.75">16</span><span>Crear nuestra propia historia</span></div>
+  </div>
+<svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -41px; width: 1984px; height: 259px; top: 54px; pointer-events: none"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#FFBE9E" stroke-opacity="1" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+</section>
+
+<section data-label="Una papelería, muchas posibilidades" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>02 — Nuestro universo</span></div>
+  <div style="padding-top:60px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">La idea central</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Una papelería, muchas posibilidades</h2>
+    </div>
+    <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.2s">Todo lo que hacemos gira alrededor de la creatividad. Productos, servicios y experiencias no son negocios independientes: son distintas formas de responder a las personas.</p>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div style="position:relative;display:grid;grid-template-columns:repeat(4,1fr);column-gap:40px">
+      <div data-a="line" style="position:absolute;left:0;right:0;top:44px;height:1px;background:#12535C;animation-delay:.3s"></div>
+      <div data-a="up" style="position:relative;display:flex;flex-direction:column;gap:30px;animation-delay:.35s"><span style="width:88px;height:88px;border-radius:999px;background:#12535C;color:rgb(243,230,207);display:flex;align-items:center;justify-content:center;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px">1</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:46px;line-height:1.1">Entra por una impresión</span></div>
+      <div data-a="up" style="position:relative;display:flex;flex-direction:column;gap:30px;animation-delay:.5s"><span style="width:88px;height:88px;border-radius:999px;background:#F0EFEB;border:1px solid #12535C;color:#12535C;display:flex;align-items:center;justify-content:center;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;box-sizing:border-box">2</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:46px;line-height:1.1">Descubre una libreta especial</span></div>
+      <div data-a="up" style="position:relative;display:flex;flex-direction:column;gap:30px;animation-delay:.65s"><span style="width:88px;height:88px;border-radius:999px;background:#F0EFEB;border:1px solid #12535C;color:#12535C;display:flex;align-items:center;justify-content:center;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;box-sizing:border-box">3</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:46px;line-height:1.1">Se inscribe a un taller</span></div>
+      <div data-a="up" style="position:relative;display:flex;flex-direction:column;gap:30px;animation-delay:.8s"><span style="width:88px;height:88px;border-radius:999px;background:#F0EFEB;border:1px solid #12535C;color:#12535C;display:flex;align-items:center;justify-content:center;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;box-sizing:border-box">4</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:46px;line-height:1.1">Regresa por materiales</span></div>
+    </div>
+  </div>
+  <div data-a="up" style="display:flex;justify-content:space-between;align-items:baseline;padding-top:30px;border-top:1px solid rgb(225,212,190);animation-delay:.95s">
+    <span style="font-size:var(--type-small);color:rgb(110,100,95)">Cada experiencia abre la puerta a otra.</span>
+    <span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;color:#12535C">No queremos hacer de todo. Queremos ofrecer distintas maneras de crear.</span>
+  </div>
+</section>
+
+<section data-label="Nuestros cinco pilares" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>02 — Nuestro universo</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">La estructura</span>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Nuestros cinco pilares</h2>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:20px;padding:56px 0 40px">
+    <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;animation-delay:.2s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:72px;color:#8C482A;line-height:1">01</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:40px;line-height:1.1">Lo esencial para crear</span><span style="margin-top:18px;font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Papelería, materiales y soluciones cotidianas.</span></div>
+    <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;animation-delay:.3s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:72px;color:#8C482A;line-height:1">02</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:40px;line-height:1.1">Descubrir algo extraordinario</span><span style="margin-top:18px;font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Marcas especiales y objetos de autor.<br><br></span></div>
+    <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;animation-delay:.4s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:72px;color:#8C482A;line-height:1">03</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:40px;line-height:1.1">Aprender y experimentar</span><span style="margin-top:18px;font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Talleres, clases y experiencias creativas.</span></div>
+    <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;animation-delay:.5s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:72px;color:#8C482A;line-height:1">04</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:40px;line-height:1.1">Impulsar a quienes crean<br><br></span><span style="margin-top:18px;font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Artistas, ilustradores y comunidad.</span></div>
+    <div data-a="up" style="border:1.5px dashed #12535C;border-radius:16px;padding:36px 32px;display:flex;flex-direction:column;animation-delay:.6s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:72px;color:#12535C;line-height:1">05</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:40px;line-height:1.1;color:#12535C">Crear nuestra propia historia<br><br></span><span style="margin-top:18px;font-size:var(--type-small);line-height:1.35;color:#12535C">El futuro: productos y colecciones Papela.</span></div>
+  </div>
+  <div data-a="up" style="display:grid;grid-template-columns:4fr 1fr;column-gap:20px;font-size:var(--type-small);animation-delay:.75s">
+    <span style="padding-top:20px;border-top:1px solid rgb(200,186,162);color:rgb(110,100,95)">Lo que ya hacemos y queremos fortalecer</span>
+    <span style="padding-top:20px;border-top:1px dashed #12535C;color:#12535C">Hacia dónde evolucionamos</span>
+  </div>
+</section>
+
+<section data-label="Pilar 01 — Lo esencial para crear" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>02 — Nuestro universo</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.78fr 1.22fr;column-gap:100px;padding-top:60px;min-height:0">
+    <div data-a="wipe" style="border-radius:16px;overflow:hidden"><img data-a="zoom" src="assets/papeles.jpg" alt="Papeles y cartulinas" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+    <div style="display:flex;flex-direction:column;gap:34px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Pilar 01 · Nuestra base</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Lo esencial para crear</h2>
+      <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:var(--type-subtitle);color:#12535C;animation-delay:.2s">Todo empieza con lo esencial.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.3s">Una cartulina, una libreta, un lápiz o una caja de colores pueden ser el comienzo de una gran idea. Materiales para la escuela, el trabajo, el arte y los proyectos cotidianos.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.4s">Y servicios para materializarlos: impresiones, copias, engargolados, stickers, diseño y personalización.</p>
+      <div data-a="up" style="margin-top:auto;padding-top:28px;border-top:1px solid rgb(200,186,162);display:grid;grid-template-columns:260px 1fr;column-gap:30px;animation-delay:.55s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:#8C482A;font-weight:500">Compromiso</span><span style="font-size:var(--type-body);line-height:1.4">Que las personas encuentren lo que necesitan para comenzar o terminar sus proyectos.</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Pilar 02 — Descubrir algo extraordinario" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>02 — Nuestro universo</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.78fr 1.22fr;column-gap:100px;padding-top:60px;min-height:0">
+    <div data-a="wipe" style="border-radius:16px;overflow:hidden"><img data-a="zoom" src="assets/libretas.jpg" alt="Libretas y plumas seleccionadas" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+    <div style="display:flex;flex-direction:column;gap:34px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Pilar 02 · Nuestra curaduría</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Descubrir algo extraordinario</h2>
+      <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:var(--type-subtitle);color:#12535C;animation-delay:.2s">Siempre hay algo nuevo por descubrir.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.3s">Los objetos pueden despertar ideas, emociones y curiosidad. Buscamos marcas reconocidas, artículos de diseño, materiales especiales y papelería de autor.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.4s">Una selección que evoluciona constantemente, para que cada visita sea una oportunidad de descubrir algo diferente.</p>
+      <div data-a="up" style="margin-top:auto;padding-top:28px;border-top:1px solid rgb(200,186,162);display:grid;grid-template-columns:260px 1fr;column-gap:30px;animation-delay:.55s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:#8C482A;font-weight:500">Compromiso</span><span style="font-size:var(--type-body);line-height:1.4">Seleccionar cosas que valga la pena descubrir, no solo tener productos exclusivos.</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Pilar 03 — Aprender y experimentar" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>02 — Nuestro universo</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.78fr 1.22fr;column-gap:100px;padding-top:60px;min-height:0">
+    <div data-a="wipe" style="border-radius:16px;overflow:hidden"><img data-a="zoom" src="assets/taller.jpg" alt="Taller de acuarela" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+    <div style="display:flex;flex-direction:column;gap:34px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Pilar 03 · Nuestras experiencias</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Aprender y experimentar</h2>
+      <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:var(--type-subtitle);color:#12535C;animation-delay:.2s">La creatividad también se vive.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.3s">Talleres, clases de arte, actividades y experiencias para descubrir técnicas, explorar habilidades y encontrar nuevas maneras de expresarse.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.4s">Un lugar donde niños, jóvenes y adultos pueden aprender, jugar, equivocarse y disfrutar del proceso: experimentar importa más que hacerlo perfecto.</p>
+      <div data-a="up" style="margin-top:auto;padding-top:28px;border-top:1px solid rgb(200,186,162);display:grid;grid-template-columns:260px 1fr;column-gap:30px;animation-delay:.55s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:#8C482A;font-weight:500">Compromiso</span><span style="font-size:var(--type-body);line-height:1.4">No necesitas experiencia. <br>Solo ganas de intentarlo.</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Pilar 04 — Impulsar a quienes crean" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>02 — Nuestro universo</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.78fr 1.22fr;column-gap:100px;padding-top:60px;min-height:0">
+    <div data-a="wipe" style="border-radius:16px;overflow:hidden"><img data-a="zoom" src="assets/ilustradora.jpg" alt="Ilustradora dibujando" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+    <div style="display:flex;flex-direction:column;gap:34px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Pilar 04 · Nuestra comunidad</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Impulsar a quienes crean</h2>
+      <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:var(--type-subtitle);color:#12535C;animation-delay:.2s">Creemos en el talento que nos rodea.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.3s">Abrimos nuestras puertas a ilustradores, artistas, diseñadores y creadores para compartir conocimientos, impartir talleres, exhibir obras o comercializar sus productos.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.4s">Fomentamos colaboraciones y conectamos a quienes crean con personas que valoran su trabajo.</p>
+      <div data-a="up" style="margin-top:auto;padding-top:28px;border-top:1px solid rgb(200,186,162);display:grid;grid-template-columns:260px 1fr;column-gap:30px;animation-delay:.55s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:#8C482A;font-weight:500">Compromiso</span><span style="font-size:var(--type-body);line-height:1.4">Ser parte de una comunidad que impulse a los artistas, no solo vender sus productos.</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Pilar 05 — Crear nuestra propia historia" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>02 — Nuestro universo</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.78fr 1.22fr;column-gap:100px;padding-top:60px;min-height:0">
+    <div data-a="wipe" style="border-radius:16px;overflow:hidden"><img data-a="zoom" src="assets/acrilicos.jpg" alt="Pinturas acrílicas" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+    <div style="display:flex;flex-direction:column;gap:34px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#12535C;font-weight:500">Pilar 05 · Nuestra visión a futuro</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Crear nuestra propia historia</h2>
+      <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:var(--type-subtitle);color:#12535C;animation-delay:.2s">De seleccionar productos a crear los nuestros.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.3s">Imaginamos nuestra línea de pinturas acrílicas, libretas, materiales, accesorios y colecciones especiales, además de ediciones en colaboración con ilustradores y artistas.</p>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.4s">Que Papela no solo sea el lugar de tus materiales favoritos, sino también una de tus marcas favoritas.</p>
+      <div data-a="up" style="margin-top:auto;padding:26px 32px;border:1.5px dashed #12535C;border-radius:16px;display:grid;grid-template-columns:228px 1fr;column-gap:30px;align-items:baseline;animation-delay:.55s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:#12535C;font-weight:500">Importante</span><span style="font-size:var(--type-body);line-height:1.4;color:#12535C">Es una aspiración de crecimiento, no una oferta actual.</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Capítulo 03" data-speaker-notes="Capítulo 03: diferenciadores, personalidad y experiencia de marca." style="background:#422526;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) 150px;box-sizing:border-box;display:grid;grid-template-columns:1.25fr 1fr;column-gap:140px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:36px">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#EEC3D7">Capítulo</span>
+    <div>
+      <div><div data-a="num" style="font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 440px; line-height: 1.05; letter-spacing: -.04em; width: 867px; height: 383px">03</div></div>
+      <h2 data-a="up" style="margin:30px 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;animation-delay:.25s;color:#EEC3D7">Nuestra identidad</h2>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;font-size:var(--type-small)">
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.4s"><span style="opacity:.75">18</span><span>Lo que hace diferente a Papela</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.47s"><span style="opacity:.75">19</span><span>Nuestra personalidad</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.54s"><span style="opacity:.75">20</span><span>Lo que somos y lo que no somos</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);border-bottom:1px solid rgba(243,230,207,.35);animation-delay:.61s"><span style="opacity:.75">21</span><span>¿Cómo queremos que se sienta Papela?</span></div>
+  </div>
+<svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -41px; width: 1984px; height: 259px; top: 54px; pointer-events: none"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#EEC3D7" stroke-opacity="1" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+</section>
+
+<section data-label="Lo que hace diferente a Papela" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>03 — Nuestra identidad</span></div>
+  <div style="padding-top:60px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Nuestra propuesta</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Lo que hace diferente a Papela</h2>
+    </div>
+    <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.2s">No buscamos ser la papelería con más productos, sino diferenciarnos por cómo los seleccionamos, presentamos y conectamos con las personas.</p>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:56px 0 44px">
+    <div data-a="up" style="background:#F0D9CC;border-radius:16px;padding:38px 34px;display:flex;flex-direction:column;animation-delay:.25s"><span style="font-size:var(--type-label);letter-spacing:.16em;color:#8C482A;font-weight:500">01</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:52px">Accesibilidad<br></span><span style="margin-top:16px;font-size:var(--type-small);line-height:1.35">Desde lo más básico hasta materiales especiales.<br><br></span></div>
+    <div data-a="up" style="background:#CED8D9;border-radius:16px;padding:38px 34px;display:flex;flex-direction:column;animation-delay:.35s"><span style="font-size:var(--type-label);letter-spacing:.16em;color:#12535C;font-weight:500">02</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:52px">Curaduría</span><span style="margin-top:16px;font-size:var(--type-small);line-height:1.35">Marcas y objetos que aportan valor, diseño o inspiración.</span></div>
+    <div data-a="up" style="background:#C9D3C0;border-radius:16px;padding:38px 34px;display:flex;flex-direction:column;animation-delay:.45s"><span style="font-size:var(--type-label);letter-spacing:.16em;color:#12535C;font-weight:500">03</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:52px">Experiencias</span><span style="margin-top:16px;font-size:var(--type-small);line-height:1.35">Oportunidades para aprender, experimentar y disfrutar.</span></div>
+    <div data-a="up" style="background:rgb(243,230,207);border-radius:16px;padding:38px 34px;display:flex;flex-direction:column;animation-delay:.55s"><span style="font-size:var(--type-label);letter-spacing:.16em;color:#8C482A;font-weight:500">04</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:52px">Comunidad</span><span style="margin-top:16px;font-size:var(--type-small);line-height:1.35">Conexiones entre personas, artistas y creadores.<br><br></span></div>
+  </div>
+  <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;color:#12535C;animation-delay:.7s">Nuestra diferencia no está en hacer muchas cosas, sino en que todas tengan un mismo sentido.</p>
+</section>
+
+<section data-label="Nuestra personalidad" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>03 — Nuestra identidad</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.85fr 1.15fr;column-gap:110px;padding-top:60px">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Si Papela fuera una persona</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Nuestra personalidad</h2>
+      <p data-a="up" style="margin:auto 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:54px;line-height:1.15;color:#12535C;animation-delay:.2s">Alguien curioso, cálido, creativo y con buen gusto, que comparte sus hallazgos sin pretensiones.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:60px;align-content:end">
+      <div data-a="up" style="padding:28px 0 34px;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:10px;animation-delay:.25s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:56px;line-height:1">Curiosa</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Siempre busca nuevas ideas y descubrimientos.</span></div>
+      <div data-a="up" style="padding:28px 0 34px;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:10px;animation-delay:.32s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:56px;line-height:1">Cercana</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Hace que todos se sientan bienvenidos.</span></div>
+      <div data-a="up" style="padding:28px 0 34px;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:10px;animation-delay:.39s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:56px;line-height:1">Creativa</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Encuentra posibilidades en lo cotidiano.</span></div>
+      <div data-a="up" style="padding:28px 0 34px;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:10px;animation-delay:.46s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:56px;line-height:1">Auténtica</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Tiene un criterio y una personalidad propios.</span></div>
+      <div data-a="up" style="padding:28px 0 0;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:10px;animation-delay:.53s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:56px;line-height:1">Inspiradora</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Motiva a intentar cosas nuevas.</span></div>
+      <div data-a="up" style="padding:28px 0 0;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:10px;animation-delay:.6s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:56px;line-height:1">Colaborativa</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Comparte espacios, ideas y oportunidades.</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Lo que somos y lo que no somos" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>03 — Nuestra identidad</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Nuestros límites</span><h2 data-a="up" style="margin: 0; font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: var(--type-title); line-height: 1.04; animation-delay: .1s; width: 1700px; height: 104px">Lo que somos y lo que no somos</h2>
+    
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding-bottom:16px;border-bottom:2px solid #12535C;font-size:var(--type-label);letter-spacing:.18em;text-transform:uppercase;font-weight:500;animation-delay:.15s"><span style="color:#12535C">Somos</span><span style="color:rgb(110,100,95)">No somos</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.22s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:38px">Una papelería creativa para todos</span><span style="font-size:var(--type-body);color:rgb(110,100,95)">Una tienda exclusiva para artistas</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.29s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:38px">Una selección con personalidad</span><span style="font-size:var(--type-body);color:rgb(110,100,95)">Un catálogo de productos sin criterio</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.36s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:38px">Un espacio de descubrimiento</span><span style="font-size:var(--type-body);color:rgb(110,100,95)">Una tienda donde siempre sucede lo mismo</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.43s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:38px">Un lugar para experimentar</span><span style="font-size:var(--type-body);color:rgb(110,100,95)">Una escuela de arte tradicional</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.5s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:38px">Una comunidad abierta</span><span style="font-size:var(--type-body);color:rgb(110,100,95)">Un círculo reservado para expertos</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.57s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:38px">Una marca en evolución</span><span style="font-size:var(--type-body);color:rgb(110,100,95)">Un negocio limitado a su oferta actual</span></div>
+  </div>
+  
+</section>
+
+<section data-label="¿Cómo queremos que se sienta Papela?" style="background:#F7F3EC;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>03 — Nuestra identidad</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Cuatro sensaciones</span>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">¿Cómo queremos que se sienta Papela?</h2>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);column-gap:50px;align-items:center">
+    <div data-a="up" style="display:flex;flex-direction:column;gap:30px;animation-delay:.2s"><span style="font-size:var(--type-label);letter-spacing:.18em;text-transform:uppercase;color:#8C482A;font-weight:500">Curiosidad</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-weight: 200; font-size: 48px; line-height: 1.12; color: #12535C">“Quiero ver qué cosas nuevas tienen.”<br><br></span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:30px;animation-delay:.32s"><span style="font-size:var(--type-label);letter-spacing:.18em;text-transform:uppercase;color:#8C482A;font-weight:500">Inspiración</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-weight: 200; font-size: 48px; line-height: 1.12; color: #12535C">“Esto me dio una idea.”<br><br></span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:30px;animation-delay:.44s"><span style="font-size:var(--type-label);letter-spacing:.18em;text-transform:uppercase;color:#8C482A;font-weight:500">Confianza</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-weight: 200; font-size: 48px; line-height: 1.12; color: #12535C">“Aunque nunca lo haya hecho, puedo intentarlo.”</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:30px;animation-delay:.56s"><span style="font-size:var(--type-label);letter-spacing:.18em;text-transform:uppercase;color:#8C482A;font-weight:500">Pertenencia</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-weight: 200; font-size: 48px; line-height: 1.12; color: #12535C">“Este también es un lugar para mí.”<br><br></span></div>
+  </div>
+  <p data-a="up" style="margin:0;padding-top:28px;border-top:1px solid rgb(225,212,190);font-size:var(--type-small);color:rgb(110,100,95);animation-delay:.7s">Una visita puede comenzar por una necesidad práctica y terminar con una idea inesperada.</p>
+</section>
+
+<section data-label="Capítulo 04" data-speaker-notes="Capítulo 04: cómo hablamos y con quién conectamos." style="background:#014375;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) 150px;box-sizing:border-box;display:grid;grid-template-columns:1.25fr 1fr;column-gap:140px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:36px">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#7DBBC9">Capítulo</span>
+    <div>
+      <div><div data-a="num" style="font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 340px; line-height: 1.05; letter-spacing: -.04em; width: 867px; height: 300px">04</div></div>
+      <h2 data-a="up" style="margin:30px 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;animation-delay:.25s">Nuestra voz y comunicación</h2>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;font-size:var(--type-small)">
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.4s"><span style="opacity:.75">23</span><span>Lo que imaginas comienza aquí</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.47s"><span style="opacity:.75">24</span><span>Nuestra voz</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.54s"><span style="opacity:.75">25</span><span>Así hablamos en Papela</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);border-bottom:1px solid rgba(243,230,207,.35);animation-delay:.61s"><span style="opacity:.75">26</span><span>¿A quién le hablamos?</span></div>
+  </div>
+<svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -41px; width: 1984px; height: 259px; top: 54px; pointer-events: none"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#7DBBC9" stroke-opacity="1" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+</section>
+
+<section data-label="Lo que imaginas comienza aquí" data-speaker-notes="El slogan resume la esencia: las ideas de cada persona y Papela como el lugar donde empiezan." style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;padding-bottom:26px;border-bottom:1px solid rgba(243,230,207,.35)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Nuestro slogan</span></span><span>04 — Nuestra voz</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div><div data-a="num" style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:196px;line-height:1;letter-spacing:-.02em">Lo que imaginas</div></div>
+    <div><div data-a="num" style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:196px;line-height:1;letter-spacing:-.02em;padding-left:300px;animation-delay:.2s">comienza aquí.</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:110px">
+    <div data-a="up" style="display:flex;flex-direction:column;gap:16px;padding-top:28px;border-top:1px solid rgba(243,230,207,.35);animation-delay:.5s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px">Lo que imaginas</span><span style="font-size:var(--type-small);line-height:1.4">Las ideas, los proyectos, la curiosidad y la capacidad creativa de cada persona.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:16px;padding-top:28px;border-top:1px solid rgba(243,230,207,.35);animation-delay:.65s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:44px">Comienza aquí</span><span style="font-size:var(--type-small);line-height:1.4">Papela como el lugar donde esas ideas encuentran materiales, inspiración, herramientas y experiencias.</span></div>
+  </div>
+</section>
+
+<section data-label="Nuestra voz" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>04 — Nuestra voz</span></div>
+  <div style="padding-top:60px;display:grid;grid-template-columns:.8fr 1.2fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Cómo sonamos</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Nuestra voz</h2>
+    </div>
+    <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:var(--type-subtitle);line-height:1.15;color:#12535C;animation-delay:.2s">Hablamos como alguien que ama la creatividad y quiere compartirla.</p>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);column-gap:36px;align-items:center">
+    <div data-a="up" style="display:flex;flex-direction:column;gap:18px;padding-top:28px;border-top:2px solid #12535C;animation-delay:.25s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:52px">Cálida</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Cercanía, sin formalismos innecesarios.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:18px;padding-top:28px;border-top:2px solid #12535C;animation-delay:.33s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:52px">Sencilla</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Palabras que cualquiera pueda entender.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:18px;padding-top:28px;border-top:2px solid #12535C;animation-delay:.41s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:52px">Inspiradora</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Despierta ideas sin frases exageradas.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:18px;padding-top:28px;border-top:2px solid #12535C;animation-delay:.49s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:52px">Natural</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Entusiasta sin forzar la personalidad.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:18px;padding-top:28px;border-top:2px solid #12535C;animation-delay:.57s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:52px">Inclusiva</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Crear nunca es solo para expertos.</span></div>
+  </div>
+  <p data-a="up" style="margin:0;padding-top:28px;border-top:1px solid rgb(225,212,190);font-size:var(--type-small);color:rgb(110,100,95);animation-delay:.7s">Queremos que nuestros mensajes inviten a explorar, no que intimiden.</p>
+</section>
+
+<section data-label="Así hablamos en Papela" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>04 — Nuestra voz</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">La voz en práctica</span>
+    <h2 data-a="up" style="margin: 0; font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: var(--type-title); line-height: 1.04; animation-delay: .1s; width: 1702px; height: 107px">Así hablamos en Papela</h2>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;padding-bottom:16px;border-bottom:2px solid #12535C;font-size:var(--type-label);letter-spacing:.18em;text-transform:uppercase;font-weight:500;animation-delay:.15s"><span style="color:rgb(110,100,95)">En lugar de decir…</span><span style="color:#12535C">Preferimos decir…</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;align-items:baseline;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.22s"><span style="font-size:var(--type-small);color:rgb(110,100,95);text-decoration:line-through;text-decoration-color:rgba(140,72,42,.6)">Contamos con una amplia variedad de productos.</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; color: #12535C">Tenemos todo para tu próxima idea.</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;align-items:baseline;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.29s"><span style="font-size:var(--type-small);color:rgb(110,100,95);text-decoration:line-through;text-decoration-color:rgba(140,72,42,.6)">Adquiere nuestros artículos exclusivos.</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; color: #12535C">Descubre algo que no sabías que necesitabas.</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;align-items:baseline;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.36s"><span style="font-size:var(--type-small);color:rgb(110,100,95);text-decoration:line-through;text-decoration-color:rgba(140,72,42,.6)">Taller para desarrollar habilidades artísticas.</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; color: #12535C">Ven a crear algo nuevo. No necesitas experiencia.</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;align-items:baseline;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.43s"><span style="font-size:var(--type-small);color:rgb(110,100,95);text-decoration:line-through;text-decoration-color:rgba(140,72,42,.6)">Contamos con servicios de personalización.</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; color: #12535C">Tú imagínalo, nosotros te ayudamos a hacerlo realidad.</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;align-items:baseline;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.5s"><span style="font-size:var(--type-small);color:rgb(110,100,95);text-decoration:line-through;text-decoration-color:rgba(140,72,42,.6)">Conoce nuestro nuevo inventario.</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; color: #12535C">Llegaron cosas nuevas a Papela.</span></div>
+    <div data-a="up" style="display:grid;grid-template-columns:1fr 1fr;column-gap:80px;align-items:baseline;padding:16px 0;border-bottom:1px solid rgb(225,212,190);animation-delay:.57s"><span style="font-size:var(--type-small);color:rgb(110,100,95);text-decoration:line-through;text-decoration-color:rgba(140,72,42,.6)">Productos elaborados por artistas locales.</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; color: #12535C">Conoce a los creativos detrás de estas piezas.</span></div>
+  </div>
+  <p data-a="up" style="margin:0;font-size:var(--type-small);color:rgb(110,100,95);animation-delay:.7s">El tono se adapta a cada canal; la personalidad siempre se mantiene.</p>
+</section>
+
+<section data-label="¿A quién le hablamos?" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>04 — Nuestra voz</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.75fr 1.25fr;column-gap:100px;padding-top:60px">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Nuestra audiencia</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">¿A quién le hablamos?</h2>
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.2s">No nos define la edad, sino la necesidad y la relación con la creatividad.</p>
+      <p data-a="up" style="margin:auto 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;line-height:1.2;color:#12535C;animation-delay:.3s">Una misma persona puede relacionarse con Papela de diferentes maneras.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:20px">
+      <div data-a="up" style="background:#F0D9CC;border-radius:16px;padding:38px 40px;display:flex;flex-direction:column;justify-content:space-between;animation-delay:.25s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:48px;line-height:1.05">Quienes necesitan resolver</span><span style="font-size:var(--type-small);line-height:1.35">Material escolar, oficina, impresiones y soluciones prácticas.</span></div>
+      <div data-a="up" style="background:#CED8D9;border-radius:16px;padding:38px 40px;display:flex;flex-direction:column;justify-content:space-between;animation-delay:.35s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:48px;line-height:1.05">Quienes disfrutan descubrir</span><span style="font-size:var(--type-small);line-height:1.35">Valoran el diseño, la papelería especial y los objetos con personalidad.</span></div>
+      <div data-a="up" style="background:#C9D3C0;border-radius:16px;padding:38px 40px;display:flex;flex-direction:column;justify-content:space-between;animation-delay:.45s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:48px;line-height:1.05">Quienes quieren experimentar</span><span style="font-size:var(--type-small);line-height:1.35">Niños, jóvenes y adultos interesados en talleres y clases de arte.</span></div>
+      <div data-a="up" style="background:rgb(243,230,207);border-radius:16px;padding:38px 40px;display:flex;flex-direction:column;justify-content:space-between;animation-delay:.55s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:48px;line-height:1.05">Quienes ya crean</span><span style="font-size:var(--type-small);line-height:1.35">Artistas, ilustradores, diseñadores y emprendedores creativos.</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Capítulo 05" data-speaker-notes="Capítulo 05: contenidos, campañas y objetivos de marketing." style="background:#8AB25A;color:#422526;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) 150px;box-sizing:border-box;display:grid;grid-template-columns:1.25fr 1fr;column-gap:140px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#422526" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:36px">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Capítulo</span>
+    <div>
+      <div><div data-a="num" style="font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 340px; line-height: 1.05; letter-spacing: -.04em; width: 867px; height: 300px">05</div></div>
+      <h2 data-a="up" style="margin:30px 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;animation-delay:.25s">Nuestra estrategia de contenido</h2>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;font-size:var(--type-small)">
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.4s"><span style="opacity:.75">28</span><span>No somos solamente un catálogo</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.47s"><span style="opacity:.75">29</span><span>Nuestros territorios de contenido</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.54s"><span style="opacity:.75">30</span><span>La jerarquía de nuestra comunicación</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(66,37,38,.3);animation-delay:.61s"><span style="opacity:.75">31</span><span>Cómo debe funcionar nuestro marketing</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(66,37,38,.3);border-bottom:1px solid rgba(66,37,38,.3);animation-delay:.68s"><span style="opacity:.75">32</span><span>Nuestros principios de comunicación</span></div>
+  </div>
+<svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -41px; width: 1984px; height: 259px; top: 54px; pointer-events: none"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#422526" stroke-opacity="0.8" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+</section>
+
+<section data-label="No somos solamente un catálogo" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>05 — Estrategia de contenido</span></div>
+  <div style="padding-top:60px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Más allá del producto</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">No somos solamente un catálogo</h2>
+    </div>
+    <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.2s">Contamos historias, compartimos ideas, mostramos procesos y presentamos artistas, no solo artículos con precio.</p>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:20px;padding:50px 0 40px">
+    <div data-a="up" style="background: #F7F3EC; border-radius: 16px; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; animation-delay: .25s; padding-top: 43px; padding-bottom: 43px"><span style="font-size:var(--type-label);color:rgb(110,100,95)">Mostrar una caja de acuarelas →</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; line-height: 1.1; color: #12535C">Enseñar qué podemos pintar con ellas</span></div>
+    <div data-a="up" style="background: #F7F3EC; border-radius: 16px; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; animation-delay: .32s; padding-top: 44px; padding-bottom: 44px"><span style="font-size:var(--type-label);color:rgb(110,100,95)">Publicar una libreta →</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; line-height: 1.1; color: #12535C">Contar por qué es diferente</span></div>
+    <div data-a="up" style="background: #F7F3EC; border-radius: 16px; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; animation-delay: .39s; padding-top: 44px; padding-bottom: 44px"><span style="font-size:var(--type-label);color:rgb(110,100,95)">Anunciar un taller →</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; line-height: 1.1; color: #12535C">Mostrar la experiencia de participar</span></div>
+    <div data-a="up" style="background: #F7F3EC; border-radius: 16px; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; animation-delay: .46s; padding-top: 44px; padding-bottom: 44px"><span style="font-size:var(--type-label);color:rgb(110,100,95)">Enseñar una ilustración →</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 30px; line-height: 1.1; color: #12535C">Presentar al artista que la creó</span></div>
+    <div data-a="up" style="background: #F7F3EC; border-radius: 16px; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; animation-delay: .53s; padding-top: 44px; padding-bottom: 44px"><span style="font-size:var(--type-label);color:rgb(110,100,95)">Publicar una lista de materiales →</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 27px; line-height: 1.1; color: #12535C">Compartir ideas para utilizarlos</span></div>
+    <div data-a="up" style="background: #F7F3EC; border-radius: 16px; padding: 30px 34px; display: flex; flex-direction: column; justify-content: space-between; animation-delay: .6s; padding-top: 44px; padding-bottom: 44px"><span style="font-size:var(--type-label);color:rgb(110,100,95)">Mostrar un servicio de impresión →</span><span style="font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 27px; line-height: 1.1; color: #12535C">Mostrar cómo materializamos un proyecto</span></div>
+  </div>
+  <p data-a="up" style="margin: 0; font-family: 'PP Editorial New',Georgia,serif; font-style: italic; font-size: 40px; color: #8C482A; animation-delay: .75s; text-align: center">Vendemos productos, pero comunicamos posibilidades.</p>
+</section>
+
+<section data-label="Nuestros territorios de contenido" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>05 — Estrategia de contenido</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.7fr 1.3fr;column-gap:100px;padding-top:60px">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Cinco territorios</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Nuestros territorios de contenido</h2>
+      <p data-a="up" style="margin:auto 0 0;font-size:var(--type-small);line-height:1.45;color:rgb(110,100,95);animation-delay:.2s">Cuando existan nuestros productos propios, se integrarán a estos territorios sin reconstruir la estrategia.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;justify-content:flex-end">
+      <div data-a="up" style="display:grid;grid-template-columns:100px 1fr;column-gap:30px;align-items:baseline;padding:22px 0;border-top:1px solid rgb(200,186,162);animation-delay:.25s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:56px;color:#12535C;line-height:1;display:flex;flex-direction:column;gap:14px">01<span style="display:flex;width:56px;height:14px;border-radius:7px;overflow:hidden"><span style="flex:1;background:#12535C"></span><span style="flex:1;background:#8AB25A"></span></span></span><div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:46px">Lo que necesitas</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Materiales, papelería, impresiones y soluciones prácticas.</span></div></div>
+      <div data-a="up" style="display:grid;grid-template-columns:100px 1fr;column-gap:30px;align-items:baseline;padding:22px 0;border-top:1px solid rgb(200,186,162);animation-delay:.33s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:56px;color:#8C482A;line-height:1">02</span><div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:46px">Lo que descubrimos</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Novedades, marcas especiales, favoritos y recomendaciones.</span></div></div>
+      <div data-a="up" style="display:grid;grid-template-columns:100px 1fr;column-gap:30px;align-items:baseline;padding:22px 0;border-top:1px solid rgb(200,186,162);animation-delay:.41s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:56px;color:#014375;line-height:1;display:flex;flex-direction:column;gap:14px">03<span style="display:flex;width:56px;height:14px;border-radius:7px;overflow:hidden"><span style="flex:1;background:#014375"></span><span style="flex:1;background:#7DBBC9"></span></span></span><div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:46px">Lo que podemos crear</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Ideas, proyectos, técnicas y usos de materiales.</span></div></div>
+      <div data-a="up" style="display:grid;grid-template-columns:100px 1fr;column-gap:30px;align-items:baseline;padding:22px 0;border-top:1px solid rgb(200,186,162);animation-delay:.49s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:56px;color:#D07C62;line-height:1;display:flex;flex-direction:column;gap:14px">04<span style="display:flex;width:56px;height:14px;border-radius:7px;overflow:hidden"><span style="flex:1;background:#D07C62"></span><span style="flex:1;background:#FFBE9E"></span></span></span><div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:46px">Lo que vivimos</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Talleres, clases, actividades y momentos dentro de Papela.</span></div></div>
+      <div data-a="up" style="display:grid;grid-template-columns:100px 1fr;column-gap:30px;align-items:baseline;padding:22px 0 0;border-top:1px solid rgb(200,186,162);animation-delay:.57s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:56px;color:#422526;line-height:1;display:flex;flex-direction:column;gap:14px">05<span style="display:flex;width:56px;height:14px;border-radius:7px;overflow:hidden"><span style="flex:1;background:#422526"></span><span style="flex:1;background:#EEC3D7"></span></span></span><div style="display:flex;flex-direction:column;gap:6px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:46px">A quienes queremos compartir</span><span style="font-size:var(--type-small);color:rgb(110,100,95)">Artistas, ilustradores, creadores, historias y colaboraciones.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="La jerarquía de nuestra comunicación" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>05 — Estrategia de contenido</span></div>
+  <div style="padding-top:60px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Cuatro niveles</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">La jerarquía de nuestra comunicación</h2>
+    </div>
+    <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.2s">La papelería es el punto de entrada. Curaduría, experiencias y comunidad son las razones para preferirnos y regresar.</p>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:end;padding-top:50px">
+    <div data-a="wipe" style="height:520px;background:#12535C;color:rgb(243,230,207);border-radius:16px;padding:34px;box-sizing:border-box;display:flex;flex-direction:column;animation-delay:.25s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:64px;line-height:1">1</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.05">Que nos conozcan</span><span style="margin-top:14px;font-size:var(--type-small);line-height:1.35">Somos una papelería creativa. Aquí encuentras lo que necesitas.</span></div>
+    <div data-a="wipe" style="height:440px;background:#CED8D9;border-radius:16px;padding:34px;box-sizing:border-box;display:flex;flex-direction:column;animation-delay:.38s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:64px;line-height:1;color:#12535C">2</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.05">Que nos descubran</span><span style="margin-top:14px;font-size:var(--type-small);line-height:1.35">Productos, marcas e ideas que no hay en cualquier lugar.</span></div>
+    <div data-a="wipe" style="height:380px;background:#C9D3C0;border-radius:16px;padding:34px;box-sizing:border-box;display:flex;flex-direction:column;animation-delay:.51s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:64px;line-height:1;color:#12535C">3</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.05">Que nos prefieran</span><span style="margin-top:14px;font-size:var(--type-small);line-height:1.35">Por selección, atención, experiencias y personalidad.</span></div>
+    <div data-a="wipe" style="height:340px;background:#F0D9CC;border-radius:16px;padding:34px;box-sizing:border-box;display:flex;flex-direction:column;animation-delay:.64s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:64px;line-height:1;color:#8C482A">4</span><span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.05">Que quieran regresar</span><span style="margin-top:14px;font-size:var(--type-small);line-height:1.35">Siempre hay algo nuevo por descubrir o crear.</span></div>
+  </div>
+</section>
+
+<section data-label="Cómo debe funcionar nuestro marketing" style="background:#F7F3EC;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>05 — Estrategia de contenido</span></div>
+  <div style="padding-top:60px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Cinco objetivos</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Cómo debe funcionar nuestro marketing</h2>
+    </div>
+    <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.2s">Equilibrar objetivos comerciales con construcción de marca.</p>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);column-gap:36px;align-items:center">
+    <div data-a="up" style="display:flex;flex-direction:column;gap:20px;animation-delay:.25s"><span style="font-size:var(--type-label);color:#8C482A;font-weight:500">01</span><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:68px;line-height:1;color:#12535C">Atraer</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Qué vendemos, qué ofrecemos y dónde encontrarnos.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:20px;animation-delay:.33s"><span style="font-size:var(--type-label);color:#8C482A;font-weight:500">02</span><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:68px;line-height:1;color:#12535C">Diferenciar</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Protagonismo a productos especiales, marcas y personas.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:20px;animation-delay:.41s"><span style="font-size:var(--type-label);color:#8C482A;font-weight:500">03</span><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:68px;line-height:1;color:#12535C">Inspirar</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Ideas, procesos y técnicas que despierten ganas de crear.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:20px;animation-delay:.49s"><span style="font-size:var(--type-label);color:#8C482A;font-weight:500">04</span><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:68px;line-height:1;color:#12535C">Conectar</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Relaciones con clientes, vecinos, talleristas y artistas.</span></div>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:20px;animation-delay:.57s"><span style="font-size:var(--type-label);color:#8C482A;font-weight:500">05</span><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:68px;line-height:1;color:#12535C">Fidelizar</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Novedades, experiencias y programas como Club Creativo.</span></div>
+  </div>
+  <p data-a="up" style="margin:0;padding-top:28px;border-top:1px solid rgb(225,212,190);font-size:var(--type-small);color:rgb(110,100,95);animation-delay:.7s">Cada campaña puede priorizar un objetivo. No necesitamos comunicar todo en cada publicación.</p>
+</section>
+
+<section data-label="Nuestros principios de comunicación" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>05 — Estrategia de contenido</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Para toda pieza de marketing</span>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Nuestros principios de comunicación</h2>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);column-gap:60px;align-content:end">
+    <div data-a="up" style="padding:28px 0 40px;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:12px;animation-delay:.2s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.1">Claridad antes que complejidad</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Que se entienda rápido qué ofrecemos.</span></div>
+    <div data-a="up" style="padding:28px 0 40px;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:12px;animation-delay:.28s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.1">Inspiración con propósito</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">No basta con algo bonito: despertar una idea.</span></div>
+    <div data-a="up" style="padding:28px 0 40px;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:12px;animation-delay:.36s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.1">Creatividad accesible</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Nada reservado para expertos.</span></div>
+    <div data-a="up" style="padding:28px 0 0;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:12px;animation-delay:.44s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.1">Autenticidad</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Productos, personas y proyectos reales.</span></div>
+    <div data-a="up" style="padding:28px 0 0;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:12px;animation-delay:.52s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.1">Descubrimiento constante</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Novedades que inviten a visitarnos.</span></div>
+    <div data-a="up" style="padding:28px 0 0;border-top:1px solid rgb(200,186,162);display:flex;flex-direction:column;gap:12px;animation-delay:.6s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:44px;line-height:1.1">Coherencia de marca</span><span style="font-size:var(--type-small);line-height:1.35;color:rgb(110,100,95)">Cada mensaje debe sentirse parte de Papela.</span></div>
+  </div>
+</section>
+
+<section data-label="Capítulo 06" data-speaker-notes="Capítulo 06: la visión de crecimiento y el manifiesto." style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) 150px;box-sizing:border-box;display:grid;grid-template-columns:1.25fr 1fr;column-gap:140px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:36px">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Capítulo</span>
+    <div>
+      <div><div data-a="num" style="font-family: 'PP Editorial New',Georgia,serif; font-weight: 200; font-size: 440px; line-height: 1.05; letter-spacing: -.04em; width: 867px; height: 383px">06</div></div>
+      <h2 data-a="up" style="margin:30px 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;animation-delay:.25s">Nuestro futuro</h2>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;font-size:var(--type-small)">
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.4s"><span style="opacity:.75">34</span><span>Una marca en constante evolución</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.47s"><span style="opacity:.75">35</span><span>La Papela que queremos construir</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.54s"><span style="opacity:.75">36</span><span>Nuestro manifiesto</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:.61s"><span style="opacity:.75">37</span><span>Cierre</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);border-bottom:1px solid rgba(243,230,207,.35);animation-delay:.68s"><span style="opacity:.75">38</span><span>Cómo utilizar este Brand Book</span></div>
+  </div>
+<svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -41px; width: 1984px; height: 259px; top: 54px; pointer-events: none"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#F3E6CF" stroke-opacity="0.8" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+</section>
+
+<section data-label="Una marca en constante evolución" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>06 — Nuestro futuro</span></div>
+  <div style="padding-top:60px;display:flex;flex-direction:column;gap:40px">
+    <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Hacia dónde vamos</span>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Una marca en constante evolución</h2>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:1.1fr .9fr;column-gap:110px;align-items:center">
+    <p data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:88px;line-height:1.04;letter-spacing:-.01em;animation-delay:.2s">No imaginamos Papela como una tienda <span style="font-style:italic;color:#12535C">estática.</span></p>
+    <div style="display:flex;flex-direction:column;gap:30px">
+      <p data-a="up" style="margin:0;font-size:var(--type-body);line-height:1.45;color:rgb(110,100,95);animation-delay:.3s">Un espacio que evoluciona con las personas: colecciones propias, más colaboraciones con creadores y nuevas experiencias.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <span data-a="up" style="padding:14px 28px;border:1px solid #12535C;border-radius:999px;font-size:var(--type-small);color:#12535C;animation-delay:.4s">Nuevas marcas</span>
+        <span data-a="up" style="padding:14px 28px;border:1px solid #12535C;border-radius:999px;font-size:var(--type-small);color:#12535C;animation-delay:.47s">Nuevas técnicas</span>
+        <span data-a="up" style="padding:14px 28px;border:1px solid #12535C;border-radius:999px;font-size:var(--type-small);color:#12535C;animation-delay:.54s">Nuevos artistas</span>
+        <span data-a="up" style="padding:14px 28px;border:1px solid #12535C;border-radius:999px;font-size:var(--type-small);color:#12535C;animation-delay:.61s">Nuevos productos</span>
+      </div>
+    </div>
+  </div>
+  <p data-a="up" style="margin:0;padding-top:28px;border-top:1px solid rgb(225,212,190);font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;color:#12535C;animation-delay:.75s">Crecer no significa alejarnos de nuestra esencia, <br>sino encontrar nuevas maneras de cumplir nuestro propósito.</p>
+</section>
+
+<section data-label="La Papela que queremos construir" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;display:grid;grid-template-columns:1fr 1fr;overflow:hidden">
+  <div style="padding:var(--pad-top) 90px var(--pad-bottom) var(--pad-x);display:flex;flex-direction:column">
+    <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>06 — Nuestro futuro</span></div>
+    <div style="padding-top:60px;display:flex;flex-direction:column;gap:36px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Imaginamos una Papela donde…</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">La Papela que queremos construir</h2>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:34px;line-height:1.25">
+      <span data-a="up" style="padding:16px 0;border-top:1px solid rgb(225,212,190);animation-delay:.2s">Alguien busca una cartulina y descubre materiales nuevos.</span>
+      <span data-a="up" style="padding:16px 0;border-top:1px solid rgb(225,212,190);animation-delay:.28s">Alguien entra por curiosidad y sale con su libreta favorita.</span>
+      <span data-a="up" style="padding:16px 0;border-top:1px solid rgb(225,212,190);animation-delay:.36s">Un niño descubre que le encanta pintar.</span>
+      <span data-a="up" style="padding:16px 0;border-top:1px solid rgb(225,212,190);animation-delay:.44s">Un adulto se anima a su primer taller creativo.</span>
+      <span data-a="up" style="padding:16px 0;border-top:1px solid rgb(225,212,190);animation-delay:.52s">Un ilustrador encuentra dónde compartir y vender su trabajo.</span>
+      <span data-a="up" style="padding:16px 0 0;border-top:1px solid rgb(225,212,190);font-style:italic;color:#12535C;animation-delay:.6s">Y algún día, nuestros propios acrílicos y libretas.</span>
+    </div>
+  </div>
+  <div style="position:relative;padding:40px 40px 40px 0">
+    <div data-a="wipe" style="width:100%;height:100%;border-radius:24px;overflow:hidden;animation-delay:.05s"><img data-a="zoom" src="assets/nino.jpg" alt="Niño pintando" style="width:100%;height:100%;object-fit:cover;object-position:45% center;display:block"></div>
+    <div data-a="up" style="position:absolute;left:40px;right:80px;bottom:80px;background:#F7F3EC;border-radius:16px;padding:36px 40px;animation-delay:.8s"><p style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:38px;line-height:1.2;color:#12535C">Que nos reconozcan por lo que pueden encontrar y nos recuerden por todo lo que pueden imaginar.</p></div>
+  </div>
+</section>
+
+<section data-label="Nuestro manifiesto" data-speaker-notes="Leer el manifiesto en voz alta, sin prisa." style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:grid;grid-template-columns:.85fr 1.15fr;column-gap:120px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:space-between">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Nuestro manifiesto</span>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:150px;line-height:.95;letter-spacing:-.02em;animation-delay:.1s">Creemos en las ideas.</h2>
+    <div data-a="up" style="display:flex;flex-direction:column;gap:12px;animation-delay:1.2s">
+      <span style="font-family: 'PP Editorial New',Georgia,serif; font-size: 42px; line-height: 1.1">Porque la creatividad es para todos.</span>
+      
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:center;gap:26px;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:34px;line-height:1.32">
+    <p data-a="up" style="margin:0;animation-delay:.3s">En las pequeñas y las grandes. En las que comienzan con una hoja en blanco, un lápiz o un color.</p>
+    <p data-a="up" style="margin:0;animation-delay:.45s">Creemos que no necesitas ser artista para crear ni tener experiencia para intentar algo nuevo.</p>
+    <p data-a="up" style="margin:0;animation-delay:.6s">Creemos en los objetos que inspiran, los materiales que despiertan curiosidad y las experiencias que nos permiten descubrir nuevas habilidades.</p>
+    <p data-a="up" style="margin:0;animation-delay:.75s">Creemos en quienes comparten lo que saben, en quienes se atreven a experimentar y en quienes encuentran en la creatividad una manera de expresarse.</p>
+    <p data-a="up" style="margin:0;animation-delay:.9s">Por eso existe Papela. Para acercarte las herramientas, los materiales y la inspiración que necesitas. Para que cada idea tenga la oportunidad de convertirse en algo real.</p>
+  </div>
+</section>
+
+<section data-label="Brand book — Identidad visual" data-speaker-notes="Un pequeño brand book: logo, color, tipografía y fotografía. La parte visual que acompaña a nuestra voz." style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) 150px;box-sizing:border-box;display:grid;grid-template-columns:1.25fr 1fr;column-gap:140px;overflow:hidden">
+  <div data-logo="" style="position:absolute;top:44px;left:var(--pad-x);z-index:5"><span style="width:100px;height:100px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="100px,100px"></x-import></span></div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:36px">
+    <span data-a="fade" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Brand book</span>
+    <div>
+      <div data-a="num" style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-style:italic;font-size:300px;line-height:1;letter-spacing:-.04em">Aa</div>
+      <h2 data-a="up" style="margin:30px 0 0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;animation-delay:.25s">Identidad visual</h2>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;justify-content:flex-end;font-size:var(--type-small)">
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:0.40s"><span style="opacity:.75">01</span><span>El logo</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:0.47s"><span style="opacity:.75">02</span><span>Paleta base</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:0.54s"><span style="opacity:.75">03</span><span>Pares de color</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:0.61s"><span style="opacity:.75">04</span><span>Probador de combinaciones</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);animation-delay:0.68s"><span style="opacity:.75">05</span><span>Tipografía</span></div>
+    <div data-a="up" style="display:flex;gap:28px;padding:20px 0;border-top:1px solid rgba(243,230,207,.35);border-bottom:1px solid rgba(243,230,207,.35);animation-delay:0.75s"><span style="opacity:.75">06</span><span>Estilo de fotografía</span></div>
+  </div>
+<svg data-ribbon="" viewBox="-67 133 1526 294" fill="none" preserveAspectRatio="xMidYMax slice" style="position: absolute; left: -41px; width: 1984px; height: 259px; top: 54px; pointer-events: none"><path data-a="draw" pathLength="1" d="M864.984 271.314C876.502 294.712 907.345 334.037 995.323 300.643C1104.1 259.357 1331.53 279.964 1457.77 390.325M864.984 271.314C862.261 265.785 860.617 261.143 859.555 258.563C856.233 250.495 861.138 246.328 865.113 247.716C867.789 248.648 870.875 251.417 869.083 258.563C867.993 262.897 866.624 267.156 864.984 271.314ZM864.984 271.314C779.94 487.307 -39.135 506.19 -66.2061 133.911" stroke="#F3E6CF" stroke-opacity="0.8" stroke-width="6" stroke-linecap="round" style="stroke-dasharray:1;stroke-dashoffset:0;animation-delay:.5s"></path></svg>
+</section>
+
+<section data-label="El logo" data-speaker-notes="El logo es nuestra firma. Haz clic en cada versión para verla aplicada; el recuadro punteado marca el área de protección." style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Brand book — Identidad visual</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:1.05fr .95fr;column-gap:100px;padding-top:50px;min-height:0">
+    <div style="display:flex;flex-direction:column;gap:20px;min-height:0">
+      <div data-a="wipe" style="flex:1;min-height:0;border-radius:16px;background:{{ logoBg }};display:flex;align-items:center;justify-content:center;position:relative;transition:background .5s ease">
+        <div style="padding:56px;border:2px dashed {{ logoGuide }};border-radius:8px;transition:border-color .5s ease"><div style="width:300px;height:300px"><x-import component-from-global-scope="Papela.AnimatedLogo" color="{{ logoFg }}" class-name="w-full h-full" hint-size="300px,300px"></x-import></div></div>
+        <span style="position:absolute;left:34px;bottom:28px;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:{{ logoFg }}">{{ logoName }}</span>
+      </div>
+      <div data-a="up" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;animation-delay:.3s">
+        <sc-for list="{{ logoVersions }}" as="v" hint-placeholder-count="4">
+          <button onClick="{{ v.pick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:999px;border:2px solid {{ v.ring }};background:#F7F3EC;font-size:24px;color:#403C3C"><span style="width:34px;height:34px;border-radius:50%;background:{{ v.bg }};border:6px solid {{ v.fg }};flex:none;box-sizing:border-box"></span>{{ v.name }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:32px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500;animation-delay:0s">El logo</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:0.1s">Nuestra firma</h2>
+      <p data-a="up" style="margin:0;font-size:var(--type-small);line-height:1.45;color:rgb(110,100,95);text-wrap:pretty;animation-delay:0.2s;">Un trazo continuo, hecho a mano: así empieza cualquier idea. Lo usamos siempre completo, con aire y en colores de nuestra paleta.</p>
+      <div style="margin-top:auto;display:flex;flex-direction:column;font-size:var(--type-small)">
+        <div data-a="up" style="display:grid;grid-template-columns:270px 1fr;column-gap:30px;padding:18px 0;border-top:1px solid rgb(200,186,162);animation-delay:0.30s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px;color:#403C3C">Área de protección</span><span style="color:rgb(110,100,95);line-height:1.4">Un espacio libre igual a ¼ del ancho del logo en todos sus lados.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:270px 1fr;column-gap:30px;padding:18px 0;border-top:1px solid rgb(200,186,162);animation-delay:0.37s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px;color:#403C3C">Tamaño mínimo</span><span style="color:rgb(110,100,95);line-height:1.4">32 px en digital · 12 mm en impreso.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:270px 1fr;column-gap:30px;padding:18px 0;border-top:1px solid rgb(200,186,162);animation-delay:0.44s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px;color:#403C3C">Versiones</span><span style="color:rgb(110,100,95);line-height:1.4">Verde sobre papel es la principal. Cremita sobre verde, la negativa.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:270px 1fr;column-gap:30px;padding:18px 0;border-top:1px solid rgb(200,186,162);border-bottom:1px solid rgb(200,186,162);animation-delay:0.51s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px;color:#8C482A">Evitamos</span><span style="color:rgb(110,100,95);line-height:1.4">Deformarlo, rotarlo, añadir sombras o ponerlo sobre fondos que compitan.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Paleta base" data-speaker-notes="Verde Papela es el color principal; los otros cinco lo acompañan siempre. Clic en un color para copiar su HEX." style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Brand book — Identidad visual</span></div>
+  <div style="padding-top:50px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:28px"><span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500;animation-delay:0s">Color · Base</span><h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Paleta Website</h2></div>
+    <p data-a="up" style="margin:0;font-size:var(--type-small);line-height:1.45;color:rgb(110,100,95);text-wrap:pretty;animation-delay:.2s">Verde Papela es nuestro color principal. Los otros cinco lo acompañan en todo: tienda, web y empaque. Haz clic en un color para copiar su código.</p>
+  </div>
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,2.2fr) repeat(5,minmax(0,1fr));gap:18px;padding-top:48px">
+    <button onClick="{{ main.copy }}" data-a="wipe" style="all:unset;cursor:pointer;border-radius:16px;background:#12535C;color:#F3E6CF;padding:36px;box-sizing:border-box;display:flex;flex-direction:column;animation-delay:.2s">
+      <span style="font-size:24px;letter-spacing:.22em;text-transform:uppercase">Principal</span>
+      <span style="margin-top:auto;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:96px;line-height:1">Verde Papela</span>
+      <span style="margin-top:16px;font-size:24px;line-height:1.4">CTAs, titulares y fondos de marca. Cerca del 25% de cada pieza.</span>
+      <span style="margin-top:24px;padding-top:18px;border-top:1px solid rgba(243,230,207,.35);display:flex;justify-content:space-between;font-size:24px"><span>{{ main.label }}</span><span>RGB {{ main.rgb }}</span></span>
+    </button>
+    <sc-for list="{{ baseRest }}" as="c" hint-placeholder-count="5">
+      <button onClick="{{ c.copy }}" data-a="up" style="all:unset;cursor:pointer;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:#F7F3EC;animation-delay:{{ c.delay }}">
+        <span style="flex:1;background:{{ c.h }};border-bottom:1px solid rgb(225,212,190)"></span>
+        <span style="padding:20px 20px 22px;display:flex;flex-direction:column;gap:6px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:28px;line-height:1.05;color:#403C3C">{{ c.n }}</span><span style="font-size:24px;color:rgb(110,100,95)">{{ c.label }}</span></span>
+      </button>
+    </sc-for>
+  </div>
+</section>
+
+<section data-label="Pares de color" data-speaker-notes="Cuatro pares nuevos, uno por territorio: un tono profundo y uno luminoso. Se usan de uno en uno, nunca todos a la vez." style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Brand book — Identidad visual</span></div>
+  <div style="padding-top:50px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:28px"><span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500;animation-delay:0s">Color · Pares</span><h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Pares de color</h2></div>
+    <p data-a="up" style="margin:0;font-size:var(--type-small);line-height:1.45;color:rgb(110,100,95);text-wrap:pretty;animation-delay:.2s">Cada territorio tiene su par: un tono profundo y uno luminoso. Se usan de uno en uno, siempre junto a la base.</p>
+  </div>
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);column-gap:64px;padding-top:48px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ pairs }}" as="p" hint-placeholder-count="4">
+        <button onClick="{{ p.pick }}" data-a="up" style="all:unset;cursor:pointer;flex:1;display:flex;align-items:center;gap:24px;padding:0 24px;border-radius:16px;border:2px solid {{ p.ring }};background:{{ p.fill }};animation-delay:{{ p.delay }}">
+          <span style="flex:none;display:flex;width:84px;height:52px;border-radius:10px;overflow:hidden"><span style="flex:1;background:{{ p.deep.h }}"></span><span style="flex:1;background:{{ p.light.h }}"></span></span>
+          <span style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:34px;line-height:1.05;color:#403C3C">{{ p.name }}</span><span style="font-size:24px;color:rgb(110,100,95)">{{ p.territory }}</span></span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:18px;min-height:0">
+      <div data-a="wipe" style="flex:1;min-height:0;border-radius:16px;background:{{ cur.deep.h }};position:relative;overflow:hidden;transition:background .6s ease;animation-delay:.2s">
+        <div style="position:absolute;right:0;top:0;bottom:0;width:30%;background:{{ cur.light.h }};transition:background .6s ease"></div>
+        <div style="position:absolute;left:44px;top:40px;bottom:40px;width:58%;display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:24px;letter-spacing:.22em;text-transform:uppercase;color:{{ cur.on }}">Par {{ cur.num }} · {{ cur.territory }}</span>
+          <span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:96px;line-height:1;color:{{ cur.light.h }}">{{ cur.name }}</span>
+          <span style="font-size:24px;line-height:1.4;color:{{ cur.on }}">{{ cur.mood }} Úsalo en {{ cur.use }}</span>
+          <span style="margin-top:auto;font-size:24px;color:{{ cur.on }}">Contraste {{ cur.ratio }}:1 · {{ cur.verdictShort }}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:40px;font-size:24px;color:#403C3C;white-space:nowrap">
+        <button onClick="{{ cur.copyDeep }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px"><span style="width:24px;height:24px;border-radius:6px;background:{{ cur.deep.h }}"></span><span>{{ cur.deep.n }} {{ cur.deepLabel }}</span></button>
+        <button onClick="{{ cur.copyLight }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px"><span style="width:24px;height:24px;border-radius:6px;background:{{ cur.light.h }};border:1px solid rgb(225,212,190)"></span><span>{{ cur.light.n }} {{ cur.lightLabel }}</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Probador de combinaciones" data-speaker-notes="Herramienta para el equipo: elige fondo y texto y revisa si la combinación es legible antes de diseñar." style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Brand book — Identidad visual</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.8fr 1.2fr;column-gap:90px;padding-top:50px;min-height:0">
+    <div style="display:flex;flex-direction:column;gap:18px;min-height:0">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500;animation-delay:0s">Color · Herramienta</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:60px;line-height:1.04;animation-delay:0.1s">Probador de combinaciones</h2>
+      <div data-a="up" style="display:flex;flex-direction:column;gap:12px;animation-delay:.2s"><span style="font-size:24px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95)">Fondo · {{ tBgName }}</span><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;max-width:560px"><sc-for list="{{ bgList }}" as="c" hint-placeholder-count="14"><button onClick="{{ c.pick }}" title="{{ c.n }}" style="all:unset;cursor:pointer;aspect-ratio:1;border-radius:50%;background:{{ c.h }};box-shadow:0 0 0 1px rgb(225,212,190), 0 0 0 {{ c.ringW }} {{ c.ring }}"></button></sc-for></div></div>
+      <div data-a="up" style="display:flex;flex-direction:column;gap:12px;animation-delay:.28s"><span style="font-size:24px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95)">Texto · {{ tFgName }}</span><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;max-width:560px"><sc-for list="{{ fgList }}" as="c" hint-placeholder-count="14"><button onClick="{{ c.pick }}" title="{{ c.n }}" style="all:unset;cursor:pointer;aspect-ratio:1;border-radius:50%;background:{{ c.h }};box-shadow:0 0 0 1px rgb(225,212,190), 0 0 0 {{ c.ringW }} {{ c.ring }}"></button></sc-for></div></div>
+      <div data-a="up" style="margin-top:auto;display:flex;flex-direction:column;animation-delay:.36s">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid rgb(200,186,162)"><span style="font-size:24px;color:#403C3C">Texto de lectura · 4.5:1</span><span style="padding:6px 18px;border-radius:999px;font-size:24px;letter-spacing:.12em;text-transform:uppercase;background:{{ vBody.bg }};color:{{ vBody.fg }}">{{ vBody.t }}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid rgb(200,186,162)"><span style="font-size:24px;color:#403C3C">Titulares grandes · 3:1</span><span style="padding:6px 18px;border-radius:999px;font-size:24px;letter-spacing:.12em;text-transform:uppercase;background:{{ vHead.bg }};color:{{ vHead.fg }}">{{ vHead.t }}</span></div>
+        <div style="border-top:1px solid rgb(200,186,162)"></div>
+      </div>
+    </div>
+    <div data-a="wipe" style="border-radius:16px;background:{{ tBg }};color:{{ tFg }};padding:56px 60px;display:flex;flex-direction:column;gap:30px;transition:background .4s ease,color .4s ease;box-shadow:inset 0 0 0 1px rgba(64,60,60,.08);animation-delay:.1s">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase">Taller · Sábado 10 am</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:110px;line-height:.8">{{ tRatio }}<span style="font-size:44px">:1</span></span></div>
+      <span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:96px;line-height:1.02;margin-top:auto">Lo que imaginas comienza aquí.</span>
+      <span style="font-size:var(--type-body);line-height:1.45;max-width:760px">Aprende acuarela con materiales de Papela. Grupos pequeños, café incluido y todo listo para que solo te preocupes por crear.</span>
+      <span style="align-self:flex-start;border:2px solid {{ tFg }};border-radius:999px;padding:16px 34px;font-size:24px;font-weight:700">Apartar lugar</span>
+    </div>
+  </div>
+</section>
+
+<section data-label="Tipografía" data-speaker-notes="Dos familias: PP Editorial New para la emoción, Satoshi para la claridad. Prueba pesos y estilos con los botones." style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Brand book — Identidad visual</span></div>
+  <div style="padding-top:44px;display:grid;grid-template-columns:1fr 1fr;column-gap:110px;align-items:end">
+    <div style="display:flex;flex-direction:column;gap:22px"><span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Tipografía</span><h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:72px;line-height:1.04;animation-delay:.1s">Dos voces, una marca</h2></div>
+    <p data-a="up" style="margin:0;font-size:22px;line-height:1.5;color:rgb(110,100,95);text-wrap:pretty;max-width:620px;animation-delay:.2s">La serif aporta lo editorial y hecho a mano; la sans, lo claro y cercano. Nunca usamos una tercera familia.</p>
+  </div>
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:36px 0 30px">
+    <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:36px 44px;display:flex;flex-direction:column;animation-delay:0.25s">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:20px;border-bottom:1px solid rgb(225,212,190)"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:36px">PP Editorial New</span><span style="font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:#8C482A">Titulares</span></div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:10px">
+        <span style="font-family:'PP Editorial New',Georgia,serif;font-size:190px;font-weight:{{ eW }};font-style:{{ eS }};line-height:1;color:#12535C">Aa</span>
+        <span style="font-family:'PP Editorial New',Georgia,serif;font-size:30px;line-height:1.3;font-weight:{{ eW }};font-style:{{ eS }};color:#403C3C">Hecho a mano, pensado con calma.</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;padding-top:20px;border-top:1px solid rgb(225,212,190)">
+        <div style="display:flex;gap:28px;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);margin-right:4px">Peso</span><sc-for list="{{ eWOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;padding:6px 16px;border-radius:999px;font-size:17px;border:1.5px solid #12535C;background:{{ o.bg }};color:{{ o.fg }}">{{ o.l }}</button></sc-for></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);margin-right:4px">Estilo</span><sc-for list="{{ eSOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;padding:6px 16px;border-radius:999px;font-size:17px;border:1.5px solid #12535C;background:{{ o.bg }};color:{{ o.fg }}">{{ o.l }}</button></sc-for></div></div>
+        <span style="font-size:18px;line-height:1.4;color:rgb(110,100,95)">Ultralight para titulares; itálica para frases y títulos de tarjeta. Ultrabold no se usa.</span>
+      </div>
+    </div>
+    <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:36px 44px;display:flex;flex-direction:column;animation-delay:0.35s">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:20px;border-bottom:1px solid rgb(225,212,190)"><span style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:500">Satoshi</span><span style="font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:#8C482A">Texto e interfaz</span></div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:10px">
+        <span style="font-family:'Satoshi',sans-serif;font-size:170px;font-weight:{{ sW }};line-height:1;color:#12535C">Aa</span>
+        <span style="font-family:'Satoshi',sans-serif;font-size:26px;line-height:1.35;font-weight:{{ sW }};color:#403C3C">Taller de lettering · $380 MXN</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;padding-top:20px;border-top:1px solid rgb(225,212,190)">
+        <div style="display:flex;gap:28px;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);margin-right:4px">Peso</span><sc-for list="{{ sWOpts }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;padding:6px 16px;border-radius:999px;font-size:17px;border:1.5px solid #12535C;background:{{ o.bg }};color:{{ o.fg }}">{{ o.l }}</button></sc-for></div></div>
+        <span style="font-size:18px;line-height:1.4;color:rgb(110,100,95)">Regular para lectura, Medium para etiquetas en mayúsculas, Bold solo en botones.</span>
+      </div>
+    </div>
+  </div>
+  <div data-a="up" style="display:grid;grid-template-columns:repeat(5,1fr);column-gap:24px;animation-delay:.5s">
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid rgb(200,186,162)"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95)">Display · 150 px</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-style:italic;font-size:46px;line-height:1.1;color:#12535C">Papela</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid rgb(200,186,162)"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95)">Título · 84 px</span><span style="font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:40px;line-height:1.1;color:#12535C">Papela</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid rgb(200,186,162)"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95)">Subtítulo · 50 px</span><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:34px;line-height:1.1;color:#12535C">Papela</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid rgb(200,186,162)"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95)">Cuerpo · 32 px</span><span style="font-family:'Satoshi',sans-serif;font-size:26px;line-height:1.1;color:#12535C">Papela</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid rgb(200,186,162)"><span style="font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95)">Etiqueta · 24 px · +22%</span><span style="font-family:'Satoshi',sans-serif;font-weight:500;letter-spacing:.22em;text-transform:uppercase;font-size:20px;line-height:1.1;color:#12535C">Papela</span></div>
+  </div>
+</section>
+
+<section data-label="Estilo de fotografía" data-speaker-notes="Nuestra foto es cálida, real y en proceso: manos, materiales y luz natural." style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Brand book — Identidad visual</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:.78fr 1.22fr;column-gap:90px;padding-top:50px;min-height:0">
+    <div style="display:flex;flex-direction:column;gap:22px;min-height:0">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500;animation-delay:0s">Fotografía</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:64px;line-height:1.04;animation-delay:0.1s">Luz, manos y materiales</h2>
+      <div style="margin-top:auto;display:flex;flex-direction:column;font-size:var(--type-small)">
+        <div data-a="up" style="display:grid;grid-template-columns:70px 1fr;column-gap:20px;align-items:baseline;padding:11px 0;border-top:1px solid rgb(200,186,162);animation-delay:0.20s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;color:#8C482A;line-height:1">01</span><div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:30px">Luz natural y cálida</span><span style="color:rgb(110,100,95);line-height:1.35">Luz de día y sombras suaves. Sin flash ni filtros fríos.</span></div></div>
+        <div data-a="up" style="display:grid;grid-template-columns:70px 1fr;column-gap:20px;align-items:baseline;padding:11px 0;border-top:1px solid rgb(200,186,162);animation-delay:0.27s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;color:#8C482A;line-height:1">02</span><div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:30px">Manos en acción</span><span style="color:rgb(110,100,95);line-height:1.35">Mostramos el proceso: trazar, cortar, pintar, armar.</span></div></div>
+        <div data-a="up" style="display:grid;grid-template-columns:70px 1fr;column-gap:20px;align-items:baseline;padding:11px 0;border-top:1px solid rgb(200,186,162);animation-delay:0.34s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;color:#8C482A;line-height:1">03</span><div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:30px">El material protagonista</span><span style="color:rgb(110,100,95);line-height:1.35">Texturas y colores reales, en primer plano.</span></div></div>
+        <div data-a="up" style="display:grid;grid-template-columns:70px 1fr;column-gap:20px;align-items:baseline;padding:11px 0;border-top:1px solid rgb(200,186,162);animation-delay:0.41s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:40px;color:#8C482A;line-height:1">04</span><div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:30px">Aire y orden</span><span style="color:rgb(110,100,95);line-height:1.35">Encuadres limpios, con espacio para respirar y para texto.</span></div></div>
+        <div data-a="up" style="padding: 12px 0 0; border-top: 1px solid rgb(200,186,162); color: #8C482A; line-height: 1.4; animation-delay: .5s; font-size: 22px"><span data-om-id="a41b2821:1238" style="font-weight: 500;">Evitamos:</span> fotos de stock genéricas o muy IA. filtros saturados y producto sin contexto (salvo en la tienda en línea).</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1.15fr 1fr 1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:16px;min-height:0;overflow:hidden">
+      <div data-a="wipe" style="border-radius:16px;overflow:hidden;position:relative;grid-row:span 2;animation-delay:0.05s"><img data-a="zoom" src="assets/taller.jpg" alt="Taller de acuarela" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;left:16px;bottom:16px;background:#F7F3EC;border-radius:999px;padding:8px 18px;font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:#403C3C">Experiencia</span></div>
+      <div data-a="wipe" style="border-radius:16px;overflow:hidden;position:relative;animation-delay:0.15s"><img data-a="zoom" src="assets/trazo.jpg" alt="Mano trazando con lápiz" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;left:16px;bottom:16px;background:#F7F3EC;border-radius:999px;padding:8px 18px;font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:#403C3C">Proceso</span></div>
+      <div data-a="wipe" style="border-radius:16px;overflow:hidden;position:relative;animation-delay:0.25s"><img data-a="zoom" src="assets/papeles.jpg" alt="Papeles y cartulinas" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;left:16px;bottom:16px;background:#F7F3EC;border-radius:999px;padding:8px 18px;font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:#403C3C">Material</span></div>
+      <div data-a="wipe" style="border-radius:16px;overflow:hidden;position:relative;animation-delay:0.35s"><img data-a="zoom" src="assets/ilustradora.jpg" alt="Ilustradora dibujando" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;left:16px;bottom:16px;background:#F7F3EC;border-radius:999px;padding:8px 18px;font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:#403C3C">Comunidad</span></div>
+      <div data-a="wipe" style="border-radius:16px;overflow:hidden;position:relative;animation-delay:0.45s"><img data-a="zoom" src="assets/libretas.jpg" alt="Libretas y plumas" style="width:100%;height:100%;object-fit:cover;display:block"><span style="position:absolute;left:16px;bottom:16px;background:#F7F3EC;border-radius:999px;padding:8px 18px;font-size:24px;letter-spacing:.12em;text-transform:uppercase;color:#403C3C">Curaduría</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Cierre" style="background:#12535C;color:rgb(243,230,207);font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;overflow:hidden">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px">
+    <div data-a="fade" style="width:220px;height:220px"><x-import component-from-global-scope="Papela.AnimatedLogo" color="rgb(243,230,207)" class-name="w-full h-full" hint-size="220px,220px"></x-import></div>
+    <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:120px;line-height:1;letter-spacing:-.015em;animation-delay:.3s">Lo que imaginas comienza aquí.</h2>
+  </div>
+  <div style="width:100%;display:grid;grid-template-columns:repeat(3,1fr);column-gap:60px;text-align:left">
+    <div data-a="up" style="padding-top:26px;border-top:1px solid rgba(243,230,207,.35);display:flex;flex-direction:column;gap:10px;animation-delay:.55s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:42px">Una papelería</span><span style="font-size:var(--type-small)">para encontrar lo que necesitas.</span></div>
+    <div data-a="up" style="padding-top:26px;border-top:1px solid rgba(243,230,207,.35);display:flex;flex-direction:column;gap:10px;animation-delay:.65s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:42px">Un espacio</span><span style="font-size:var(--type-small)">para descubrir algo nuevo.</span></div>
+    <div data-a="up" style="padding-top:26px;border-top:1px solid rgba(243,230,207,.35);display:flex;flex-direction:column;gap:10px;animation-delay:.75s"><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-size:42px">Una comunidad</span><span style="font-size:var(--type-small)">para compartir lo que creamos.</span></div>
+  </div>
+</section>
+
+<section data-label="Cómo utilizar este Brand Book" style="background:#F0EFEB;color:#403C3C;font-family:'Satoshi',system-ui,sans-serif;padding:var(--pad-top) var(--pad-x) var(--pad-bottom);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">
+  <div data-hdr-el="" style="display:flex;justify-content:space-between;align-items:center;font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:rgb(110,100,95);padding-bottom:18px;border-bottom:1px solid rgb(225,212,190)"><span style="display:flex;align-items:center;gap:22px"><span style="width:80px;height:80px;display:block;flex:none"><x-import component-from-global-scope="Papela.AnimatedLogo" color="#12535C" class-name="w-full h-full" hint-size="80px,80px"></x-import></span><span>Papela · Brand Book 2026</span></span><span>Anexo</span></div>
+  <div style="flex:1;display:grid;grid-template-columns:1.2fr .8fr;column-gap:90px;padding-top:60px;min-height:0">
+    <div style="display:flex;flex-direction:column;gap:40px">
+      <span data-a="up" style="font-size:var(--type-label);letter-spacing:.22em;text-transform:uppercase;color:#8C482A;font-weight:500">Anexo</span>
+      <h2 data-a="up" style="margin:0;font-family:'PP Editorial New',Georgia,serif;font-weight:200;font-size:var(--type-title);line-height:1.04;animation-delay:.1s">Cómo utilizar este Brand Book</h2>
+      <div style="margin-top:auto;display:flex;flex-direction:column;font-size:var(--type-small)">
+        <div data-a="up" style="display:grid;grid-template-columns:340px 1fr;column-gap:30px;padding:14px 0;border-top:1px solid rgb(200,186,162);animation-delay:.2s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px">01 · Esencia</span><span style="color:rgb(110,100,95)">Por qué existe Papela y qué representa.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:340px 1fr;column-gap:30px;padding:14px 0;border-top:1px solid rgb(200,186,162);animation-delay:.26s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px">02 · Universo</span><span style="color:rgb(110,100,95)">Los cinco pilares, actuales y futuros.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:340px 1fr;column-gap:30px;padding:14px 0;border-top:1px solid rgb(200,186,162);animation-delay:.32s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px">03 · Identidad</span><span style="color:rgb(110,100,95)">Personalidad, diferenciadores y experiencia.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:340px 1fr;column-gap:30px;padding:14px 0;border-top:1px solid rgb(200,186,162);animation-delay:.38s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px">04 · Voz</span><span style="color:rgb(110,100,95)">Cómo hablamos y con quién conectamos.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:340px 1fr;column-gap:30px;padding:14px 0;border-top:1px solid rgb(200,186,162);animation-delay:.44s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px">05 · Comunicación</span><span style="color:rgb(110,100,95)">Contenidos, campañas y objetivos.</span></div>
+        <div data-a="up" style="display:grid;grid-template-columns:340px 1fr;column-gap:30px;padding:14px 0;border-top:1px solid rgb(200,186,162);border-bottom:1px solid rgb(200,186,162);animation-delay:.5s"><span style="font-family:'PP Editorial New',Georgia,serif;font-size:32px">06 · Futuro</span><span style="color:rgb(110,100,95)">Visión de crecimiento y manifiesto.</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:32px 36px;display:flex;flex-direction:column;gap:12px;animation-delay:.3s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:#8C482A;font-weight:500">Alcance</span><span style="font-size:var(--type-small);line-height:1.4">Manual estratégico y verbal. Se complementará con un manual técnico de identidad visual.</span></div>
+      <div data-a="up" style="background:#F7F3EC;border-radius:16px;padding:32px 36px;display:flex;flex-direction:column;gap:12px;animation-delay:.4s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;color:#8C482A;font-weight:500">Pilares</span><span style="font-size:var(--type-small);line-height:1.4">Son estructura estratégica, no categorías con igual peso publicitario. La marca propia no se anuncia como oferta actual.</span></div>
+      <div data-a="up" style="flex:1;background:#12535C;color:rgb(243,230,207);border-radius:16px;padding:34px 36px;display:flex;flex-direction:column;justify-content:space-between;gap:20px;animation-delay:.5s"><span style="font-size:var(--type-label);letter-spacing:.16em;text-transform:uppercase;font-weight:500">Brújula para marketing</span><span style="font-family:'PP Editorial New',Georgia,serif;font-style:italic;font-weight:200;font-size:34px;line-height:1.25">Que lleguen porque encuentran lo que necesitan, se enamoren de lo que descubren y regresen porque siempre hay algo nuevo por imaginar.</span></div>
+    </div>
+  </div>
+</section>
+
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;motion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Deck&quot;},&quot;runningHeader&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Deck&quot;}}">
+class Component extends DCLogic {
+  state = { logoV: 0, pair: 0, bg: 1, fg: 2, eW: 200, eS: 'normal', sW: 400, copied: null };
+  BASE = [
+    { n: 'Papel', h: '#F0EFEB', u: 'Fondo general de piezas y web.' },
+    { n: 'Verde Papela', h: '#12535C', u: 'Color principal: CTAs, titulares y fondos de marca.' },
+    { n: 'Cremita', h: '#F3E6CF', u: 'Texto sobre verde y fondos de color.' },
+    { n: 'Cremita claro', h: '#F7F3EC', u: 'Tarjetas, formularios y cajas de resumen.' },
+    { n: 'Terracota', h: '#8C482A', u: 'Etiquetas, acentos y detalles.' },
+    { n: 'Tinta', h: '#403C3C', u: 'Texto principal sobre fondos claros.' },
+  ];
+  PAIRS = [
+    { name: 'Raíz', territory: 'Lo que necesitas', deep: { n: 'Verde Papela', h: '#12535C' }, light: { n: 'Pistache', h: '#8AB25A' }, mood: 'Fresco y natural: lo esencial, hecho con calma.', use: 'materiales, regreso a clases, básicos y la tienda del día a día.' },
+    { name: 'Barro', territory: 'Lo que vivimos', deep: { n: 'Barro', h: '#D07C62' }, light: { n: 'Durazno', h: '#FFBE9E' }, mood: 'Cálido y cercano: las manos ocupadas, el taller lleno.', use: 'talleres, clases, actividades y momentos dentro de Papela.' },
+    { name: 'Tinta', territory: 'Lo que podemos crear', deep: { n: 'Azul tinta', h: '#014375' }, light: { n: 'Agua', h: '#7DBBC9' }, mood: 'Preciso y creativo: de la idea a la pieza impresa.', use: 'impresión, personalización, proyectos y técnicas.' },
+    { name: 'Cacao', territory: 'A quienes compartimos', deep: { n: 'Cacao', h: '#422526' }, light: { n: 'Rosa papel', h: '#EEC3D7' }, mood: 'Íntimo y especial: artistas, historias y ocasiones.', use: 'artistas invitados, colaboraciones, regalos y fechas especiales.' },
+  ];
+  LOGOS = [
+    { name: 'Principal', bg: '#F0EFEB', fg: '#12535C' },
+    { name: 'Negativa', bg: '#12535C', fg: '#F3E6CF' },
+    { name: 'Tinta', bg: '#F7F3EC', fg: '#403C3C' },
+    { name: 'Extendida', bg: '#422526', fg: '#EEC3D7' },
+  ];
+  lum(h) { const c = [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }
+  ratio(a, b) { const x = this.lum(a), y = this.lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+  rgb(h) { return [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)).join(', '); }
+  copy(h) {
+    try { navigator.clipboard && navigator.clipboard.writeText(h); } catch (e) {}
+    this.setState({ copied: h }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ copied: null }), 1400);
+  }
+  lbl(h) { return this.state.copied === h ? 'Copiado ✓' : h; }
+  componentWillUnmount() { clearTimeout(this._t); }
+  renderVals() {
+    const s = this.state, G = '#12535C';
+    const all = this.BASE.map(c => ({ n: c.n, h: c.h })).concat(...this.PAIRS.map(p => [p.deep, p.light]).flat().filter(c => c.h !== G).map(c => [c]));
+    const L = this.LOGOS[s.logoV], P = this.PAIRS[s.pair];
+    const pr = this.ratio(P.deep.h, P.light.h);
+    const chip = (key) => all.map((c, i) => ({ ...c, ring: s[key] === i ? '#8C482A' : 'transparent', ringW: s[key] === i ? '5px' : '0px', pick: () => this.setState({ [key]: i }) }));
+    const tb = all[s.bg].h, tf = all[s.fg].h, tr = this.ratio(tb, tf);
+    const v = (ok) => ok ? { t: 'Aprobado', bg: '#C9D3C0', fg: '#12535C' } : { t: 'No usar', bg: '#F0D9CC', fg: '#8C482A' };
+    const opt = (list, key) => list.map(([val, l]) => ({ l, bg: s[key] === val ? G : 'transparent', fg: s[key] === val ? '#F3E6CF' : G, pick: () => this.setState({ [key]: val }) }));
+    return {
+      motion: this.props.motion === false ? 'off' : 'on',
+      header: this.props.runningHeader === false ? 'off' : 'on',
+      logoBg: L.bg, logoFg: L.fg, logoName: 'Versión ' + L.name.toLowerCase(), logoGuide: L.fg + '66',
+      logoVersions: this.LOGOS.map((x, i) => ({ ...x, ring: s.logoV === i ? G : 'transparent', pick: () => this.setState({ logoV: i }) })),
+      base: this.BASE.map((c, i) => ({ ...c, rgb: this.rgb(c.h), label: this.lbl(c.h), on: this.lum(c.h) > .4 ? '#403C3C' : '#F3E6CF', delay: (.25 + i * .06).toFixed(2) + 's', copy: () => this.copy(c.h) })),
+      main: { label: this.lbl(G), rgb: this.rgb(G), copy: () => this.copy(G) },
+      baseRest: this.BASE.filter(c => c.h !== G).map((c, i) => ({ ...c, label: this.lbl(c.h), delay: (.25 + i * .05).toFixed(2) + 's', copy: () => this.copy(c.h) })),
+      pairs: this.PAIRS.map((p, i) => ({ ...p, ring: s.pair === i ? G : 'transparent', fill: s.pair === i ? '#F7F3EC' : 'transparent', delay: (.3 + i * .07).toFixed(2) + 's', pick: () => this.setState({ pair: i }) })),
+      cur: { ...P, num: '0' + (s.pair + 1), ratio: pr.toFixed(1), deepRgb: 'RGB ' + this.rgb(P.deep.h), lightRgb: 'RGB ' + this.rgb(P.light.h), deepLabel: this.lbl(P.deep.h), on: this.lum(P.deep.h) > .18 ? '#403C3C' : '#F3E6CF', verdictShort: pr >= 4.5 ? 'apto para texto' : pr >= 3 ? 'solo titulares' : 'solo decorativo', lightLabel: this.lbl(P.light.h),
+        verdict: pr >= 4.5 ? 'Apto para texto de lectura.' : pr >= 3 ? 'Solo titulares grandes; texto con Papel o Tinta.' : 'Decorativo: no pongas texto de uno sobre otro.',
+        copyDeep: () => this.copy(P.deep.h), copyLight: () => this.copy(P.light.h) },
+      bgList: chip('bg'), fgList: chip('fg'), tBg: tb, tFg: tf, tBgName: all[s.bg].n, tFgName: all[s.fg].n, tRatio: tr.toFixed(1), vBody: v(tr >= 4.5), vHead: v(tr >= 3),
+      eW: s.eW, eS: s.eS, sW: s.sW,
+      eWOpts: opt([[200, 'Ultralight'], [400, 'Regular']], 'eW'), eSOpts: opt([['normal', 'Romana'], ['italic', 'Itálica']], 'eS'), sWOpts: opt([[400, 'Regular'], [500, 'Medium'], [700, 'Bold']], 'sW'),
+    };
+  }
+}
+</script>
+</body>
+</html>
