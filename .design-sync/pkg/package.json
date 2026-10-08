@@ -1,0 +1,13 @@
+{
+  "name": "papela-ds",
+  "private": true,
+  "description": "Papela design system — generated entry for Claude Design sync (see .design-sync/NOTES.md)",
+  "module": "index.ts",
+  "types": "types/index.d.ts",
+  "dependencies": {
+    "@heroicons/react": "*",
+    "framer-motion": "*",
+    "gsap": "*",
+    "zustand": "*"
+  }
+}

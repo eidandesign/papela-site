@@ -32,3 +32,15 @@ public/images/fondos tarjetas/
 .claude/skills/
 skills-lock.json
 .vercel
+
+# design-sync (Claude Design) — generated / machine state
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.design-sync/pkg/types/
+.design-sync/pkg/papela.css
+.design-sync/pkg/fonts/
+.design-sync/pkg/src/
+.design-sync/pkg/index.ts

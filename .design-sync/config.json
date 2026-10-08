@@ -1,0 +1,146 @@
+{
+  "projectId": "d5bc8318-cfd2-47d9-a16e-1a0d3dfeea44",
+  "shape": "package",
+  "pkg": "papela-ds",
+  "globalName": "Papela",
+  "buildCmd": "node .design-sync/build-ds.mjs",
+  "entry": ".design-sync/pkg/index.ts",
+  "srcDir": "../../components/site",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "papela.css",
+  "runtimeFontPrefixes": [
+    "Satoshi"
+  ],
+  "componentSrcMap": {
+    "SiteNavbar": "../../components/site/Navbar.tsx",
+    "SiteFooter": "../../components/site/Footer.tsx",
+    "ArrowRightIcon": null,
+    "ArrowLeftIcon": null,
+    "PlusIcon": null,
+    "MinusIcon": null,
+    "XMarkIcon": null,
+    "CheckIcon": null,
+    "CheckCircleIcon": null,
+    "ChevronRightIcon": null,
+    "ChevronLeftIcon": null,
+    "ChevronDownIcon": null,
+    "SparklesIcon": null,
+    "StarIcon": null,
+    "HeartIcon": null,
+    "ShoppingBagIcon": null,
+    "MapPinIcon": null,
+    "ClockIcon": null,
+    "CalendarDaysIcon": null,
+    "ScissorsIcon": null,
+    "SwatchIcon": null,
+    "AcademicCapIcon": null,
+    "CakeIcon": null,
+    "UserGroupIcon": null,
+    "BuildingStorefrontIcon": null,
+    "PhoneIcon": null,
+    "EnvelopeIcon": null
+  },
+  "docsMap": {
+    "SiteNavbar": "../docs/SiteNavbar.md",
+    "SiteFooter": "../docs/SiteFooter.md",
+    "HeroSection": "../docs/HeroSection.md",
+    "TextCarousel": "../docs/TextCarousel.md",
+    "BackToTop": "../docs/BackToTop.md",
+    "WhatsAppFloatButton": "../docs/WhatsAppFloatButton.md",
+    "AnimatedLogo": "../docs/AnimatedLogo.md",
+    "AnimatedBurger": "../docs/AnimatedBurger.md",
+    "ScrollReveal": "../docs/ScrollReveal.md",
+    "ProductCard": "../docs/ProductCard.md",
+    "ProductCarousel": "../docs/ProductCarousel.md",
+    "QuickAddButton": "../docs/QuickAddButton.md",
+    "AddToCartButton": "../docs/AddToCartButton.md",
+    "ProductDrawer": "../docs/ProductDrawer.md",
+    "CartButton": "../docs/CartButton.md",
+    "CartDrawer": "../docs/CartDrawer.md",
+    "Select": "../docs/Select.md",
+    "PersonalizacionForm": "../docs/PersonalizacionForm.md",
+    "HojaInferior": "../docs/HojaInferior.md",
+    "FaqSection": "../docs/FaqSection.md",
+    "OcasionesPills": "../docs/OcasionesPills.md",
+    "CategoriasStack": "../docs/CategoriasStack.md",
+    "ActividadesGrid": "../docs/ActividadesGrid.md",
+    "TalleresGallery": "../docs/TalleresGallery.md"
+  },
+  "overrides": {
+    "HeroSection": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "viewport": "1280x760"
+    },
+    "ProductDrawer": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "viewport": "900x1150"
+    },
+    "CartDrawer": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "viewport": "900x760"
+    },
+    "HojaInferior": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "viewport": "900x760"
+    },
+    "SiteNavbar": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "viewport": "1280x720"
+    },
+    "SiteFooter": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "viewport": "1280x900"
+    },
+    "WhatsAppFloatButton": {
+      "cardMode": "single",
+      "primaryStory": "Default",
+      "viewport": "480x320"
+    },
+    "BackToTop": {
+      "cardMode": "column"
+    },
+    "TextCarousel": {
+      "cardMode": "column"
+    },
+    "OcasionesPills": {
+      "cardMode": "column"
+    },
+    "CategoriasStack": {
+      "cardMode": "column"
+    },
+    "TalleresGallery": {
+      "cardMode": "column"
+    },
+    "ActividadesGrid": {
+      "cardMode": "column"
+    },
+    "FaqSection": {
+      "cardMode": "column"
+    },
+    "ProductCarousel": {
+      "cardMode": "column"
+    },
+    "PersonalizacionForm": {
+      "cardMode": "column"
+    },
+    "Select": {
+      "cardMode": "column"
+    },
+    "ScrollReveal": {
+      "cardMode": "column"
+    },
+    "AddToCartButton": {
+      "cardMode": "column"
+    },
+    "ProductCard": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
