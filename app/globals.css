@@ -401,6 +401,49 @@ body {
   .ms-thumb img { transition: none !important; }
 }
 
+/* ── Mockup animado del menú en línea (MenuDemo, página de Mini Site desactivado) ──
+   .demo-tap = "dedo" que toca (anillo que late); .demo-pop = aparece con rebote;
+   .demo-rise = renglón que sube al entrar. Fill-mode backwards: no deja transform. */
+@keyframes demo-tap {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+  25%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  45%  { opacity: 1; transform: translate(-50%, -50%) scale(0.8); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+}
+.demo-tap {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  animation: demo-tap 1.4s ease-out 0.6s infinite;
+}
+@keyframes demo-pop {
+  from { opacity: 0; transform: scale(0.85); }
+}
+.demo-pop { animation: demo-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+@keyframes demo-rise {
+  from { opacity: 0; transform: translateY(8px); }
+}
+.demo-rise { animation: demo-rise 0.4s ease-out backwards; }
+/* Tooltips que señalan lo personalizable: aparecen en cascada (delay inline). */
+.demo-tip { transition: opacity 0.25s ease; pointer-events: none; }
+@keyframes demo-tip-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.9); }
+}
+.demo-tip-on { animation: demo-tip-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+/* Barras de la data: crecen desde la base. */
+@keyframes demo-bar { from { transform: scaleY(0); } }
+.demo-bar { transform-origin: bottom; animation: demo-bar 0.6s ease-out backwards; }
+@keyframes demo-grow { from { transform: scaleX(0); } }
+.demo-grow { animation: demo-grow 0.7s ease-out 0.2s backwards; }
+@media (prefers-reduced-motion: reduce) {
+  .demo-tap { animation: none !important; opacity: 1; transform: translate(-50%, -50%); }
+  .demo-pop, .demo-rise, .demo-tip-on, .demo-bar, .demo-grow { animation: none !important; }
+}
+
 /* ── Cotización — lightbox de la foto de un renglón ──
    Overlay verde profundo con blur + tarjeta que entra con un zoom suave. */
 @keyframes cot-fade {
