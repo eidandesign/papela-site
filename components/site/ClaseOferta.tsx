@@ -7,6 +7,8 @@ import HojaInferior from "@/components/site/HojaInferior";
 import { useReservaModalStore } from "@/lib/stores/reservaModalStore";
 import type { Horario, HorarioSemanal } from "@/lib/clases";
 import type { PaqueteClasePublico, TipoClasePublico } from "@/lib/clases-tipos";
+import WhatsAppLink from "./WhatsAppLink";
+import { track } from "@/lib/analitica";
 
 // Clases en el sitio (/clases y la página de cada maestra). Todo se edita en
 // el admin (perfil de la maestra). Cada clase es UN bloque con solo su info
@@ -187,12 +189,10 @@ export function ClaseBloque({
   const [pestana, setPestana] = useState<"paquetes" | "suelta">(paquetes.length ? "paquetes" : "suelta");
 
   const waNumero = whatsapp || WHATSAPP_PAPELA;
-  const waHref = (o: Opcion) => {
-    const texto = o.paquete
+  const waTexto = (o: Opcion) =>
+    o.paquete
       ? `Hola Papela 🌿 me interesa el "${o.paquete.nombre}" de ${tipo.nombre}.`
       : `Hola Papela 🌿 me interesa una clase suelta de "${tipo.nombre}".`;
-    return `https://wa.me/${waNumero}?text=${encodeURIComponent(texto)}`;
-  };
 
   function cerrar() {
     setAbierto(false);
@@ -208,6 +208,7 @@ export function ClaseBloque({
       whatsapp,
       tipos,
       tipoInicial: tipo.id,
+      yaMedido: true,
       paquete: o.paquete
         ? { id: o.paquete.id, nombre: o.paquete.nombre, precio: o.paquete.precio, inscripcion: o.paquete.inscripcion, sesiones: o.paquete.sesiones }
         : null,
@@ -257,7 +258,10 @@ export function ClaseBloque({
         <div className="mt-auto pt-5">
         <button
           type="button"
-          onClick={() => setAbierto(true)}
+          onClick={() => {
+            setAbierto(true);
+            track("select_item", { item_name: tipo.nombre, item_category: "clase" });
+          }}
           className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-verde)] px-6 py-3 font-sans text-sm font-semibold text-[var(--color-cremita)] hover:opacity-90 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-verde)]"
         >
           Ver más información
@@ -286,14 +290,15 @@ export function ClaseBloque({
         pie={
           elegida && (
             <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
-              <a
-                href={waHref(elegida)}
-                target="_blank"
-                rel="noopener noreferrer"
+              <WhatsAppLink
+                ubicacion="clases_hoja"
+                numero={waNumero}
+                texto={waTexto(elegida)}
+                itemName={elegida.paquete ? elegida.paquete.nombre : tipo.nombre}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-6 py-3 font-sans text-sm font-semibold text-[var(--color-text)] hover:border-[var(--color-verde)] hover:text-[var(--color-verde)] transition-colors"
               >
                 Por WhatsApp
-              </a>
+              </WhatsAppLink>
               <button
                 type="button"
                 onClick={() => pagarEnLinea(elegida)}
@@ -475,14 +480,15 @@ export function PaquetesSueltos({
               <span className="text-2xl font-semibold text-[var(--color-verde)]">{precioMx(o.precio)}</span>{" "}
               <span className="text-sm text-[var(--color-muted)]">{o.precioNota}</span>
             </p>
-            <a
-              href={`https://wa.me/${waNumero}?text=${encodeURIComponent(`Hola Papela 🌿 me interesa el "${p.nombre}" con ${maestraNombre}.`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <WhatsAppLink
+              ubicacion="clases_paquetes"
+              numero={waNumero}
+              texto={`Hola Papela 🌿 me interesa el "${p.nombre}" con ${maestraNombre}.`}
+              itemName={p.nombre}
               className="mt-4 inline-flex items-center justify-center rounded-full bg-[var(--color-verde)] px-6 py-3 font-sans text-sm font-semibold text-[var(--color-cremita)] hover:opacity-90 transition-opacity"
             >
               Apartar por WhatsApp
-            </a>
+            </WhatsAppLink>
           </div>
         );
       })}

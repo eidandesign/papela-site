@@ -20,11 +20,11 @@ import {
   ArrowRightIcon,
   MapPinIcon,
 } from "@heroicons/react/24/solid";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
+import TrackedLink from "@/components/site/TrackedLink";
 
 export const revalidate = 60;
 
-const WHATSAPP = "522211865590";
-const wa = (msg: string) => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
 const MAPS = "https://maps.google.com/?q=Papela+Atelier+Lomas+de+Angel%C3%B3polis+Puebla";
 
 export const metadata: Metadata = {
@@ -307,15 +307,14 @@ export default function ServiciosPage() {
             páginas web, menús, presentaciones y experiencias digitales.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-            <a
-              href={wa("Hola Papela 🌿 quiero cotizar un servicio.")}
-              target="_blank"
-              rel="noopener noreferrer"
+            <WhatsAppLink
+              ubicacion="servicios_hero"
+              texto="Hola Papela 🌿 quiero cotizar un servicio."
               className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-cremita)] px-7 py-3.5 font-sans text-sm font-semibold text-[var(--color-verde)] transition-opacity hover:opacity-90"
             >
               Cotizar un servicio
               <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
+            </WhatsAppLink>
             <a
               href="#servicios"
               className="inline-flex items-center rounded-full border border-[var(--color-cremita)]/60 px-7 py-3.5 font-sans text-sm font-semibold text-[var(--color-cremita)] transition-colors hover:bg-[var(--color-cremita)]/10"
@@ -517,24 +516,23 @@ export default function ServiciosPage() {
             de presentación o construir una página web.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-            <a
-              href={wa("Hola Papela 🌿 tengo un proyecto en mente y quiero cotizarlo.")}
-              target="_blank"
-              rel="noopener noreferrer"
+            <WhatsAppLink
+              ubicacion="servicios_cierre"
+              texto="Hola Papela 🌿 tengo un proyecto en mente y quiero cotizarlo."
               className="inline-flex items-center gap-2.5 rounded-full bg-[#25D366] px-7 py-3.5 font-sans text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               <WaGlyph className="h-5 w-5" />
               Cotizar por WhatsApp
-            </a>
-            <a
+            </WhatsAppLink>
+            <TrackedLink
+              evento="pa_click_como_llegar"
+              ubicacion="servicios_cierre"
               href={MAPS}
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-[var(--color-cremita)]/60 px-7 py-3.5 font-sans text-sm font-semibold text-[var(--color-cremita)] transition-colors hover:bg-[var(--color-cremita)]/10"
             >
               <MapPinIcon className="h-4 w-4" />
               Visítanos en Papela
-            </a>
+            </TrackedLink>
           </div>
         </div>
       </section>

@@ -7,6 +7,7 @@ import { getPaquetesClase, getTiposClase } from "@/lib/clases-tipos";
 import { esReservable } from "@/lib/clases-matching";
 import HeroSection from "@/components/site/HeroSection";
 import { ClaseBloque, PaquetesSueltos } from "@/components/site/ClaseOferta";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 export const revalidate = 60;
 
@@ -124,14 +125,14 @@ export default async function ClasesPage() {
                 <MapPinIcon aria-hidden="true" className="w-4 h-4 flex-shrink-0" />
                 Lomas de Angelópolis – Papela Atelier
               </p>
-              <a
-                href={`https://wa.me/522211865590?text=${encodeURIComponent("Hola Papela 🌿 quiero unirme al Club de Arcilla")}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <WhatsAppLink
+                ubicacion="clases_club_arcilla"
+                texto="Hola Papela 🌿 quiero unirme al Club de Arcilla"
+                itemName="Club de Arcilla"
                 className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-verde)] px-6 py-2.5 font-sans text-sm font-semibold text-[var(--color-cremita)] hover:opacity-90 transition-opacity"
               >
                 ¡Quiero Unirme!
-              </a>
+              </WhatsAppLink>
             </div>
 
             {/* Foto */}

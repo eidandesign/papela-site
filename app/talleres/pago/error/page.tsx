@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { XCircleIcon } from "@heroicons/react/24/solid";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 export const metadata: Metadata = {
   title: "Error en el pago",
@@ -25,14 +26,12 @@ export default function TallerPagoError() {
           >
             Volver a talleres
           </Link>
-          <a
-            href="https://wa.me/522211865590"
-            target="_blank"
-            rel="noopener noreferrer"
+          <WhatsAppLink
+            ubicacion="pago_error_taller"
             className="inline-flex items-center justify-center gap-2 border border-[var(--color-verde)] text-[var(--color-verde)] font-sans font-semibold px-8 py-4 rounded-full hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] transition-colors"
           >
             Contactar por WhatsApp
-          </a>
+          </WhatsAppLink>
         </div>
       </div>
     </div>

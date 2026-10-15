@@ -8,6 +8,9 @@ import { usePathname } from "next/navigation";
 import CartButton from "./CartButton";
 import AnimatedLogo from "./AnimatedLogo";
 import AnimatedBurger from "./AnimatedBurger";
+import { trackWhatsApp } from "./WhatsAppLink";
+import { track } from "@/lib/analitica";
+import { waHref } from "@/lib/whatsapp";
 
 const NAV_LINKS = [
   { href: "/productos", label: "Catálogo" },
@@ -55,11 +58,11 @@ function WaIcon() {
   );
 }
 
-const SOCIALS = [
-  { href: "https://instagram.com/papela.atelier", label: "Instagram", Icon: IgIcon },
+const SOCIALS: { href: string; label: string; Icon: () => React.JSX.Element; medir?: () => void }[] = [
+  { href: "https://instagram.com/papela.atelier", label: "Instagram", Icon: IgIcon, medir: () => track("pa_click_instagram", { ubicacion: "navbar_menu" }) },
   { href: "https://www.facebook.com/papelaatelier/", label: "Facebook", Icon: FbIcon },
-  { href: "https://tiktok.com/@papela.atelier", label: "TikTok", Icon: TkIcon },
-  { href: "https://wa.me/522211865590", label: "WhatsApp", Icon: WaIcon },
+  { href: "https://tiktok.com/@papela.atelier", label: "TikTok", Icon: TkIcon, medir: () => track("pa_click_tiktok", { ubicacion: "navbar_menu" }) },
+  { href: waHref(), label: "WhatsApp", Icon: WaIcon, medir: () => trackWhatsApp("navbar_menu") },
 ];
 
 const HOVER_FG = "rgba(243,230,207,0.5)";
@@ -183,13 +186,14 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
           transition: `opacity 0.5s ease ${socialDelay}s, transform 0.6s ${EASE} ${socialDelay}s`,
         }}
       >
-        {SOCIALS.map(({ href, label, Icon }, i) => (
+        {SOCIALS.map(({ href, label, Icon, medir }, i) => (
           <a
             key={i}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
+            onClick={medir}
             onMouseEnter={(e) => {
               const el = e.currentTarget as HTMLElement;
               el.style.borderColor = FG;

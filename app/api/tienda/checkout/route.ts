@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/site";
 import { randomUUID } from "crypto";
 import { COSTO_ENVIO } from "@/lib/stores/cartStore";
 import { logger } from "@/lib/logger";
+import { gaClientId } from "@/lib/ga4";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 const client = new MercadoPagoConfig({
@@ -197,10 +198,18 @@ export async function POST(req: NextRequest) {
         auto_return: "approved",
         notification_url: `${SITE_URL}/api/webhooks/mercadopago`,
         external_reference: externalReference,
+        // El webhook lo reenvía a GA4 para atribuir la compra.
+        ...(gaClientId(req) ? { metadata: { ga_client_id: gaClientId(req) } } : {}),
       },
     });
 
-    return NextResponse.json({ checkoutUrl: result.init_point });
+    return NextResponse.json({
+      checkoutUrl: result.init_point,
+      analitica: {
+        item_name: orderItems.length > 1 ? `${orderItems[0].nombre} y ${orderItems.length - 1} más` : orderItems[0].nombre,
+        value: montoTotal,
+      },
+    });
   } catch (error) {
     logger.error("tienda checkout failed", {}, error);
     return NextResponse.json({ error: "Error al crear el pago" }, { status: 500 });

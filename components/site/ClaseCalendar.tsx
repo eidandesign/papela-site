@@ -19,6 +19,7 @@ import {
   duracionDeSlot,
 } from "@/lib/clases-matching";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
+import { irACheckout } from "@/lib/analitica";
 
 const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -178,7 +179,7 @@ export default function ClaseCalendar({
       }
       const data = await res.json();
       if (data.checkoutUrl) {
-        window.location.assign(data.checkoutUrl);
+        irACheckout(data.checkoutUrl, "clase", data.analitica);
       } else {
         setErrorMsg("No se pudo iniciar el pago. Intenta de nuevo.");
       }

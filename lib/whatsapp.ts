@@ -17,6 +17,15 @@ export function urlProducto(p: ProductoLink) {
  * variación elegida ("Libreta — Rosa") sin cambiar el link, que es del producto.
  */
 export function waProductoHref(p: ProductoLink, nombreMostrado?: string) {
-  const texto = `Hola Papela 🌿 me interesa: ${nombreMostrado ?? p.nombre}\n${urlProducto(p)}`;
-  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`;
+  return waHref(waProductoTexto(p, nombreMostrado));
+}
+
+/** Mensaje de "Consultar por WhatsApp" de un producto (ver waProductoHref). */
+export function waProductoTexto(p: ProductoLink, nombreMostrado?: string) {
+  return `Hola Papela 🌿 me interesa: ${nombreMostrado ?? p.nombre}\n${urlProducto(p)}`;
+}
+
+/** Link de WhatsApp con mensaje opcional. Por defecto, el número de Papela. */
+export function waHref(texto?: string, numero: string = WHATSAPP_NUMERO) {
+  return `https://wa.me/${numero}${texto ? `?text=${encodeURIComponent(texto)}` : ""}`;
 }

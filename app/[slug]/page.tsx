@@ -4,8 +4,8 @@ import MiniSiteRenderer from "@/components/mini-sites/MiniSiteRenderer";
 import { fetchMiniSite, MINI_SITE_SLUG_RE } from "@/lib/mini-sites";
 import SiteNavbar from "@/components/site/Navbar";
 import SiteFooter from "@/components/site/Footer";
-import { WHATSAPP_NUMERO } from "@/lib/whatsapp";
 import MenuDemo from "@/components/site/MenuDemo";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 function WaIcon({ className }: { className?: string }) {
   return (
@@ -68,9 +68,7 @@ export default async function MiniSitePage({ params }: Props) {
     // Página de un Mini Site desactivado (venció o se dio de baja). No muestra
     // nada del cliente (la API ni lo manda): se vuelve vitrina de Papela, con
     // navbar y footer del sitio, para que quien escanee el QR pueda pedir el suyo.
-    const waHref = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(
-      `Hola Papela 🌿 quiero tener mi menú en línea. (Vi papela-atelier.com/${slug})`,
-    )}`;
+    const waTexto = `Hola Papela 🌿 quiero tener mi menú en línea. (Vi papela-atelier.com/${slug})`;
     return (
       <>
         <SiteNavbar />
@@ -83,15 +81,14 @@ export default async function MiniSitePage({ params }: Props) {
             <p className="max-w-md text-base md:text-lg text-[var(--color-cremita)]/80 mb-9">
               ¿Quieres tener tu menú en línea? Mándanos mensaje por WhatsApp.
             </p>
-            <a
-              href={waHref}
-              target="_blank"
-              rel="noopener noreferrer"
+            <WhatsAppLink
+              ubicacion="mini_site_expirado"
+              texto={waTexto}
               className="inline-flex items-center gap-2.5 rounded-full bg-[#25D366] px-7 py-3.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-cremita)]/40"
             >
               <WaIcon className="h-5 w-5" />
               Escríbenos por WhatsApp
-            </a>
+            </WhatsAppLink>
           </div>
         </main>
         <SiteFooter />

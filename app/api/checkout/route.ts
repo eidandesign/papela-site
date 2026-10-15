@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/site";
 import { logger } from "@/lib/logger";
+import { gaClientId } from "@/lib/ga4";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -107,17 +108,19 @@ export async function POST(req: NextRequest) {
         items,
         // El webhook lo usa para anotar la reserva como paquete y registrar la
         // inscripción (vigencia anual). MercadoPago devuelve las llaves en snake_case.
-        ...(paquete
-          ? {
-              metadata: {
+        // ga_client_id: el webhook lo reenvía a GA4 para atribuir la compra.
+        metadata: {
+          ...(gaClientId(req) ? { ga_client_id: gaClientId(req) } : {}),
+          ...(paquete
+            ? {
                 paquete_id: paquete.id,
                 paquete_nombre: paquete.nombre,
                 paquete_sesiones: paquete.sesiones,
                 // La inscripción se paga en Papela: solo se avisa para la nota.
                 inscripcion_por_pagar: paquete.inscripcion,
-              },
-            }
-          : {}),
+              }
+            : {}),
+        },
         back_urls: {
           success: `${baseUrl}/clases/pago/gracias`,
           failure: `${baseUrl}/clases/pago/error`,
@@ -129,7 +132,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ checkoutUrl: result.init_point });
+    // Datos autoritativos para begin_checkout (el cliente no calcula el precio).
+    return NextResponse.json({
+      checkoutUrl: result.init_point,
+      analitica: { item_name: items[0].title, value: items[0].unit_price },
+    });
   } catch (error) {
     logger.error("clases checkout failed", {}, error);
     return NextResponse.json({ error: "Error al crear el pago" }, { status: 500 });

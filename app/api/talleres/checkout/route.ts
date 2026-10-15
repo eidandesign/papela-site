@@ -3,6 +3,7 @@ import { MercadoPagoConfig, Preference } from "mercadopago";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site";
 import { logger } from "@/lib/logger";
+import { gaClientId } from "@/lib/ga4";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -85,10 +86,15 @@ export async function POST(req: NextRequest) {
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         external_reference: `taller:${tallerId}`,
+        // El webhook lo reenvía a GA4 para atribuir la compra.
+        ...(gaClientId(req) ? { metadata: { ga_client_id: gaClientId(req) } } : {}),
       },
     });
 
-    return NextResponse.json({ checkoutUrl: result.init_point });
+    return NextResponse.json({
+      checkoutUrl: result.init_point,
+      analitica: { item_name: taller.titulo, value: taller.precio * cantidad },
+    });
   } catch (error) {
     logger.error("talleres checkout failed", {}, error);
     return NextResponse.json({ error: "Error al crear el pago" }, { status: 500 });
