@@ -21,8 +21,8 @@
 //   dopa_ig_comparte               — abrió Instagram desde la pantalla final
 //                                    (invitación a etiquetar @papela.atelier)
 
+import { pushDataLayer } from "@/lib/analitica";
+
 export function eventoDopa(evento: string, datos?: Record<string, unknown>) {
-  if (typeof window === "undefined") return;
-  const w = window as unknown as { dataLayer?: Record<string, unknown>[] };
-  w.dataLayer?.push({ event: `dopa_${evento}`, ...datos });
+  pushDataLayer(`dopa_${evento}`, datos);
 }
