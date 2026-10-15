@@ -124,7 +124,7 @@ function BurgerLines({ open }: { open: boolean }) {
   );
 }
 
-function MenuCotizacion({ waAprobar, proyecto }: { waAprobar: string; proyecto: string }) {
+function MenuCotizacion({ waAprobar }: { waAprobar: string }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -149,7 +149,8 @@ function MenuCotizacion({ waAprobar, proyecto }: { waAprobar: string; proyecto: 
 
   const acciones = [
     { key: "pdf", label: "Descargar PDF", onClick: descargarPdf },
-    { key: "aprobar", label: "Aprobar cotización", href: waAprobar, medir: () => trackWhatsApp("cotizacion_menu", proyecto, { tipo: "cotizacion", item_name: proyecto }) },
+    // El lead va sin el nombre del proyecto: lo escribe el cliente y puede traer nombres de personas.
+    { key: "aprobar", label: "Aprobar cotización", href: waAprobar, medir: () => trackWhatsApp("cotizacion_menu", undefined, { tipo: "cotizacion" }) },
   ];
 
   return createPortal(
@@ -414,7 +415,7 @@ export default function CotizacionDoc() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] cotizacion-doc">
-      <MenuCotizacion waAprobar={waAprobar} proyecto={cot.proyecto} />
+      <MenuCotizacion waAprobar={waAprobar} />
 
       <div className="max-w-[820px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 print:p-0 print:space-y-0 print:max-w-none">
 
