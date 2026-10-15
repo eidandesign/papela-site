@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/solid";
+import { irACheckout } from "@/lib/analitica";
 
 export default function TallerCheckoutForm({
   tallerId,
@@ -48,7 +49,7 @@ export default function TallerCheckoutForm({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+        irACheckout(data.checkoutUrl, "taller", data.analitica);
       } else {
         throw new Error("Sin URL de pago");
       }

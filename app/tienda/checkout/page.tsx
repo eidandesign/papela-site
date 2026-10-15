@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useCartStore, COSTO_ENVIO, cartKey } from "@/lib/stores/cartStore";
+import { irACheckout } from "@/lib/analitica";
 
 const ESTADOS_MX = [
   "Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas",
@@ -119,7 +120,7 @@ export default function CheckoutPage() {
         throw new Error((data as { error?: string }).error ?? "Error al crear el pago");
       }
       const data = await res.json();
-      window.location.href = data.checkoutUrl;
+      irACheckout(data.checkoutUrl, "producto", data.analitica);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
       setLoading(false);

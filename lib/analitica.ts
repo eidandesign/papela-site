@@ -76,3 +76,17 @@ export function track<E extends EventoSitio>(evento: E, datos: EventosSitio[E]) 
     // idem
   }
 }
+
+/**
+ * begin_checkout + redirección a MercadoPago. Espera un instante antes de
+ * salir para que GTM y el Pixel alcancen a mandar el hit (navegar en el mismo
+ * tick puede cancelarlo); `analitica` viene del servidor (precio autoritativo).
+ */
+export function irACheckout(
+  url: string,
+  item_category: ItemCategory,
+  analitica?: { item_name: string; value: number },
+) {
+  if (analitica) track("begin_checkout", { ...analitica, item_category, currency: "MXN" });
+  setTimeout(() => window.location.assign(url), analitica ? 250 : 0);
+}

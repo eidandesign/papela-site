@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import { inputBase } from "@/lib/ui";
 import Select from "@/components/site/Select";
+import { track } from "@/lib/analitica";
 
 const TIPOS = [
   "Stickers personalizados",
@@ -76,6 +77,7 @@ export default function PersonalizacionForm() {
         throw new Error(body.error || "No se pudo enviar tu solicitud.");
       }
       setEnviado(true);
+      track("generate_lead", { tipo: "personalizacion", ...(payload.tipo ? { item_name: payload.tipo } : {}) });
       form.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Algo salió mal. Intenta de nuevo.");

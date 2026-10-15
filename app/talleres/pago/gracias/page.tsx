@@ -1,15 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import PurchaseTracker from "@/components/site/PurchaseTracker";
+import { compraAprobada } from "@/lib/ga4";
 
 export const metadata: Metadata = {
   title: "Lugar reservado",
   robots: { index: false, follow: false },
 };
 
-export default function TallerPagoGracias() {
+export default async function TallerPagoGracias({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const compra = await compraAprobada(await searchParams, "taller");
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center px-5">
+      {compra && <PurchaseTracker compra={compra} />}
       <div className="text-center max-w-md">
         <CheckCircleIcon className="w-16 h-16 text-[var(--color-verde)] mx-auto mb-6" />
         <h1 className="font-serif italic text-[clamp(2rem,4vw,3rem)] text-[var(--color-text)] mb-4">

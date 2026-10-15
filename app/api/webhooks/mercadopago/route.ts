@@ -3,6 +3,7 @@ import { createHmac } from "crypto";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
+import { enviarPurchaseServidor } from "@/lib/ga4";
 
 const mpClient = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -207,6 +208,9 @@ export async function POST(req: NextRequest) {
         : null,
     });
   }
+
+  // Compra para GA4 (mismo transaction_id que la página de gracias). Nunca rompe el webhook.
+  await enviarPurchaseServidor(payment);
 
   return NextResponse.json({ ok: true });
 }

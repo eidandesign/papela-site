@@ -1,14 +1,18 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import PurchaseTracker from "@/components/site/PurchaseTracker";
+import { compraAprobada } from "@/lib/ga4";
 
 export const metadata: Metadata = {
   title: "Clase reservada",
   robots: { index: false, follow: false },
 };
 
-export default function PagoGraciasPage() {
+export default async function PagoGraciasPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const compra = await compraAprobada(await searchParams, "clase");
   return (
     <section className="min-h-screen flex flex-col items-center justify-center text-center px-8 gap-6">
+      {compra && <PurchaseTracker compra={compra} />}
       <div className="w-16 h-16 rounded-full bg-[var(--color-verde)] flex items-center justify-center">
         <svg className="w-8 h-8 text-[var(--color-cremita)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />

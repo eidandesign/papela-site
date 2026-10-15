@@ -1,16 +1,20 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import ClearCartOnMount from "@/components/site/ClearCartOnMount";
+import PurchaseTracker from "@/components/site/PurchaseTracker";
+import { compraAprobada } from "@/lib/ga4";
 
 export const metadata: Metadata = {
   title: "¡Pedido recibido! — Papela Atelier",
   robots: { index: false, follow: false },
 };
 
-export default function GraciasPage() {
+export default async function GraciasPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const compra = await compraAprobada(await searchParams, "producto");
   return (
     <section className="w-[90%] mx-auto pt-32 pb-24 flex flex-col items-center text-center gap-6">
       <ClearCartOnMount />
+      {compra && <PurchaseTracker compra={compra} />}
       <span className="text-5xl">🌿</span>
       <h1 className="font-serif font-extralight text-[clamp(2rem,5vw,3.5rem)] text-[#403C3C]">
         ¡Gracias por tu pedido!
