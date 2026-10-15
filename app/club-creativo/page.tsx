@@ -4,6 +4,7 @@ import ScrollReveal from "@/components/site/ScrollReveal";
 import AnimatedLogo from "@/components/site/AnimatedLogo";
 import SeccionDopamina from "@/components/site/dopamina/SeccionDopamina";
 import TarjetaPreview from "@/components/site/club/TarjetaPreview";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 export const revalidate = 60;
 
@@ -76,14 +77,15 @@ export default function ClubCreativoPage() {
                 <p className="font-sans text-[14px] font-semibold text-[#4A3B31] leading-tight">Tarjeta de Lealtad</p>
                 <p className="font-sans text-[12px] text-[#4A3B31]/70">Se pide en Papela</p>
               </div>
-              <a
-                href={`https://wa.me/522211865590?text=${encodeURIComponent("Hola Papela 🌿 quiero mi Tarjeta de Lealtad del Club Creativo")}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <WhatsAppLink
+                ubicacion="club_creativo"
+                texto="Hola Papela 🌿 quiero mi Tarjeta de Lealtad del Club Creativo"
+                itemName="Tarjeta de Lealtad"
+                lead={{ tipo: "club", item_name: "Tarjeta de Lealtad" }}
                 className="shrink-0 inline-flex items-center rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-[13px] font-semibold px-5 py-2 hover:opacity-90 transition-opacity"
               >
                 Pedir la mía
-              </a>
+              </WhatsAppLink>
             </div>
           </article>
         </ScrollReveal>

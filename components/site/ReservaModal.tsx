@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useReservaModalStore } from "@/lib/stores/reservaModalStore";
 import ClaseCalendar from "@/components/site/ClaseCalendar";
+import { track } from "@/lib/analitica";
+import WhatsAppLink from "./WhatsAppLink";
 
 const WHATSAPP_FALLBACK = "522211865590";
 
@@ -49,6 +51,16 @@ export default function ReservaModal() {
     setPrevClase(claseKey);
     setSelected(data?.tipoInicial ?? null);
   }
+
+  // select_item una vez por apertura (salvo que venga de la hoja de la clase, que ya lo mandó).
+  useEffect(() => {
+    if (!data || data.yaMedido) return;
+    const tipo = data.tipos.find((t) => t.id === data.tipoInicial);
+    track("select_item", {
+      item_name: data.paquete?.nombre ?? tipo?.nombre ?? `Clase con ${data.claseNombre}`,
+      item_category: "clase",
+    });
+  }, [data]);
   const paquete = data?.paquete ?? null;
   // La inscripción anual NO se cobra en línea: se paga directamente en Papela.
   const totalPaquete = paquete ? paquete.precio : 0;
@@ -86,14 +98,13 @@ export default function ReservaModal() {
   if (!mounted) return null;
 
   const numero = data?.whatsapp || WHATSAPP_FALLBACK;
-  const waText = encodeURIComponent(
+  const waText = (
     paquete
       ? `Hola Papela 🌿 me interesa el "${paquete.nombre}"${tipoSeleccionado ? ` de ${tipoSeleccionado.nombre}` : ""} con ${data?.claseNombre}.`
       : tipoSeleccionado
         ? `Hola Papela 🌿 me interesa reservar la clase de "${tipoSeleccionado.nombre}" con ${data?.claseNombre}.`
         : `Hola Papela 🌿 me interesa reservar una clase con ${data?.claseNombre}.`
   );
-  const waHref = `https://wa.me/${numero}?text=${waText}`;
 
   return createPortal(
     <AnimatePresence>
@@ -273,15 +284,16 @@ export default function ReservaModal() {
           <p className="font-sans text-sm text-[var(--color-muted)] text-center">
             ¿Prefieres reservar con una persona?
           </p>
-          <a
-            href={waHref}
-            target="_blank"
-            rel="noopener noreferrer"
+          <WhatsAppLink
+            ubicacion="reserva_modal"
+            numero={numero}
+            texto={waText}
+            itemName={paquete?.nombre ?? tipoSeleccionado?.nombre}
             className="inline-flex items-center gap-2.5 rounded-full bg-[#25D366] px-7 py-3.5 font-sans text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
             <WaIcon className="h-5 w-5" />
             Reservar con WhatsApp
-          </a>
+          </WhatsAppLink>
         </div>
           </motion.div>
         </div>

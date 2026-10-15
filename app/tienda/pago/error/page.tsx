@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 export const metadata: Metadata = {
   title: "Error en el pago — Papela Atelier",
@@ -23,14 +24,12 @@ export default function ErrorPage() {
         >
           Volver al catálogo
         </Link>
-        <a
-          href="https://wa.me/522211865590"
-          target="_blank"
-          rel="noopener noreferrer"
+        <WhatsAppLink
+          ubicacion="pago_error_tienda"
           className="inline-flex items-center gap-2 rounded-full border border-[var(--color-verde)] text-[var(--color-verde)] px-7 py-3.5 text-sm font-semibold"
         >
           Contactar por WhatsApp
-        </a>
+        </WhatsAppLink>
       </div>
     </section>
   );

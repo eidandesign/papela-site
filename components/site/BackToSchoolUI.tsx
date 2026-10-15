@@ -5,10 +5,11 @@ import Image from "next/image";
 import { ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import { useAcabadosModalStore, type PaqueteSeleccionado } from "@/lib/stores/acabadosModalStore";
 import type { Paquete } from "@/lib/back-to-school-data";
+import { waHref } from "@/lib/whatsapp";
+import WhatsAppLink from "./WhatsAppLink";
 
 // WhatsApp de Papela con mensaje precargado por CTA.
-const WA = "522211865590";
-export const wa = (msg: string) => `https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
+export const wa = (msg: string) => waHref(msg);
 
 export function CtaMeInteresa({
   msg,
@@ -76,9 +77,9 @@ export function CtaMeInteresa({
   }
 
   return (
-    <a href={wa(msg ?? "")} target="_blank" rel="noopener noreferrer" className={className} style={style}>
+    <WhatsAppLink ubicacion="back_to_school" texto={msg ?? ""} className={className} style={style}>
       {children}
-    </a>
+    </WhatsAppLink>
   );
 }
 

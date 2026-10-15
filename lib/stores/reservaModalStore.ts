@@ -21,6 +21,8 @@ interface ReservaPayload {
   tipoInicial?: string | null;
   // Si viene, se aparta un PAQUETE: se elige la primera clase y se paga el paquete.
   paquete?: PaqueteReserva | null;
+  // true si quien abre ya mandó select_item (la hoja de la clase): no se repite.
+  yaMedido?: boolean;
 }
 
 interface ReservaModalStore {

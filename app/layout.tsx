@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import ConditionalShell from "@/components/site/ConditionalShell";
 import ReservaModal from "@/components/site/ReservaModal";
+import { waHref } from "@/lib/whatsapp";
 
 const SITE_URL = "https://www.papela-atelier.com";
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-W238H5M2";
@@ -123,7 +124,7 @@ const jsonLd = {
         "https://instagram.com/papela.atelier",
         "https://tiktok.com/@papela.atelier",
         "https://www.facebook.com/papelaatelier/",
-        `https://wa.me/522211865590`,
+        waHref(),
       ],
       hasOfferCatalog: {
         "@type": "OfferCatalog",

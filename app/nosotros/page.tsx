@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/24/solid";
 import HeroSection from "@/components/site/HeroSection";
 import ScrollReveal from "@/components/site/ScrollReveal";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 export const revalidate = 60;
 
@@ -293,14 +294,12 @@ export default function NosotrosPage() {
           <p className="font-sans text-[var(--color-cremita)]/70 text-[17px] leading-relaxed max-w-xl">
             Ya sea que vengas por una impresión, una libreta, material para un proyecto, un regalo especial o una idea que quieres hacer realidad, queremos que Papela sea ese lugar al que siempre quieras volver.
           </p>
-          <a
-            href="https://wa.me/522211865590"
-            target="_blank"
-            rel="noopener noreferrer"
+          <WhatsAppLink
+            ubicacion="nosotros"
             className="mt-2 inline-flex items-center gap-2 bg-[var(--color-cremita)] text-[var(--color-verde)] font-sans font-medium text-base px-8 py-4 rounded-full hover:opacity-90 transition-opacity"
           >
             Visítanos en Papela
-          </a>
+          </WhatsAppLink>
         </div>
       </section>
     </>

@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { track } from "@/lib/analitica";
+import { trackWhatsApp } from "@/components/site/WhatsAppLink";
+import { waHref } from "@/lib/whatsapp";
 
-const WHATSAPP = "522211865590";
 const EMAIL = "hola@papela-atelier.com";
 
 
@@ -13,8 +15,10 @@ function LinkButton({
   icon,
   label,
   outline = false,
+  onClick,
 }: {
   href: string;
+  onClick?: () => void;
   icon: React.ReactNode;
   label: string;
   outline?: boolean;
@@ -24,6 +28,7 @@ function LinkButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={onClick}
       className={`group flex items-center justify-center gap-3 w-full max-w-sm mx-auto px-6 py-4 rounded-full font-sans font-semibold text-base transition-all duration-300 ${
         outline
           ? "border-2 border-[var(--color-verde)] text-[var(--color-verde)] hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)]"
@@ -112,11 +117,13 @@ export default function LinksPage() {
           href="https://instagram.com/papela.atelier"
           icon={<IgIcon />}
           label="Instagram"
+          onClick={() => track("pa_click_instagram", { ubicacion: "links" })}
         />
         <LinkButton
-          href={`https://wa.me/${WHATSAPP}`}
+          href={waHref()}
           icon={<WaIcon />}
           label="WhatsApp"
+          onClick={() => trackWhatsApp("links")}
         />
         <LinkButton
           href="https://www.papela-atelier.com/productos"
@@ -134,6 +141,7 @@ export default function LinksPage() {
           href="https://tiktok.com/@papela.atelier"
           icon={<TkIcon />}
           label="TikTok"
+          onClick={() => track("pa_click_tiktok", { ubicacion: "links" })}
           outline
         />
       </div>

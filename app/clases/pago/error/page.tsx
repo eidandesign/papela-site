@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 export const metadata: Metadata = {
   title: "Error en el pago",
@@ -27,14 +28,12 @@ export default function PagoErrorPage() {
         >
           Volver a clases
         </Link>
-        <a
-          href="https://wa.me/522211865590"
-          target="_blank"
-          rel="noopener noreferrer"
+        <WhatsAppLink
+          ubicacion="pago_error_clase"
           className="bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans px-8 py-3 rounded-xl hover:opacity-90 transition-opacity"
         >
           Escríbenos
-        </a>
+        </WhatsAppLink>
       </div>
     </section>
   );

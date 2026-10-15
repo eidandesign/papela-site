@@ -7,6 +7,7 @@ import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { useAcabadosModalStore } from "@/lib/stores/acabadosModalStore";
 import { ACABADOS, BORDADOS } from "@/lib/back-to-school-data";
 import { wa, Foto } from "./BackToSchoolUI";
+import { trackWhatsApp } from "./WhatsAppLink";
 
 type Tab = "acabados" | "bordados";
 
@@ -69,6 +70,7 @@ export default function BackToSchoolAcabadosModal() {
       lineas.push("", `Total aproximado: $${paquete.precio + totalExtras} MXN`);
     }
     lineas.push("", "¿Me pueden compartir más información?");
+    trackWhatsApp("back_to_school_paquete", `Paquete ${paquete.nombre}`);
     window.open(wa(lineas.join("\n")), "_blank", "noopener,noreferrer");
     close();
   };
