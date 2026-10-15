@@ -172,6 +172,12 @@ Flujo completo: catálogo → drawer → carrito → checkout → MercadoPago �
 - Migración: `papela-admin/supabase/migrations/20260616_personalizacion_solicitudes.sql` (RLS: insert público anon, gestión solo authenticated)
 - El sitio inserta vía `app/api/personalizacion/route.ts` (anon key). ⚠️ El admin **ya no tiene bandeja de solicitudes** (eliminada 2026-07-07): las filas siguen guardándose en la tabla, pero las cotizaciones de clientes se gestionan como proyectos en el admin
 
+## Analítica (GTM + GA4 + Meta Pixel)
+- **`lib/analitica.ts`** → `track(evento, datos)` tipado: push al `dataLayer` y réplica al Pixel (`begin_checkout`→InitiateCheckout, `purchase`→Purchase, `generate_lead`→Lead, `pa_click_whatsapp`→Contact). Todo con guardas: si GTM/Pixel están bloqueados no pasa nada. `irACheckout(url, categoria, analitica)` manda `begin_checkout` y redirige a MercadoPago (los 3 checkouts devuelven `analitica {item_name, value}` con precio del servidor). Dopamina (`lib/dopamina/analitica.ts`) usa el mismo `pushDataLayer` con sus `dopa_*`
+- **Links a WhatsApp de Papela: SIEMPRE `components/site/WhatsAppLink.tsx`** (`ubicacion` descriptiva + `texto`/`numero`/`itemName`/`lead` opcionales; `trackWhatsApp()` para los que abren con `window.open`). Nunca escribir `wa.me` a mano. Excepciones a propósito: Mini Sites (WhatsApp de otros negocios) y regalar sticker en `FichaSticker` (se manda a un amigo). Instagram/TikTok/`tel:`/Maps → `TrackedLink`
+- Embudo: `select_item` al abrir la hoja de una clase o `ReservaModal` (con `yaMedido` en el payload no se repite), `generate_lead` en personalización / aprobar cotización / pedir Tarjeta de Lealtad, `purchase` en `*/pago/gracias` (`PurchaseTracker`, una vez por `payment_id` vía sessionStorage; los datos se validan con `compraAprobada()` en `lib/ga4.ts` leyendo el pago real de MP, nunca de la URL) y desde el webhook por Measurement Protocol (`enviarPurchaseServidor`, env `GA4_MEASUREMENT_ID` + `GA4_API_SECRET`; el `client_id` de `_ga` viaja en `metadata.ga_client_id` de la preferencia). `transaction_id = payment_id` en ambos
+- Atribución: `lib/utm.ts` → `conUtm(url, {source, medium, campaign, content?})`. **`/w`** (`app/w/route.ts`) = link del mensaje semanal: 307 a `/` o `?to=/ruta` (solo internas) con `utm_source=whatsapp&utm_medium=grupo_vecinos&utm_campaign=semanal`. `w` está en `SITE_ROOT_SEGMENTS` (falta reservarlo en el admin, `reserved-slugs.ts`)
+
 ## Logger
 `lib/logger.ts` — logger estructurado JSON para producción
 - Uso: `logger.error("mensaje", { campo: valor }, error)`

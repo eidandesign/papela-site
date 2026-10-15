@@ -70,8 +70,8 @@ export function track<E extends EventoSitio>(evento: E, datos: EventosSitio[E]) 
     if (d.tipo) params.content_category = d.tipo;
     // eventID = transaction_id: si algún día se manda Purchase por la
     // Conversions API, Meta deduplica con este id.
-    const opciones = typeof d.transaction_id === "string" ? { eventID: d.transaction_id } : undefined;
-    w.fbq("track", pixel, params, opciones);
+    if (typeof d.transaction_id === "string") w.fbq("track", pixel, params, { eventID: d.transaction_id });
+    else w.fbq("track", pixel, params);
   } catch {
     // idem
   }
