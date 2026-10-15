@@ -135,6 +135,7 @@ export const SITE_ROOT_SEGMENTS = new Set([
   "talleres",
   "terminos",
   "tienda",
+  "w", // redirect con UTM del mensaje semanal de WhatsApp (app/w/route.ts)
   "whoweare",
 ]);
 
