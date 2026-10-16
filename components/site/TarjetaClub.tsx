@@ -28,7 +28,6 @@ import RascaSticker from "./club/RascaSticker";
 import FichaSticker from "./club/FichaSticker";
 import SelectorPortada from "./club/SelectorPortada";
 import MenuClub from "./club/MenuClub";
-import SaldoPapela from "./club/SaldoPapela";
 import {
   PORTADA_SLOTS, clubApi, clubOrigen, copiarTexto, stickerSrc,
   type Catalogo, type MensajeClub, type MisStickers, type SaldoTarjeta, type StickerInfo,
@@ -260,6 +259,15 @@ type Tarjeta = {
   stickers?: MisStickers;
   saldo?: SaldoTarjeta;
 };
+
+// Papela Coins (cashback en MXN) tal como se ven en el pase: $148.50 / $2,500.
+function fmtCoins(centavos: number) {
+  const pesos = centavos / 100;
+  return pesos.toLocaleString("es-MX", {
+    style: "currency", currency: "MXN",
+    minimumFractionDigits: Number.isInteger(pesos) ? 0 : 2, maximumFractionDigits: 2,
+  });
+}
 
 function fechaLarga(iso: string) {
   const d = new Date(iso);
@@ -841,15 +849,19 @@ export default function TarjetaClub() {
                 )}
                 <DecorBloque estilo={vista} claro={tema.claro} reducida={reducida} animada />
 
-                {/* Header — título editorial + nº de socio */}
-                <div className="relative flex items-start justify-between gap-3 p-6 pb-4">
-                  <p className="club-foil font-serif italic text-[28px] leading-tight whitespace-nowrap">
-                    Club Creativo
+                {/* Header — el miembro y sus Papela Coins (el saldo manda; oct-2026,
+                    a petición del dueño: "prioridad a los Papela Coins") */}
+                <div className="relative p-6 pb-3">
+                  <p className="club-foil font-serif text-[26px] leading-snug break-words">{tarjeta.nombre}</p>
+                  <p className="club-ink-75 text-[9px] font-bold uppercase tracking-[0.22em] mt-3">Papela Coins</p>
+                  <p className="club-ink font-serif text-[42px] leading-none mt-1 tabular-nums">
+                    {fmtCoins(tarjeta.saldo?.disponibleCentavos ?? 0)}
                   </p>
-                  <div className="text-right flex-shrink-0">
-                    <p className="club-ink-75 text-[9px] font-bold uppercase tracking-[0.22em]">N.º de socio</p>
-                    <p className="club-ink font-mono text-lg tracking-[0.14em] mt-0.5">{tarjeta.numero}</p>
-                  </div>
+                  {tarjeta.saldo?.proximoVencimiento && tarjeta.saldo.proximoVencimiento.centavos > 0 && (
+                    <p className="club-ink-75 text-[11px] mt-1.5">
+                      {fmtCoins(tarjeta.saldo.proximoVencimiento.centavos)} vencen el {fechaLarga(tarjeta.saldo.proximoVencimiento.venceAt)}
+                    </p>
+                  )}
                 </div>
 
                 {/* Portada — los coleccionables que el miembro eligió mostrar */}
@@ -924,13 +936,11 @@ export default function TarjetaClub() {
                   </button>
                 </div>
 
-                {/* Miembro */}
-                <div className="relative p-6 pt-12 flex items-end justify-between gap-3">
-                  <p className="club-foil font-serif text-[26px] leading-snug break-words min-w-0">{tarjeta.nombre}</p>
-                  <div className="text-right flex-shrink-0">
-                    <p className="club-ink-75 text-[9px] font-bold uppercase tracking-[0.22em]">Miembro desde</p>
-                    <p className="club-ink-85 text-xs mt-0.5">{fechaLarga(tarjeta.desde)}</p>
-                  </div>
+                {/* Pie — la marca del programa */}
+                <div className="relative p-6 pt-12 flex items-end">
+                  <p className="club-foil font-serif italic text-[28px] leading-tight whitespace-nowrap">
+                    Club Creativo
+                  </p>
                 </div>
 
                 {/* Cositas decorativas — arrastrables sobre todo el cuerpo del pase */}
@@ -958,9 +968,6 @@ export default function TarjetaClub() {
               </div>
             </div>
           </div>
-
-          {/* Saldo Papela (cashback): consulta debajo del pase; el canje es en caja */}
-          {tarjeta.saldo && <SaldoPapela saldo={tarjeta.saldo} />}
 
           {/* Personalizar y compartir viven en el menú del header (MenuClub) */}
 
