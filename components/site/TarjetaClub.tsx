@@ -851,17 +851,21 @@ export default function TarjetaClub() {
 
                 {/* Header — el miembro y sus Papela Coins (el saldo manda; oct-2026,
                     a petición del dueño: "prioridad a los Papela Coins") */}
-                <div className="relative p-6 pb-3">
-                  <p className="club-foil font-serif text-[26px] leading-snug break-words">{tarjeta.nombre}</p>
-                  <p className="club-ink-75 text-[9px] font-bold uppercase tracking-[0.22em] mt-3">Papela Coins</p>
-                  <p className="club-ink font-serif text-[42px] leading-none mt-1 tabular-nums">
-                    {fmtCoins(tarjeta.saldo?.disponibleCentavos ?? 0)}
-                  </p>
-                  {tarjeta.saldo?.proximoVencimiento && tarjeta.saldo.proximoVencimiento.centavos > 0 && (
-                    <p className="club-ink-75 text-[11px] mt-1.5">
-                      {fmtCoins(tarjeta.saldo.proximoVencimiento.centavos)} vencen el {fechaLarga(tarjeta.saldo.proximoVencimiento.venceAt)}
+                <div className="relative flex items-start justify-between gap-4 p-6 pb-3">
+                  {/* Izquierda: el nombre, grande (antes iba al pie) */}
+                  <p className="club-foil font-serif text-[34px] leading-[1.05] break-words min-w-0">{tarjeta.nombre}</p>
+                  {/* Derecha: Papela Coins (donde antes iba el N.º de socio) */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="club-ink-75 text-[9px] font-bold uppercase tracking-[0.22em]">Papela Coins</p>
+                    <p className="club-ink font-serif text-[30px] leading-none mt-1 tabular-nums">
+                      {fmtCoins(tarjeta.saldo?.disponibleCentavos ?? 0)}
                     </p>
-                  )}
+                    {tarjeta.saldo?.proximoVencimiento && tarjeta.saldo.proximoVencimiento.centavos > 0 && (
+                      <p className="club-ink-75 text-[10px] mt-1.5 leading-snug">
+                        {fmtCoins(tarjeta.saldo.proximoVencimiento.centavos)} vencen el {fechaLarga(tarjeta.saldo.proximoVencimiento.venceAt)}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Portada — los coleccionables que el miembro eligió mostrar */}
