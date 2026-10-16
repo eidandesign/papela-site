@@ -28,9 +28,10 @@ import RascaSticker from "./club/RascaSticker";
 import FichaSticker from "./club/FichaSticker";
 import SelectorPortada from "./club/SelectorPortada";
 import MenuClub from "./club/MenuClub";
+import SaldoPapela from "./club/SaldoPapela";
 import {
   PORTADA_SLOTS, clubApi, clubOrigen, copiarTexto, stickerSrc,
-  type Catalogo, type MensajeClub, type MisStickers, type StickerInfo,
+  type Catalogo, type MensajeClub, type MisStickers, type SaldoTarjeta, type StickerInfo,
 } from "./club/clubTipos";
 
 // ── Personalización (whitelist — debe coincidir con el API del admin) ──
@@ -257,6 +258,7 @@ type Tarjeta = {
   numero: string;
   estilo: Estilo;
   stickers?: MisStickers;
+  saldo?: SaldoTarjeta;
 };
 
 function fechaLarga(iso: string) {
@@ -956,6 +958,9 @@ export default function TarjetaClub() {
               </div>
             </div>
           </div>
+
+          {/* Saldo Papela (cashback): consulta debajo del pase; el canje es en caja */}
+          {tarjeta.saldo && <SaldoPapela saldo={tarjeta.saldo} />}
 
           {/* Personalizar y compartir viven en el menú del header (MenuClub) */}
 

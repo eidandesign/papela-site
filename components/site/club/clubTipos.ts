@@ -59,6 +59,15 @@ export type MisStickers = {
   detalles?: Record<number, DetalleSticker>;
 };
 
+// Saldo Papela (cashback): lo que el miembro CONSULTA en su tarjeta. El canje
+// se autoriza en caja; el admin nunca expone aquí una acción que descuente.
+export type SaldoTarjeta = {
+  disponibleCentavos: number;
+  proximoVencimiento: { centavos: number; venceAt: string } | null;
+  movimientos?: { tipo: string; montoCentavos: number; concepto: string | null; fecha: string }[];
+  programa?: { activo: boolean; porcentaje: number; vigenciaDias: number };
+};
+
 // Mensajes del negocio (campana de la tarjeta).
 export type MensajeClub = { id: string; titulo: string; cuerpo: string; created_at: string };
 
