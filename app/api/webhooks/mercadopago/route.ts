@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import { enviarPurchaseServidor } from "@/lib/ga4";
 
+// ⚠️ Depende de las RPC `webhook_inscribir_taller`, `webhook_reservar_clase` y
+// `webhook_confirmar_pedido_tienda` (papela-admin/supabase/migrations/
+// 20261017_webhook_idempotente.sql). Aplicar esa migración ANTES de desplegar.
+//
+// Idempotencia: MercadoPago manda cada notificación varias veces y reintenta
+// ante cualquier respuesta no-2xx. Cada flujo reclama el `payment_id` dentro
+// de UNA transacción en la BD y solo descuenta cupo/stock si lo reclamó. Un
+// pago ya procesado responde 200 sin tocar nada (y sin repetir `purchase`).
+// Cuando el cliente pagó y ya no hay cupo/stock, la fila queda marcada
+// (`sin_cupo` / `incidencia`) y se responde 200: reintentar no lo arregla,
+// hay que atenderlo a mano.
+
 const mpClient = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
 });
+
+// Ventana de frescura de la firma: una notificación legítima vieja (replay)
+// ya no hace daño por la idempotencia, pero no hay razón para aceptarla.
+const MAX_EDAD_FIRMA_MS = 10 * 60 * 1000;
 
 function verifySignature(req: NextRequest): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
@@ -15,21 +31,32 @@ function verifySignature(req: NextRequest): boolean {
 
   const xSignature = req.headers.get("x-signature");
   const xRequestId = req.headers.get("x-request-id");
-  const dataId = new URL(req.url).searchParams.get("data.id");
+  const params = new URL(req.url).searchParams;
+  // MP manda `data.id`; las notificaciones IPN viejas mandan `id`.
+  const dataId = params.get("data.id") ?? params.get("id");
 
-  if (!xSignature || !xRequestId) return false;
+  if (!xSignature || !xRequestId || !dataId) return false;
 
-  // MercadoPago signature format: ts=...&v1=...
-  const parts = Object.fromEntries(xSignature.split(",").map((p) => p.split("=")));
+  // MercadoPago signature format: ts=...,v1=...
+  const parts = Object.fromEntries(xSignature.split(",").map((p) => p.trim().split("=")));
   const ts = parts["ts"];
   const v1 = parts["v1"];
   if (!ts || !v1) return false;
 
-  const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+  const edad = Math.abs(Date.now() - Number(ts) * (ts.length > 11 ? 1 : 1000));
+  if (!Number.isFinite(edad) || edad > MAX_EDAD_FIRMA_MS) return false;
+
+  // Docs MP: si data.id es alfanumérico va en minúsculas.
+  const manifest = `id:${dataId.toLowerCase()};request-id:${xRequestId};ts:${ts};`;
   const expected = createHmac("sha256", secret).update(manifest).digest("hex");
 
-  return expected === v1;
+  const a = Buffer.from(expected, "utf8");
+  const b = Buffer.from(v1, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
 }
+
+const texto = (v: unknown, max = 200): string =>
+  typeof v === "string" ? v.trim().slice(0, max) : "";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
@@ -58,18 +85,38 @@ export async function POST(req: NextRequest) {
     const paymentApi = new Payment(mpClient);
     payment = await paymentApi.get({ id: paymentId });
   } catch {
+    // 500 a propósito: MP reintenta y la próxima vez sí podremos consultarlo.
     return NextResponse.json({ error: "Error consultando pago" }, { status: 500 });
   }
 
   if (payment.status !== "approved") {
-    // No aprobado — no hacemos nada, MP reintentará si es necesario
+    // refunded / charged_back / cancelled: aún no se repone cupo/stock de forma
+    // automática (pendiente de la Fase 1) — se deja rastro para revisión manual.
+    if (["refunded", "charged_back", "cancelled"].includes(payment.status ?? "")) {
+      logger.error("webhook: pago revertido, revisar cupo/stock a mano", {
+        paymentId, status: payment.status, externalReference: payment.external_reference ?? null,
+      });
+    }
     return NextResponse.json({ ok: true });
   }
 
+  if (payment.currency_id && payment.currency_id !== "MXN") {
+    logger.error("webhook: moneda inesperada", { paymentId, currency: payment.currency_id });
+  }
+
   const externalRef = payment.external_reference ?? "";
+  const monto = Number(payment.transaction_amount) || 0;
+  const nombre = texto([payment.payer?.first_name, payment.payer?.last_name].filter(Boolean).join(" "), 120);
+  const email = texto(payment.payer?.email, 160);
+  const telefono = texto(payment.payer?.phone?.number, 40) || null;
+
   // Service role: el webhook escribe tablas protegidas por RLS (tienda_pedidos
   // "service only", stock en productos, cupos de clases/talleres).
   const supabase = createAdminClient();
+
+  // `nuevo` = este webhook fue el que procesó el pago (solo entonces se manda
+  // `purchase` a GA4; un reintento no debe duplicar la compra en analítica).
+  let nuevo = false;
 
   // ── Taller ────────────────────────────────────────────────────────────────
   if (externalRef.startsWith("taller:")) {
@@ -78,101 +125,53 @@ export async function POST(req: NextRequest) {
       ? Number(payment.additional_info.items[0].quantity)
       : 1;
 
-    // Decrementar cupo atómicamente vía función Postgres
-    const { data: ok } = await supabase.rpc("reservar_cupo_taller", {
+    const { data, error } = await supabase.rpc("webhook_inscribir_taller", {
+      p_payment_id: paymentId,
       p_taller: tallerId,
-      p_cant: cantidad,
+      p_cantidad: cantidad,
+      p_monto: monto,
+      p_nombre: nombre,
+      p_email: email,
+      p_telefono: telefono,
     });
-
-    if (!ok) {
-      // Cupo insuficiente — registrar para revisión manual
-      logger.error("webhook: cupo insuficiente taller", { tallerId, paymentId });
-      return NextResponse.json({ error: "Sin cupo" }, { status: 409 });
+    if (error) {
+      logger.error("webhook: fallo registrando inscripción de taller", { tallerId, paymentId }, error);
+      return NextResponse.json({ error: "Error registrando inscripción" }, { status: 500 });
     }
-
-    // Persistir el pedido
-    await supabase.from("talleres_inscripciones").insert({
-      taller_id: tallerId,
-      payment_id: paymentId,
-      cantidad,
-      monto: payment.transaction_amount,
-      nombre: payment.payer?.first_name ?? "",
-      email: payment.payer?.email ?? "",
-      telefono: payment.payer?.phone?.number ?? null,
-    });
+    if (data === "sin_cupo") {
+      logger.error("webhook: PAGADO SIN CUPO taller — contactar al cliente", { tallerId, paymentId, cantidad });
+    }
+    nuevo = data !== "repetida";
   }
 
   // ── Tienda ────────────────────────────────────────────────────────────────
   else if (externalRef.startsWith("tienda:")) {
-    // Fetch the pending order
-    const { data: pedido, error: pedidoError } = await supabase
-      .from("tienda_pedidos")
-      .select("id, items, tipo_envio, estado")
-      .eq("external_reference", externalRef)
-      .single();
-
-    if (pedidoError || !pedido) {
-      logger.error("webhook: pedido no encontrado", { externalRef, paymentId });
-      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    const { data, error } = await supabase.rpc("webhook_confirmar_pedido_tienda", {
+      p_external_reference: externalRef,
+      p_payment_id: paymentId,
+      p_monto: monto,
+      p_nombre: nombre || null,
+      p_email: email || null,
+    });
+    if (error) {
+      logger.error("webhook: fallo confirmando pedido", { externalRef, paymentId }, error);
+      return NextResponse.json({ error: "Error confirmando pedido" }, { status: 500 });
     }
-
-    if (pedido.estado === "pagado") {
-      // Idempotency: already processed
+    const r = (data ?? {}) as { resultado?: string; incidencia?: string | null };
+    if (r.resultado === "no_encontrado") {
+      // Reintentar no lo va a encontrar: 200 + rastro.
+      logger.error("webhook: pedido no encontrado", { externalRef, paymentId });
       return NextResponse.json({ ok: true });
     }
-
-    // Decrement stock for each item atomically. Si la línea trae variación,
-    // se descuenta esa variación dentro de atributos.variaciones (y se
-    // re-sincroniza productos.stock); si no, se descuenta el stock agregado.
-    const items = pedido.items as {
-      productoId: string;
-      cantidad: number;
-      variacionId?: string | null;
-    }[];
-    for (const item of items) {
-      const { data: ok } = item.variacionId
-        ? await supabase.rpc("decrementar_stock_variacion", {
-            p_id: item.productoId,
-            p_variacion_id: item.variacionId,
-            p_cant: item.cantidad,
-          })
-        : await supabase.rpc("decrementar_stock_producto", {
-            p_id: item.productoId,
-            p_cant: item.cantidad,
-          });
-      if (!ok) {
-        logger.error("webhook: stock insuficiente producto", { productoId: item.productoId, variacionId: item.variacionId ?? null, cantidad: item.cantidad, paymentId });
-        // Continue — log and update order with partial note rather than blocking
-      }
+    if (r.incidencia) {
+      logger.error("webhook: pedido pagado con incidencia — revisar en el admin", { externalRef, paymentId, incidencia: r.incidencia });
     }
-
-    // Mark order as paid
-    await supabase
-      .from("tienda_pedidos")
-      .update({
-        estado: "pagado",
-        payment_id: paymentId,
-        monto_total: payment.transaction_amount,
-        comprador_nombre: payment.payer?.first_name ?? null,
-        comprador_email: payment.payer?.email ?? null,
-      })
-      .eq("external_reference", externalRef);
+    nuevo = r.resultado === "ok";
   }
 
   // ── Clase (horario) ────────────────────────────────────────────────────────
   else {
     const horarioId = externalRef;
-
-    // Decrementar cupo_disponible en clases_horarios
-    const { error: updateError } = await supabase.rpc("reservar_cupo_clase", {
-      p_horario: horarioId,
-      p_cant: 1,
-    });
-
-    if (updateError) {
-      logger.error("webhook: cupo insuficiente horario", { horarioId, paymentId });
-      return NextResponse.json({ error: "Sin cupo" }, { status: 409 });
-    }
 
     // Paquete (ver /api/checkout): MercadoPago devuelve la metadata en snake_case.
     const meta = (payment.metadata ?? {}) as {
@@ -184,33 +183,31 @@ export async function POST(req: NextRequest) {
     const esPaquete = typeof meta.paquete_id === "string" && meta.paquete_id.length > 0;
     // La inscripción anual se paga en Papela (no en línea): solo se anota.
     const inscripcionPorPagar = esPaquete ? Math.max(0, Number(meta.inscripcion_por_pagar) || 0) : 0;
-    const alumnoNombre = [payment.payer?.first_name, payment.payer?.last_name].filter(Boolean).join(" ").trim();
-    const alumnoTel = payment.payer?.phone?.number ?? null;
+    const notas = esPaquete
+      ? `Paquete en línea: ${texto(meta.paquete_nombre, 120)}${meta.paquete_sesiones ? ` (${Number(meta.paquete_sesiones)} clases)` : ""} — primera clase en este horario${inscripcionPorPagar > 0 ? ` · inscripción anual $${inscripcionPorPagar} por pagar en Papela` : ""} · MercadoPago #${paymentId}`
+      : `MercadoPago #${paymentId}`;
 
-    const { data: horarioRow } = await supabase
-      .from("clases_horarios")
-      .select("clase_id")
-      .eq("id", horarioId)
-      .single();
-    const claseId = (horarioRow?.clase_id as string | undefined) ?? null;
-
-    // Persistir la reserva
-    await supabase.from("clases_reservas").insert({
-      horario_id: horarioId,
-      clase_id: claseId,
-      estado_pago: "pagado",
-      monto_pagado: payment.transaction_amount,
-      alumno_nombre: alumnoNombre || (payment.payer?.first_name ?? ""),
-      alumno_email: payment.payer?.email ?? "",
-      alumno_telefono: alumnoTel,
-      notas: esPaquete
-        ? `Paquete en línea: ${meta.paquete_nombre ?? ""}${meta.paquete_sesiones ? ` (${meta.paquete_sesiones} clases)` : ""} — primera clase en este horario${inscripcionPorPagar > 0 ? ` · inscripción anual $${inscripcionPorPagar} por pagar en Papela` : ""} · MercadoPago #${paymentId}`
-        : null,
+    const { data, error } = await supabase.rpc("webhook_reservar_clase", {
+      p_payment_id: paymentId,
+      p_horario: horarioId,
+      p_monto: monto,
+      p_nombre: nombre,
+      p_email: email,
+      p_telefono: telefono,
+      p_notas: notas,
     });
+    if (error) {
+      logger.error("webhook: fallo registrando reserva de clase", { horarioId, paymentId }, error);
+      return NextResponse.json({ error: "Error registrando reserva" }, { status: 500 });
+    }
+    if (data === "sin_cupo") {
+      logger.error("webhook: PAGADO SIN CUPO clase — contactar al alumno", { horarioId, paymentId });
+    }
+    nuevo = data !== "repetida";
   }
 
   // Compra para GA4 (mismo transaction_id que la página de gracias). Nunca rompe el webhook.
-  await enviarPurchaseServidor(payment);
+  if (nuevo) await enviarPurchaseServidor(payment);
 
   return NextResponse.json({ ok: true });
 }

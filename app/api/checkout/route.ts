@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { SITE_URL } from "@/lib/site";
 import { logger } from "@/lib/logger";
 import { gaClientId } from "@/lib/ga4";
+import { calzaConTipo } from "@/lib/clases-matching";
+import type { TipoClasePublico } from "@/lib/clases-tipos";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -27,12 +29,19 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
     const { data: horario, error: dbError } = await supabase
       .from("clases_horarios")
-      .select("precio, clase_id")
+      .select("precio, clase_id, tipo_clase_id, fecha_hora, duracion_minutos, cupo_disponible")
       .eq("id", horarioId)
       .single();
 
     if (dbError || !horario) {
       return NextResponse.json({ error: "Horario no encontrado" }, { status: 404 });
+    }
+    // El webhook igual rechaza sin cupo, pero el cliente ya habría pagado.
+    if (!(Number(horario.cupo_disponible) > 0)) {
+      return NextResponse.json({ error: "Este horario ya no tiene lugares" }, { status: 409 });
+    }
+    if (new Date(horario.fecha_hora).getTime() < Date.now()) {
+      return NextResponse.json({ error: "Este horario ya pasó" }, { status: 409 });
     }
 
     let precio = horario.precio;
@@ -41,16 +50,47 @@ export async function POST(req: NextRequest) {
     // admin (service role: paquetes_clase no es legible por anon y trae la
     // ganancia de Papela) — nunca del cliente.
     let paquete: { id: string; nombre: string; precio: number; inscripcion: number; sesiones: number } | null = null;
-    if ((tipoClaseId && typeof tipoClaseId === "string") || (paqueteId && typeof paqueteId === "string")) {
+    // El tipo de clase fija el precio (niños/adultos pagan distinto), así que
+    // el que manda el cliente NO se acepta a ciegas: si el admin ligó el
+    // horario a un tipo (`tipo_clase_id`) tiene que ser ese; si no, el tipo
+    // tiene que calzar con el horario por sus días disponibles (misma regla
+    // que pinta el calendario, lib/clases-matching.ts). Antes bastaba con que
+    // el tipo existiera en la maestra para pagar el más barato en cualquier slot.
+    const tipoPedido = typeof tipoClaseId === "string" && tipoClaseId ? tipoClaseId : null;
+    const tipoDelHorario = typeof horario.tipo_clase_id === "string" && horario.tipo_clase_id ? horario.tipo_clase_id : null;
+    if (tipoDelHorario && tipoPedido && tipoPedido !== tipoDelHorario) {
+      return NextResponse.json({ error: "Esa clase no corresponde a este horario" }, { status: 400 });
+    }
+    const tipoEfectivo = tipoDelHorario ?? tipoPedido;
+    const slot = {
+      id: horarioId,
+      fecha_hora: horario.fecha_hora as string,
+      cupo_disponible: Number(horario.cupo_disponible) || 0,
+      precio: Number(horario.precio) || 0,
+      duracion_minutos: Number(horario.duracion_minutos) || 0,
+      tipo_clase_id: tipoDelHorario,
+    };
+
+    if (tipoEfectivo || (paqueteId && typeof paqueteId === "string")) {
       const adminClient = createAdminClient();
       const { data: clase } = await adminClient
         .from("clases")
         .select("tipos_clase, paquetes_clase")
         .eq("id", horario.clase_id)
         .single();
-      const tipos = (clase?.tipos_clase ?? []) as { id: string; precio: number }[];
-      const tipo = tipos.find((t) => t.id === tipoClaseId);
-      if (tipo) precio = tipo.precio;
+      const tipos = (clase?.tipos_clase ?? []) as { id: string; precio: number; dias?: number[] }[];
+      const tipoCalza = (id: string | null) => {
+        if (!id) return true;
+        const t = tipos.find((x) => x.id === id);
+        if (!t) return false;
+        return calzaConTipo(slot, { id: t.id, dias: Array.isArray(t.dias) ? t.dias : [] } as TipoClasePublico);
+      };
+      if (tipoEfectivo) {
+        if (!tipoCalza(tipoEfectivo)) {
+          return NextResponse.json({ error: "Esa clase no se da en este horario" }, { status: 400 });
+        }
+        precio = tipos.find((t) => t.id === tipoEfectivo)!.precio;
+      }
 
       if (paqueteId && typeof paqueteId === "string") {
         const paquetes = (clase?.paquetes_clase ?? []) as {
@@ -58,8 +98,11 @@ export async function POST(req: NextRequest) {
         }[];
         const pq = paquetes.find((x) => x.id === paqueteId);
         // El paquete tiene que ser de ESTA maestra y, si es de una clase, de la
-        // clase de este horario (no se aparta un paquete de arcilla en la clase de arte).
-        if (!pq || (pq.tipoId && tipoClaseId && pq.tipoId !== tipoClaseId)) {
+        // clase de este horario (no se aparta un paquete de arcilla en la clase
+        // de arte) — se comprueba contra el horario aunque el cliente no mande
+        // tipoClaseId.
+        const pqTipo = pq && typeof pq.tipoId === "string" && pq.tipoId ? pq.tipoId : null;
+        if (!pq || (pqTipo && tipoEfectivo && pqTipo !== tipoEfectivo) || (pqTipo && !tipoCalza(pqTipo))) {
           return NextResponse.json({ error: "Paquete no disponible" }, { status: 400 });
         }
         paquete = {
