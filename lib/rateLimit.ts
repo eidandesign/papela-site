@@ -45,12 +45,28 @@ let avisado = false;
 // Un Ratelimit por combinación límite/ventana (Upstash exige el límite al construirlo).
 const limiters = new Map<string, Ratelimit>();
 
+// Limpia el valor de una variable: espacios y comillas que se cuelan al copiar
+// desde el panel de Upstash (lo muestra en formato .env: KEY="valor").
+function limpia(v: string | undefined): string {
+  return (v ?? "").trim().replace(/^(['"])(.*)\1$/, "$2").trim();
+}
+
 function getRedis(): Redis | null {
   if (redis !== undefined) return redis;
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = limpia(process.env.UPSTASH_REDIS_REST_URL);
+  const token = limpia(process.env.UPSTASH_REDIS_REST_TOKEN);
   if (url && token) {
-    redis = new Redis({ url, token });
+    // Una configuración inválida NUNCA debe tirar la petición: se avisa y se
+    // cae al contador en memoria (ya pasó: la URL con comillas daba 500 en todo).
+    try {
+      redis = new Redis({ url, token });
+    } catch (error) {
+      redis = null;
+      if (!avisado) {
+        avisado = true;
+        logger.error("rateLimit: configuración de Upstash inválida, usando memoria", {}, error);
+      }
+    }
   } else {
     redis = null;
     if (!avisado && process.env.NODE_ENV === "production") {
@@ -84,7 +100,12 @@ function getLimiter(r: Redis, limit: number, windowMs: number): Ratelimit {
  * @param windowMs  Ventana en milisegundos
  */
 export async function rateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
-  const r = getRedis();
+  let r: Redis | null = null;
+  try {
+    r = getRedis();
+  } catch {
+    r = null;
+  }
   if (!r) return rateLimitEnMemoria(key, limit, windowMs);
   try {
     const { success } = await getLimiter(r, limit, windowMs).limit(key);
