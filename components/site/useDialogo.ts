@@ -22,6 +22,28 @@ import { useEffect, type RefObject } from "react";
  * El `role="dialog" aria-modal="true"` + `aria-label`/`aria-labelledby` van en
  * el JSX de cada componente.
  */
+// Cuántos diálogos abiertos marcaron cada elemento como inert. Dos diálogos
+// pueden traslaparse un instante (ProductDrawer → "Agregar" → abre CartDrawer y
+// cierra el de producto): si el que cierra quitara el inert a secas, dejaría
+// al que sigue abierto sin protección. Solo se quita cuando el contador llega a 0.
+const marcas = new WeakMap<HTMLElement, number>();
+
+function inertar(el: HTMLElement) {
+  const n = marcas.get(el) ?? 0;
+  marcas.set(el, n + 1);
+  el.inert = true;
+}
+
+function desinertar(el: HTMLElement) {
+  const n = (marcas.get(el) ?? 1) - 1;
+  if (n <= 0) {
+    marcas.delete(el);
+    el.inert = false;
+  } else {
+    marcas.set(el, n);
+  }
+}
+
 export default function useDialogo({
   abierto,
   onClose,
@@ -66,8 +88,9 @@ export default function useDialogo({
             if (hijo === raiz || permitidos.includes(hijo)) continue;
             if (conserva(hijo)) {
               marcar(hijo);
-            } else if (!hijo.inert && hijo.tagName !== "SCRIPT" && hijo.tagName !== "STYLE") {
-              hijo.inert = true;
+            } else if (hijo.tagName !== "SCRIPT" && hijo.tagName !== "STYLE" && (marcas.has(hijo) || !hijo.inert)) {
+              // (un inert ajeno —no puesto por un diálogo— se respeta y no se toca)
+              inertar(hijo);
               inertados.push(hijo);
             }
           }
@@ -81,9 +104,14 @@ export default function useDialogo({
       cancelAnimationFrame(raf);
       document.removeEventListener("keydown", onKey);
       if (bloquearScroll) document.body.style.overflow = overflow;
-      for (const el of inertados) el.inert = false;
-      // Devolver el foco a quien abrió (si sigue en el documento).
-      if (previo && previo.isConnected) previo.focus?.({ preventScroll: true });
+      for (const el of inertados) desinertar(el);
+      // Devolver el foco a quien abrió (si sigue en el documento) — salvo que
+      // otro diálogo ya lo haya tomado (el foco está fuera de este panel y no
+      // en el body): no se lo robamos.
+      const activo = document.activeElement;
+      const raiz = raizRef?.current ?? panelRef.current;
+      const focoLibre = !activo || activo === document.body || (raiz ? raiz.contains(activo) : true);
+      if (focoLibre && previo && previo.isConnected) previo.focus?.({ preventScroll: true });
     };
   }, [abierto, onClose, panelRef, raizRef, bloquearScroll]);
 }
