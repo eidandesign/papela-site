@@ -90,12 +90,28 @@ export async function POST(req: NextRequest) {
   }
 
   if (payment.status !== "approved") {
-    // refunded / charged_back / cancelled: aún no se repone cupo/stock de forma
-    // automática (pendiente de la Fase 1) — se deja rastro para revisión manual.
+    // refunded / charged_back / cancelled: se repone cupo/stock vía RPC
+    // (papela-admin/supabase/migrations/20261017_webhook_reversiones.sql).
+    // Idempotente: una fila ya revertida responde 'repetida' sin tocar nada.
+    // `cancelled` solo importa si el pago llegó a aprobarse (si no, no hay fila
+    // con ese payment_id y la RPC responde 'no_encontrada' → 200 sin ruido).
     if (["refunded", "charged_back", "cancelled"].includes(payment.status ?? "")) {
-      logger.error("webhook: pago revertido, revisar cupo/stock a mano", {
-        paymentId, status: payment.status, externalReference: payment.external_reference ?? null,
+      const { data, error } = await createAdminClient().rpc("webhook_revertir_pago", {
+        p_payment_id: paymentId,
+        p_status: payment.status,
       });
+      if (error) {
+        logger.error("webhook: fallo revirtiendo pago — revisar cupo/stock a mano", {
+          paymentId, status: payment.status, externalReference: payment.external_reference ?? null,
+        }, error);
+        // 500: MP reintenta (si la migración aún no está aplicada, hasta que lo esté).
+        return NextResponse.json({ error: "Error revirtiendo pago" }, { status: 500 });
+      }
+      if (data === "ok") {
+        logger.warn("webhook: pago revertido, cupo/stock repuesto", {
+          paymentId, status: payment.status, externalReference: payment.external_reference ?? null,
+        });
+      }
     }
     return NextResponse.json({ ok: true });
   }
