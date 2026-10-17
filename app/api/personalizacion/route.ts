@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     const tipo = typeof body.tipo === "string" ? body.tipo.trim() : "";
     const ocasion = typeof body.ocasion === "string" ? body.ocasion.trim() : "";
     const mensaje = typeof body.mensaje === "string" ? body.mensaje.trim() : "";
+    const sinPromociones = body.sinPromociones === true;
 
     // Validación server-side (el endpoint es público)
     if (nombre.length < 2 || nombre.length > 100) {
@@ -38,14 +39,24 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = await createClient();
-    const { error: dbError } = await supabase.from("personalizacion_solicitudes").insert({
+    const fila: Record<string, unknown> = {
       nombre,
       telefono,
       email: email || null,
       tipo: tipo || null,
       ocasion: ocasion || null,
       mensaje,
-    });
+    };
+    // `sin_promociones` (migración 20261017_privacidad_sin_promociones del
+    // admin) solo viaja cuando el cliente la marcó; si la columna aún no existe
+    // se reintenta sin ella para no perder la solicitud (y se deja rastro).
+    let { error: dbError } = await supabase
+      .from("personalizacion_solicitudes")
+      .insert(sinPromociones ? { ...fila, sin_promociones: true } : fila);
+    if (dbError && sinPromociones && dbError.code === "PGRST204") {
+      logger.error("personalizacion: falta la columna sin_promociones — aplicar migración", { code: dbError.code });
+      ({ error: dbError } = await supabase.from("personalizacion_solicitudes").insert(fila));
+    }
 
     if (dbError) {
       logger.error("personalizacion insert failed", { code: dbError.code }, dbError);

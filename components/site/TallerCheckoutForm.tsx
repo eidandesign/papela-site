@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { irACheckout } from "@/lib/analitica";
+import ConsentimientoPrivacidad from "@/components/site/ConsentimientoPrivacidad";
 
 export default function TallerCheckoutForm({
   tallerId,
@@ -22,6 +23,7 @@ export default function TallerCheckoutForm({
   const [estado, setEstado] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [sinPromociones, setSinPromociones] = useState(false);
 
   const total = precio * cantidad;
 
@@ -44,6 +46,7 @@ export default function TallerCheckoutForm({
           nombreUsuario: nombre.trim(),
           emailUsuario: email.trim(),
           telefonoUsuario: telefono.trim() || undefined,
+          sinPromociones,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -184,6 +187,8 @@ export default function TallerCheckoutForm({
           {error}
         </p>
       )}
+
+      <ConsentimientoPrivacidad accion="pagar" sinPromociones={sinPromociones} onChange={setSinPromociones} />
 
       {/* Submit */}
       <button

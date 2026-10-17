@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useCartStore, COSTO_ENVIO, cartKey } from "@/lib/stores/cartStore";
 import { irACheckout } from "@/lib/analitica";
+import ConsentimientoPrivacidad from "@/components/site/ConsentimientoPrivacidad";
 
 const ESTADOS_MX = [
   "Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas",
@@ -62,6 +63,7 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<FormData>(empty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sinPromociones, setSinPromociones] = useState(false);
 
   // El carrito vive en localStorage: el server renderiza esta página vacía
   // (null). Esperar al montaje evita el mismatch de hidratación.
@@ -112,6 +114,7 @@ export default function CheckoutPage() {
           compradorNombre: form.nombre,
           compradorTelefono: form.telefono,
           direccionEnvio,
+          sinPromociones,
         }),
       });
 
@@ -207,6 +210,8 @@ export default function CheckoutPage() {
               </p>
             </div>
           )}
+
+          <ConsentimientoPrivacidad accion="continuar al pago" sinPromociones={sinPromociones} onChange={setSinPromociones} />
 
           {error && (
             <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>

@@ -5,6 +5,7 @@ import { ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import { inputBase } from "@/lib/ui";
 import Select from "@/components/site/Select";
 import { track } from "@/lib/analitica";
+import ConsentimientoPrivacidad from "@/components/site/ConsentimientoPrivacidad";
 
 const TIPOS = [
   "Stickers personalizados",
@@ -58,6 +59,7 @@ export default function PersonalizacionForm() {
       tipo: String(data.get("tipo") || "").trim(),
       ocasion: String(data.get("ocasion") || "").trim(),
       mensaje: String(data.get("mensaje") || "").trim(),
+      sinPromociones: data.get("sinPromociones") === "1",
     };
 
     if (!payload.nombre || !payload.telefono || !payload.mensaje) {
@@ -184,6 +186,8 @@ export default function PersonalizacionForm() {
             {error}
           </p>
         )}
+
+        <ConsentimientoPrivacidad accion="enviar" />
 
         <button
           type="submit"

@@ -28,12 +28,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { items, tipoEnvio, compradorNombre, compradorTelefono, direccionEnvio } = body as {
+    const { items, tipoEnvio, compradorNombre, compradorTelefono, direccionEnvio, sinPromociones } = body as {
       items: CartItemInput[];
       tipoEnvio: "recoger" | "envio";
       compradorNombre?: string;
       compradorTelefono?: string;
       direccionEnvio?: Record<string, string> | null;
+      sinPromociones?: boolean;
     };
 
     // Basic validation
@@ -169,7 +170,7 @@ export async function POST(req: NextRequest) {
       orderItems.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0) +
       (tipoEnvio === "envio" ? COSTO_ENVIO : 0);
 
-    const { error: insertError } = await supabase.from("tienda_pedidos").insert({
+    const pedido: Record<string, unknown> = {
       external_reference: externalReference,
       estado: "pendiente",
       tipo_envio: tipoEnvio,
@@ -178,7 +179,17 @@ export async function POST(req: NextRequest) {
       comprador_nombre: compradorNombre ?? null,
       comprador_telefono: compradorTelefono ?? null,
       direccion_envio: direccionEnvio ?? null,
-    });
+    };
+    // `sin_promociones` (migración 20261017_privacidad_sin_promociones del
+    // admin) solo viaja cuando el cliente la marcó; si la columna aún no existe
+    // se reintenta sin ella para no perder la venta (y se deja rastro).
+    let { error: insertError } = await supabase
+      .from("tienda_pedidos")
+      .insert(sinPromociones === true ? { ...pedido, sin_promociones: true } : pedido);
+    if (insertError && sinPromociones === true && insertError.code === "PGRST204") {
+      logger.error("tienda checkout: falta la columna sin_promociones — aplicar migración", { externalReference });
+      ({ error: insertError } = await supabase.from("tienda_pedidos").insert(pedido));
+    }
     if (insertError) {
       // No mandamos al cliente a pagar un pedido que no se registró: sin el
       // pedido, el webhook no podría descontar stock ni marcarlo pagado.

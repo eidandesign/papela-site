@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { tallerId, cantidad, nombreUsuario, emailUsuario, telefonoUsuario } = body;
+    const { tallerId, cantidad, nombreUsuario, emailUsuario, telefonoUsuario, sinPromociones } = body;
 
     if (!tallerId || typeof tallerId !== "string") {
       return NextResponse.json({ error: "tallerId inválido" }, { status: 400 });
@@ -88,8 +88,12 @@ export async function POST(req: NextRequest) {
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         external_reference: `taller:${tallerId}`,
         ...expiracionPreferencia(),
-        // El webhook lo reenvía a GA4 para atribuir la compra.
-        ...(gaClientId(req) ? { metadata: { ga_client_id: gaClientId(req) } } : {}),
+        // ga_client_id: el webhook lo reenvía a GA4 para atribuir la compra.
+        // sin_promociones: casilla del aviso de privacidad; el webhook la anota.
+        metadata: {
+          ...(gaClientId(req) ? { ga_client_id: gaClientId(req) } : {}),
+          ...(sinPromociones === true ? { sin_promociones: true } : {}),
+        },
       },
     });
 

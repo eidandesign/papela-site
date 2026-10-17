@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { horarioId, claseNombre, actividad, tipoClaseId, paqueteId, fechaHora, duracion } = body;
+    const { horarioId, claseNombre, actividad, tipoClaseId, paqueteId, fechaHora, duracion, sinPromociones } = body;
 
     if (!horarioId || typeof horarioId !== "string") {
       return NextResponse.json({ error: "horarioId inválido" }, { status: 400 });
@@ -161,6 +161,8 @@ export async function POST(req: NextRequest) {
         // ga_client_id: el webhook lo reenvía a GA4 para atribuir la compra.
         metadata: {
           ...(gaClientId(req) ? { ga_client_id: gaClientId(req) } : {}),
+          // Casilla del aviso de privacidad; el webhook la anota en la reserva.
+          ...(sinPromociones === true ? { sin_promociones: true } : {}),
           ...(paquete
             ? {
                 paquete_id: paquete.id,

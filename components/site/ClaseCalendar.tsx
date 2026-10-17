@@ -67,6 +67,7 @@ export default function ClaseCalendar({
   tipo,
   tipos = [],
   paquete,
+  sinPromociones = false,
 }: {
   horarios: Horario[];
   claseNombre: string;
@@ -75,6 +76,8 @@ export default function ClaseCalendar({
   // Apartar un paquete: cada horario es "tu primera clase" y se cobra el
   // paquete completo (+ inscripción). El checkout re-calcula el precio.
   paquete?: { id: string; precio: number; inscripcion: number };
+  // Casilla "no quiero promociones" del modal (ConsentimientoPrivacidad).
+  sinPromociones?: boolean;
 }) {
   // Sin tipo elegido ("Todas las clases") se muestran todos los horarios.
   const horarios = tipo
@@ -171,6 +174,7 @@ export default function ClaseCalendar({
           paqueteId: paquete?.id,
           fechaHora,
           duracion: duracionDeSlot(h, tipoSlot),
+          sinPromociones,
         }),
       });
       if (!res.ok) {

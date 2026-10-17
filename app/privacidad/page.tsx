@@ -19,6 +19,18 @@ export const metadata: Metadata = {
 const EMAIL = "hola@papela-atelier.com";
 const WHATSAPP = "+52 221 186 5590";
 
+// ⚠️ IDENTIDAD DEL RESPONSABLE (LFPDPPP art. 16-I): la ley exige nombre o
+// razón social y domicilio completo. Mientras el dueño no confirme el dato
+// legal, se muestra el nombre comercial y se marcan los huecos. Pendiente:
+// razón social / nombre de la persona física y calle, número, colonia y CP.
+const RESPONSABLE = {
+  nombre: "Papela Atelier",
+  // TODO(dueño): razón social o nombre completo de la persona física titular.
+  razonSocial: "[razón social o nombre de la persona física — pendiente de confirmar]",
+  // TODO(dueño): calle, número, colonia y código postal del local.
+  domicilio: "[calle y número, colonia, C.P. — pendiente de confirmar], Puebla, Puebla, México",
+};
+
 function Seccion({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-10">
@@ -52,15 +64,16 @@ export default function PrivacidadPage() {
         Aviso de privacidad
       </h1>
       <p className="font-sans text-sm text-[var(--color-muted)] mb-12">
-        Última actualización: 17 de septiembre de 2026
+        Última actualización: 17 de octubre de 2026
       </p>
 
       <Seccion title="Quién es responsable de tus datos">
         <p>
-          Papela Atelier, con domicilio en Puebla, Puebla, México, es responsable del
-          tratamiento de los datos personales que nos compartes a través de este sitio
-          (papela-atelier.com) y de nuestros canales de contacto, conforme a la Ley Federal
-          de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).
+          <Dato>{RESPONSABLE.nombre}</Dato> ({RESPONSABLE.razonSocial}), con domicilio en{" "}
+          {RESPONSABLE.domicilio}, es responsable del tratamiento de los datos personales que
+          nos compartes a través de este sitio (papela-atelier.com) y de nuestros canales de
+          contacto, conforme a la Ley Federal de Protección de Datos Personales en Posesión
+          de los Particulares (LFPDPPP).
         </p>
         <p>
           Para cualquier tema relacionado con tus datos escríbenos a <Correo /> o por
@@ -101,7 +114,10 @@ export default function PrivacidadPage() {
           </li>
           <li>
             <Dato>Navegación:</Dato> datos de uso del sitio mediante cookies y tecnologías
-            similares (ver la sección de cookies).
+            similares (ver la sección de cookies). Al pagar, el identificador anónimo de
+            navegación de Google Analytics (<Dato>client id</Dato>, la cookie <code>_ga</code>)
+            viaja con el pago para registrar la compra desde nuestro servidor; no contiene tu
+            nombre ni tus datos de contacto.
           </li>
         </ul>
         <p>
@@ -126,7 +142,10 @@ export default function PrivacidadPage() {
           <li>Contactarte sobre tu compra, reserva o proyecto (confirmaciones, cambios, aclaraciones).</li>
           <li>Mejorar nuestros talleres y clases a partir de las encuestas de satisfacción.</li>
         </ul>
-        <p>Finalidades secundarias (puedes oponerte a ellas escribiéndonos):</p>
+        <p>
+          Finalidades secundarias (puedes oponerte a ellas marcando la casilla &ldquo;No quiero
+          recibir promociones&rdquo; en cualquiera de nuestros formularios, o escribiéndonos):
+        </p>
         <ul className="list-disc pl-5 space-y-2">
           <li>Enviarte información sobre productos, talleres, clases y promociones.</li>
           <li>Medir el uso del sitio y mostrar anuncios relevantes en redes sociales.</li>
@@ -142,7 +161,12 @@ export default function PrivacidadPage() {
           <li><Dato>Mercado Pago:</Dato> procesamiento de pagos.</li>
           <li><Dato>Empresas de paquetería:</Dato> entrega de pedidos con envío a domicilio.</li>
           <li><Dato>Formspree:</Dato> recepción de las respuestas de las encuestas de satisfacción.</li>
-          <li><Dato>Google (Tag Manager y Analytics) y Meta (Pixel):</Dato> medición del uso del sitio y publicidad.</li>
+          <li>
+            <Dato>Google (Tag Manager y Analytics) y Meta (Pixel):</Dato> medición del uso del
+            sitio y publicidad. Las compras confirmadas se reportan a Google Analytics también
+            desde nuestro servidor (Measurement Protocol) con el identificador anónimo de
+            navegación y el importe, sin nombre ni correo.
+          </li>
           <li><Dato>WhatsApp (Meta):</Dato> mensajería cuando nos contactas por ese medio.</li>
           <li>
             <Dato>Infraestructura tecnológica:</Dato> los proveedores que alojan el sitio, la

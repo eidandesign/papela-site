@@ -222,6 +222,18 @@ export async function POST(req: NextRequest) {
     nuevo = data !== "repetida";
   }
 
+  // Casilla "no quiero promociones" del aviso de privacidad (viaja en la
+  // metadata de la preferencia, snake_case). Se anota en la fila que reclamó
+  // este pago; columna de 20261017_privacidad_sin_promociones (admin). Nunca
+  // rompe el webhook: si la columna no existe se deja rastro.
+  if (nuevo && (payment.metadata as { sin_promociones?: unknown } | undefined)?.sin_promociones === true) {
+    const tabla = externalRef.startsWith("taller:")
+      ? "talleres_inscripciones"
+      : externalRef.startsWith("tienda:") ? "tienda_pedidos" : "clases_reservas";
+    const { error } = await supabase.from(tabla).update({ sin_promociones: true }).eq("payment_id", paymentId);
+    if (error) logger.error("webhook: no se pudo anotar sin_promociones", { tabla, paymentId, code: error.code });
+  }
+
   // Compra para GA4 (mismo transaction_id que la página de gracias). Nunca rompe el webhook.
   if (nuevo) await enviarPurchaseServidor(payment);
 

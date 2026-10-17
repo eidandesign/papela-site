@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import ConsentimientoPrivacidad from "@/components/site/ConsentimientoPrivacidad";
 
 const FORMSPREE_URL = "https://formspree.io/f/mbdbbwgo";
 
@@ -268,6 +269,7 @@ export default function SatisfaccionClasesPage() {
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sinPromociones, setSinPromociones] = useState(false);
   const celebrate = useConfetti();
   const done = useRef(new Set<string>());
 
@@ -319,6 +321,7 @@ export default function SatisfaccionClasesPage() {
           "Clases sugeridas": form.nuevas_clases || "—",
           "¿Recomendaría?": form.recomendacion || "—",
           "Comentario extra": form.comentario_extra || "—",
+          "No quiere promociones": sinPromociones ? "Sí (no contactar con promociones)" : "No indicado",
         }),
       });
       const data = await res.json();
@@ -482,6 +485,11 @@ export default function SatisfaccionClasesPage() {
               <TArea placeholder="Escríbenos cualquier sugerencia o comentario adicional" value={form.comentario_extra}
                 onChange={(e) => set("comentario_extra")(e.target.value)} onBlur={(e) => onBlurText("comentario_extra", e)} />
             </Fld>
+
+            {/* Privacidad (LFPDPPP): aviso + negativa a promociones */}
+            <div style={{ marginTop: 32 }}>
+              <ConsentimientoPrivacidad accion="enviar" sinPromociones={sinPromociones} onChange={setSinPromociones} />
+            </div>
 
             {/* Submit */}
             <div style={{ marginTop: 40, paddingTop: 32, borderTop: `1px solid ${T.border}` }}>

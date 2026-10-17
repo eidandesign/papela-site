@@ -8,6 +8,7 @@ import { useReservaModalStore } from "@/lib/stores/reservaModalStore";
 import ClaseCalendar from "@/components/site/ClaseCalendar";
 import { track } from "@/lib/analitica";
 import WhatsAppLink from "./WhatsAppLink";
+import ConsentimientoPrivacidad from "./ConsentimientoPrivacidad";
 
 const WHATSAPP_FALLBACK = "522211865590";
 
@@ -37,6 +38,7 @@ export default function ReservaModal() {
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [prevClase, setPrevClase] = useState<string | null>(null);
+  const [sinPromociones, setSinPromociones] = useState(false);
 
   // Patrón estándar para render solo-cliente (createPortal necesita document).
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -266,6 +268,7 @@ export default function ReservaModal() {
             tipo={tipoSeleccionado ?? undefined}
             tipos={data.tipos}
             paquete={paquete ?? undefined}
+            sinPromociones={sinPromociones}
           />
         ) : (
           <div className="bg-[#f2f0e9] rounded-xl px-5 py-8 text-center">
@@ -278,6 +281,13 @@ export default function ReservaModal() {
             </p>
           </div>
         )}
+
+        <ConsentimientoPrivacidad
+          accion="reservar"
+          sinPromociones={sinPromociones}
+          onChange={setSinPromociones}
+          className="mt-6 mx-auto max-w-md"
+        />
 
         {/* WhatsApp */}
         <div className="mt-7 pt-6 border-t border-[var(--color-border)] flex flex-col items-center gap-3">
