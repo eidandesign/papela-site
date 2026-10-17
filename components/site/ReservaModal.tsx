@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { XMarkIcon } from "@heroicons/react/24/solid";
@@ -9,6 +9,7 @@ import ClaseCalendar from "@/components/site/ClaseCalendar";
 import { track } from "@/lib/analitica";
 import WhatsAppLink from "./WhatsAppLink";
 import ConsentimientoPrivacidad from "./ConsentimientoPrivacidad";
+import useDialogo from "./useDialogo";
 
 const WHATSAPP_FALLBACK = "522211865590";
 
@@ -39,6 +40,8 @@ export default function ReservaModal() {
   const [selected, setSelected] = useState<string | null>(null);
   const [prevClase, setPrevClase] = useState<string | null>(null);
   const [sinPromociones, setSinPromociones] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const raizRef = useRef<HTMLDivElement>(null);
 
   // Patrón estándar para render solo-cliente (createPortal necesita document).
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -86,16 +89,8 @@ export default function ReservaModal() {
     radios[next]?.focus();
   }
 
-  useEffect(() => {
-    if (!data) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [data, close]);
+  // Escape, foco inicial/restaurado, inert fuera y scroll bloqueado (useDialogo).
+  useDialogo({ abierto: data !== null, onClose: close, panelRef, raizRef, bloquearScroll: true });
 
   if (!mounted) return null;
 
@@ -113,6 +108,7 @@ export default function ReservaModal() {
       {data && (
         <div
           key="reserva-modal"
+          ref={raizRef}
           className="fixed inset-0 z-[100050] flex items-end justify-center sm:items-center sm:p-6"
           role="dialog"
           aria-modal="true"
@@ -132,11 +128,13 @@ export default function ReservaModal() {
 
           {/* Card */}
           <motion.div
+            ref={panelRef}
+            tabIndex={-1}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.38 }}
-            className="relative z-10 w-full sm:max-w-3xl max-h-[92vh] overflow-y-auto bg-white rounded-t-[28px] sm:rounded-[28px] px-5 py-8 sm:px-10 sm:py-10 shadow-2xl"
+            className="relative z-10 w-full sm:max-w-3xl max-h-[92vh] overflow-y-auto bg-white rounded-t-[28px] sm:rounded-[28px] px-5 py-8 sm:px-10 sm:py-10 shadow-2xl outline-none"
           >
             <button
               type="button"
@@ -299,7 +297,7 @@ export default function ReservaModal() {
             numero={numero}
             texto={waText}
             itemName={paquete?.nombre ?? tipoSeleccionado?.nombre}
-            className="inline-flex items-center gap-2.5 rounded-full bg-[#25D366] px-7 py-3.5 font-sans text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2.5 rounded-full bg-[var(--color-whatsapp)] px-7 py-3.5 font-sans text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
             <WaIcon className="h-5 w-5" />
             Reservar con WhatsApp

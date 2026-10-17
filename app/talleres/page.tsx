@@ -43,10 +43,10 @@ export default async function TalleresPage() {
   return (
     <>
       {/* Hero */}
-      <HeroSection bgColor="#C4846A">
+      <HeroSection bgColor="#844B34">
         <div className="flex-1 flex flex-col items-center justify-center text-center px-10 md:px-20 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
           <span data-hero-badge className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
-            <span className="label text-[var(--color-cremita)]/70">
+            <span className="label text-[var(--color-cremita)]/85">
               Próximos Talleres
             </span>
           </span>

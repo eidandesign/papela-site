@@ -84,7 +84,7 @@ export default async function MiniSitePage({ params }: Props) {
             <WhatsAppLink
               ubicacion="mini_site_expirado"
               texto={waTexto}
-              className="inline-flex items-center gap-2.5 rounded-full bg-[#25D366] px-7 py-3.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-cremita)]/40"
+              className="inline-flex items-center gap-2.5 rounded-full bg-[var(--color-whatsapp)] px-7 py-3.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-cremita)]/40"
             >
               <WaIcon className="h-5 w-5" />
               Escríbenos por WhatsApp

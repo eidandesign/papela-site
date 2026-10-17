@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -8,10 +8,13 @@ import { useRouter } from "next/navigation";
 import { XMarkIcon, MinusIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useCartStore, COSTO_ENVIO, cartKey } from "@/lib/stores/cartStore";
 import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
+import useDialogo from "./useDialogo";
 
 export default function CartDrawer() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const panelRef = useRef<HTMLElement>(null);
+  const raizRef = useRef<HTMLDivElement>(null);
 
   const {
     isOpen, closeCart, items, tipoEnvio,
@@ -37,6 +40,10 @@ export default function CartDrawer() {
     if (isOpen) closeProductDrawer();
   }, [isOpen, closeProductDrawer]);
 
+  // Escape, foco inicial/restaurado e inert fuera del carrito (useDialogo).
+  // El scroll lo maneja el efecto de arriba (convive con ProductDrawer).
+  useDialogo({ abierto: isOpen, onClose: closeCart, panelRef, raizRef });
+
   const handleCheckout = () => {
     closeCart();
     router.push("/tienda/checkout");
@@ -45,6 +52,7 @@ export default function CartDrawer() {
   if (!mounted) return null;
 
   return createPortal(
+    <div ref={raizRef}>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -62,11 +70,16 @@ export default function CartDrawer() {
           {/* Drawer */}
           <motion.aside
             key="drawer"
+            ref={panelRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tu carrito"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.35, ease: [0.76, 0, 0.24, 1] }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-[var(--color-bg)] z-[9999] flex flex-col shadow-2xl"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-[var(--color-bg)] z-[9999] flex flex-col shadow-2xl outline-none"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--color-border)]">
@@ -77,6 +90,7 @@ export default function CartDrawer() {
                 )}
               </h2>
               <button
+                type="button"
                 onClick={closeCart}
                 aria-label="Cerrar carrito"
                 className="p-2 rounded-full hover:bg-[var(--color-cremita-2)] transition-colors"
@@ -234,7 +248,8 @@ export default function CartDrawer() {
           </motion.aside>
         </>
       )}
-    </AnimatePresence>,
+    </AnimatePresence>
+    </div>,
     document.body
   );
 }

@@ -296,7 +296,7 @@ export default function ServiciosPage() {
       <HeroSection>
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 md:px-20 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
           <span data-hero-badge className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
-            <span className="label text-[var(--color-cremita)]/70">Servicios Papela</span>
+            <span className="label text-[var(--color-cremita)]/85">Servicios Papela</span>
           </span>
           <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-3xl mb-6">
             Servicios para imprimir, diseñar y darle forma a tus ideas
@@ -375,7 +375,7 @@ export default function ServiciosPage() {
       <section className="w-[90%] mx-auto pb-16 md:pb-24">
         {/* Banner premium */}
         <div className="rounded-[28px] md:rounded-[40px] bg-[var(--color-verde)] px-8 md:px-16 py-12 md:py-16 text-center">
-          <span className="label text-[var(--color-cremita)]/70">Estudio de diseño</span>
+          <span className="label text-[var(--color-cremita)]/85">Estudio de diseño</span>
           <h2 className="font-serif italic text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.08] text-[var(--color-cremita)] mt-3 max-w-3xl mx-auto">
             Diseño para marcas, negocios e ideas que quieren verse mejor
           </h2>
@@ -519,7 +519,7 @@ export default function ServiciosPage() {
             <WhatsAppLink
               ubicacion="servicios_cierre"
               texto="Hola Papela 🌿 tengo un proyecto en mente y quiero cotizarlo."
-              className="inline-flex items-center gap-2.5 rounded-full bg-[#25D366] px-7 py-3.5 font-sans text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-2.5 rounded-full bg-[var(--color-whatsapp)] px-7 py-3.5 font-sans text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               <WaGlyph className="h-5 w-5" />
               Cotizar por WhatsApp

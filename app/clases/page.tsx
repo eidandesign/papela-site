@@ -36,7 +36,7 @@ export default async function ClasesPage() {
     <>
       {/* ── Hero ── */}
       {/* Hero compacto: el mismo de Catálogo (/productos), solo el título */}
-      <HeroSection bgColor="#4F8674" className="!min-h-0" showRibbon={false} showInk={false}>
+      <HeroSection bgColor="#396154" className="!min-h-0" showRibbon={false} showInk={false}>
         <div className="flex-1 flex flex-col items-center justify-center text-center px-8 md:px-20 pt-[140px] md:pt-[170px] pb-14 md:pb-16">
           <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-3xl">
             Clases creativas para volver a conectar con tus manos

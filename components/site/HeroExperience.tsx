@@ -333,7 +333,7 @@ export default function HeroExperience() {
           className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8 md:mb-10"
           style={{ visibility: "hidden" }}
         >
-          <span className="font-sans text-[10px] font-medium tracking-[0.22em] uppercase text-[var(--color-cremita)]/70">
+          <span className="font-sans text-[10px] font-medium tracking-[0.22em] uppercase text-[var(--color-cremita)]/85">
             Una pape bien bonita
           </span>
         </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import { useCartStore } from "@/lib/stores/cartStore";
 import AddToCartButton from "./AddToCartButton";
 import { waProductoTexto } from "@/lib/whatsapp";
 import WhatsAppLink from "./WhatsAppLink";
+import useDialogo from "./useDialogo";
 
 export default function ProductDrawer() {
   const [mounted, setMounted] = useState(false);
@@ -18,6 +19,8 @@ export default function ProductDrawer() {
   const [seleccion, setSeleccion] = useState<{ productId: string; varId: string } | null>(null);
   const { product, close } = useProductDrawerStore();
   const isOpen = product !== null;
+  const panelRef = useRef<HTMLElement>(null);
+  const raizRef = useRef<HTMLDivElement>(null);
 
   // Intentional: gates the SSR portal so it renders client-side only.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -37,12 +40,9 @@ export default function ProductDrawer() {
     return unlock;
   }, [isOpen]);
 
-  // Close on Escape
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [close]);
+  // Escape, foco inicial/restaurado e inert fuera del panel (useDialogo).
+  // El scroll lo maneja el efecto de arriba (convive con CartDrawer).
+  useDialogo({ abierto: isOpen, onClose: close, panelRef, raizRef });
 
   if (!mounted) return null;
 
@@ -62,6 +62,7 @@ export default function ProductDrawer() {
     : product?.nombre ?? "";
 
   return createPortal(
+    <div ref={raizRef}>
     <AnimatePresence>
       {isOpen && product && (
         <>
@@ -79,11 +80,16 @@ export default function ProductDrawer() {
           {/* Panel */}
           <motion.aside
             key="panel"
+            ref={panelRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label={dispNombreCompleto || "Detalle del producto"}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.35, ease: [0.76, 0, 0.24, 1] }}
-            className="fixed right-0 top-0 h-full left-[15%] sm:left-auto sm:w-full sm:max-w-lg bg-[var(--color-bg)] z-[9999] flex flex-col shadow-2xl rounded-l-3xl sm:rounded-none"
+            className="fixed right-0 top-0 h-full left-[15%] sm:left-auto sm:w-full sm:max-w-lg bg-[var(--color-bg)] z-[9999] flex flex-col shadow-2xl rounded-l-3xl sm:rounded-none outline-none"
           >
             {/* Image + close button on top */}
             <div className="relative w-full aspect-square flex-shrink-0 bg-[var(--color-cremita-2)]">
@@ -100,6 +106,7 @@ export default function ProductDrawer() {
                 <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
               )}
               <button
+                type="button"
                 onClick={close}
                 aria-label="Cerrar"
                 className="absolute top-4 right-4 p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-colors"
@@ -221,7 +228,8 @@ export default function ProductDrawer() {
           </motion.aside>
         </>
       )}
-    </AnimatePresence>,
+    </AnimatePresence>
+    </div>,
     document.body
   );
 }

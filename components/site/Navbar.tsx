@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import CartButton from "./CartButton";
 import AnimatedLogo from "./AnimatedLogo";
+import useDialogo from "./useDialogo";
 import AnimatedBurger from "./AnimatedBurger";
 import { trackWhatsApp } from "./WhatsAppLink";
 import { track } from "@/lib/analitica";
@@ -73,6 +74,12 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   // `visible` is separate from `isOpen` so we can mount first, then animate in
   const [visible, setVisible] = useState(false);
   const portalRef = useRef<HTMLElement | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Diálogo accesible: Escape cierra, el foco entra al menú y vuelve a la
+  // hamburguesa al cerrar, y el resto de la página queda `inert` — salvo la
+  // hamburguesa (data-dialogo-permitir), que dibuja la ✕ sobre el menú.
+  useDialogo({ abierto: isOpen && mounted, onClose, panelRef });
 
   useEffect(() => {
     let el = document.getElementById("papela-hamburger-portal");
@@ -115,10 +122,16 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
 
   return createPortal(
     <div
+      ref={panelRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menú"
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 100002,
+        outline: "none",
         backgroundColor: "var(--color-verde)",
         display: "flex",
         flexDirection: "column",
@@ -369,6 +382,8 @@ export default function SiteNavbar() {
                   type="button"
                   onClick={menuOpen ? closeMenu : openMenu}
                   aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+                  aria-expanded={menuOpen}
+                  data-dialogo-permitir=""
                   className="p-2"
                   style={{ WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}
                 >
@@ -429,8 +444,11 @@ export default function SiteNavbar() {
 
             {/* Mobile hamburger */}
             <motion.button
+              type="button"
               onClick={menuOpen ? closeMenu : openMenu}
               aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={menuOpen}
+              data-dialogo-permitir=""
               className="lg:hidden p-1"
               whileTap={{ scale: 0.95 }}
               style={{

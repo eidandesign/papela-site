@@ -77,7 +77,9 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
           >
             {/* − */}
             <button
+              type="button"
               onClick={handleMinus}
+              aria-label={`Quitar uno: ${nombre}`}
               className="w-9 h-9 flex items-center justify-center text-[var(--color-cremita)] active:opacity-70 flex-shrink-0"
             >
               <MinusIcon className="w-3.5 h-3.5" />
@@ -85,7 +87,9 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
 
             {/* Número */}
             <button
+              type="button"
               onClick={handleOpenCart}
+              aria-label={`${cantidad} en el carrito — ver carrito`}
               className="min-w-[20px] text-center overflow-hidden flex items-center justify-center"
             >
               <AnimatePresence mode="popLayout" initial={false}>
@@ -104,7 +108,9 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
 
             {/* + */}
             <button
+              type="button"
               onClick={handlePlus}
+              aria-label={atLimit ? `Sin más existencias de ${nombre}` : `Agregar uno más: ${nombre}`}
               disabled={atLimit}
               className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30"
               style={{ color: "var(--color-cremita)" }}
@@ -116,6 +122,8 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
           // ── Collapsed: solo + ──────────────────────────
           <motion.button
             key="add"
+            type="button"
+            aria-label={`Agregar al carrito: ${nombre}`}
             onClick={handleAdd}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

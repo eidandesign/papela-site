@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import useDialogo from "./useDialogo";
 
 /**
  * Hoja de detalle: bottom sheet en mobile, ventana centrada en desktop (mismo
@@ -45,26 +46,13 @@ export default function HojaInferior({
   const [montado, setMontado] = useState(false);
   const tituloId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
-  const previoRef = useRef<HTMLElement | null>(null);
+  const raizRef = useRef<HTMLDivElement>(null);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMontado(true), []);
 
-  useEffect(() => {
-    if (!abierta) return;
-    previoRef.current = document.activeElement as HTMLElement | null;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    // Foco al panel para lectores de pantalla y teclado.
-    requestAnimationFrame(() => panelRef.current?.focus());
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
-      previoRef.current?.focus?.();
-    };
-  }, [abierta, onClose]);
+  // Escape, foco inicial/restaurado, inert fuera y scroll bloqueado (useDialogo).
+  useDialogo({ abierto: abierta, onClose, panelRef, raizRef, bloquearScroll: true });
 
   if (!montado) return null;
 
@@ -72,6 +60,7 @@ export default function HojaInferior({
     <AnimatePresence>
       {abierta && (
         <div
+          ref={raizRef}
           className={`fixed inset-0 z-[100040] flex items-end justify-center ${drawer ? "sm:items-stretch sm:justify-end" : "sm:items-center sm:p-6"}`}
           role="dialog"
           aria-modal="true"

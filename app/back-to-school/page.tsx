@@ -514,7 +514,7 @@ export default function BackToSchoolPage() {
 
       {/* 8 · CTA final */}
       <section className="w-[90%] mx-auto pb-24 pt-4">
-        <div className="relative overflow-hidden rounded-[32px] bg-[#C4846A] px-8 py-14 md:px-16 md:py-20 text-center">
+        <div className="relative overflow-hidden rounded-[32px] bg-[#844B34] px-8 py-14 md:px-16 md:py-20 text-center">
           <h2 className="font-serif italic text-[clamp(2rem,4.5vw,3.4rem)] leading-[1.1] text-[var(--color-cremita)] max-w-2xl mx-auto mb-5">
             ¿Listos para marcar todo este regreso a clases?
           </h2>

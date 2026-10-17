@@ -47,6 +47,9 @@
   --color-bg: #F0EFEB;
   --color-white: #FFFFFF;
   --color-verde: #12535C;
+  /* Botones de WhatsApp: el verde oficial #25D366 da 1.98:1 con texto blanco;
+     este tono conserva la lectura "WhatsApp" y da 5.0:1 (auditoría 2026-10-16). */
+  --color-whatsapp: #0F7F5A;
   --color-verde-light: rgba(18, 83, 92, 0.08);
   --color-cremita: rgb(243, 230, 207);
   --color-cremita-2: #F0E6D0;

@@ -24,7 +24,7 @@ interface HeroSectionProps {
  * and ribbon-papela.png decorative image.
  *
  * Usage:
- *   <HeroSection bgColor="#5E7E86">
+ *   <HeroSection bgColor="#475F65">
  *     <div className="flex-1 flex flex-col items-center justify-center text-center px-6 md:px-20 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
  *       ...content...
  *     </div>

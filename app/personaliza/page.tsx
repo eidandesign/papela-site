@@ -66,10 +66,10 @@ export default function PersonalizaPage() {
   return (
     <>
       {/* Hero */}
-      <HeroSection bgColor="#5E7E86">
+      <HeroSection bgColor="#475F65">
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 md:px-20 pt-[140px] md:pt-[180px] pb-16 md:pb-20">
           <span data-hero-badge className="inline-flex items-center border border-[var(--color-cremita)]/40 rounded-full px-5 py-2 mb-8">
-            <span className="label text-[var(--color-cremita)]/70">Hecho a la medida</span>
+            <span className="label text-[var(--color-cremita)]/85">Hecho a la medida</span>
           </span>
           <h1 className="font-serif italic text-[clamp(2.5rem,5.5vw,5rem)] leading-[1.05] text-[var(--color-cremita)] max-w-2xl mb-6">
             Creamos piezas únicas para cada ocasión

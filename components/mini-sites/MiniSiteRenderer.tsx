@@ -1192,7 +1192,7 @@ function PedidoSheet({
                   onEnviado("whatsapp");
                 }}
                 className="flex-1 min-w-0 h-12 px-4 rounded-full text-[14px] font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap transition-transform active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-black/10"
-                style={{ background: "#25D366", color: "#fff", boxShadow: "0 8px 22px rgba(37,211,102,.35)" }}
+                style={{ background: "var(--color-whatsapp, #0F7F5A)", color: "#fff", boxShadow: "0 8px 22px rgba(15,127,90,.35)" }}
               >
                 {iconoDe("whatsapp", 20)}
                 Enviar por WA

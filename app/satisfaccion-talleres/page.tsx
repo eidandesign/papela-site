@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useId } from "react";
 import ConsentimientoPrivacidad from "@/components/site/ConsentimientoPrivacidad";
 
 const FORMSPREE_URL = "https://formspree.io/f/mbdbbwgo";
@@ -171,11 +171,11 @@ function ChipGroup({ opts, val, onChange, onFirstPick, showOtro = false, otroVal
   useEffect(() => { if (val === "Otro") setTimeout(() => inputRef.current?.focus(), 50); }, [val]);
   return (
     <div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+      <div role="radiogroup" style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {opts.map((o) => {
           const sel = val === o;
           return (
-            <button key={o} type="button"
+            <button key={o} type="button" role="radio" aria-checked={sel}
               onClick={(e) => {
                 const first = !val; onChange(o);
                 if (first) { const { x, y } = getCenter(e.currentTarget); onFirstPick(x, y); }
@@ -197,7 +197,7 @@ function ChipGroup({ opts, val, onChange, onFirstPick, showOtro = false, otroVal
       </div>
       {showOtro && val === "Otro" && (
         <div style={{ marginTop: 10 }}>
-          <input ref={inputRef} type="text" placeholder="¿Qué taller tomaste?" value={otroVal}
+          <input ref={inputRef} type="text" placeholder="¿Qué taller tomaste?" aria-label="¿Qué taller tomaste?" value={otroVal}
             onChange={(e) => onOtroChange?.(e.target.value)}
             onFocus={() => setOtroFocused(true)} onBlur={() => setOtroFocused(false)}
             style={{
@@ -226,6 +226,7 @@ function Stars({ val, onChange, lo, hi, onPick }: {
       <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: 8 }}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button"
+            aria-label={`${n} de 5 estrellas`} aria-pressed={val === n}
             onMouseEnter={() => setHov(n)} onMouseLeave={() => setHov(0)}
             onClick={(e) => { onChange(n); const { x, y } = getCenter(e.currentTarget); onPick(x, y, n); }}
             style={{
@@ -249,12 +250,22 @@ function Stars({ val, onChange, lo, hi, onPick }: {
   );
 }
 
-function Fld({ l, children }: { l: string; children: React.ReactNode }) {
+// `htmlFor` liga la etiqueta a un input/textarea; sin él, el bloque es un
+// grupo (chips, estrellas) etiquetado por aria-labelledby (WCAG 1.3.1 / 4.1.2).
+function Fld({ l, htmlFor, children }: { l: string; htmlFor?: string; children: React.ReactNode }) {
+  const id = useId();
+  const estilo = { display: "block", fontSize: 16, lineHeight: "24px", fontWeight: 400, color: T.ink, marginBottom: 10 } as const;
+  if (htmlFor) {
+    return (
+      <div style={{ marginBottom: 24, width: "100%" }}>
+        <label htmlFor={htmlFor} style={estilo}>{l}</label>
+        {children}
+      </div>
+    );
+  }
   return (
-    <div style={{ marginBottom: 24, width: "100%" }}>
-      <label style={{ display: "block", fontSize: 16, lineHeight: "24px", fontWeight: 400, color: T.ink, marginBottom: 10 }}>
-        {l}
-      </label>
+    <div role="group" aria-labelledby={id} style={{ marginBottom: 24, width: "100%" }}>
+      <span id={id} style={estilo}>{l}</span>
       {children}
     </div>
   );
@@ -431,8 +442,8 @@ export default function SatisfaccionTalleresPage() {
 
           <form onSubmit={submit} noValidate>
             <Sec c="Sobre ti" />
-            <Fld l="Nombre (Opcional)">
-              <TInput type="text" placeholder="Tu nombre" value={form.nombre}
+            <Fld l="Nombre (Opcional)" htmlFor="sat-nombre">
+              <TInput id="sat-nombre" type="text" placeholder="Tu nombre" value={form.nombre}
                 onChange={(e) => set("nombre")(e.target.value)}
                 onBlur={(e) => onBlurText("nombre", e)} />
             </Fld>
@@ -469,20 +480,20 @@ export default function SatisfaccionTalleresPage() {
             </Fld>
 
             <Sec c="Tu opinión" />
-            <Fld l="¿Qué fue lo que más te gustó del taller?">
-              <TArea placeholder="Cuéntanos qué disfrutaste más" value={form.lo_mejor}
+            <Fld l="¿Qué fue lo que más te gustó del taller?" htmlFor="sat-lo_mejor">
+              <TArea id="sat-lo_mejor" placeholder="Cuéntanos qué disfrutaste más" value={form.lo_mejor}
                 onChange={(e) => set("lo_mejor")(e.target.value)} onBlur={(e) => onBlurText("lo_mejor", e)} />
             </Fld>
-            <Fld l="¿Qué crees que podríamos mejorar?">
-              <TArea placeholder="Tu opinión nos ayuda muchísimo" value={form.mejoras}
+            <Fld l="¿Qué crees que podríamos mejorar?" htmlFor="sat-mejoras">
+              <TArea id="sat-mejoras" placeholder="Tu opinión nos ayuda muchísimo" value={form.mejoras}
                 onChange={(e) => set("mejoras")(e.target.value)} onBlur={(e) => onBlurText("mejoras", e)} />
             </Fld>
             <Fld l="¿Te gustaría seguir tomando talleres en Papela?">
               <ChipGroup opts={["Sí", "No", "Tal vez"]} val={form.regresar}
                 onChange={(v) => set("regresar")(v)} onFirstPick={(x, y) => once("regresar", x, y)} />
             </Fld>
-            <Fld l="¿Qué tipo de talleres te gustaría que agregáramos?">
-              <TArea placeholder="Ej. Acuarela, cerámica, bordado, lettering, fotografía..." value={form.nuevos_talleres}
+            <Fld l="¿Qué tipo de talleres te gustaría que agregáramos?" htmlFor="sat-nuevos_talleres">
+              <TArea id="sat-nuevos_talleres" placeholder="Ej. Acuarela, cerámica, bordado, lettering, fotografía..." value={form.nuevos_talleres}
                 onChange={(e) => set("nuevos_talleres")(e.target.value)} onBlur={(e) => onBlurText("nuevos_talleres", e)} />
             </Fld>
 
@@ -491,8 +502,8 @@ export default function SatisfaccionTalleresPage() {
               <ChipGroup opts={["Sí", "No", "Tal vez"]} val={form.recomendacion}
                 onChange={(v) => set("recomendacion")(v)} onFirstPick={(x, y) => once("recomendacion", x, y)} />
             </Fld>
-            <Fld l="Comentario extra o mensaje para el instructor">
-              <TArea placeholder="Escríbenos cualquier sugerencia o comentario adicional" value={form.comentario_extra}
+            <Fld l="Comentario extra o mensaje para el instructor" htmlFor="sat-comentario_extra">
+              <TArea id="sat-comentario_extra" placeholder="Escríbenos cualquier sugerencia o comentario adicional" value={form.comentario_extra}
                 onChange={(e) => set("comentario_extra")(e.target.value)} onBlur={(e) => onBlurText("comentario_extra", e)} />
             </Fld>
 
