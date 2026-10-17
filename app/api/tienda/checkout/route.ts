@@ -7,6 +7,7 @@ import { COSTO_ENVIO } from "@/lib/stores/cartStore";
 import { logger } from "@/lib/logger";
 import { gaClientId } from "@/lib/ga4";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { expiracionPreferencia } from "@/lib/mercadopago";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -21,7 +22,7 @@ interface CartItemInput {
 
 export async function POST(req: NextRequest) {
   // 8 intentos de checkout por IP cada 5 minutos
-  if (!rateLimit(`tienda-checkout:${getClientIp(req)}`, 8, 5 * 60_000)) {
+  if (!(await rateLimit(`tienda-checkout:${getClientIp(req)}`, 8, 5 * 60_000))) {
     return NextResponse.json({ error: "Demasiadas solicitudes. Intenta en unos minutos." }, { status: 429 });
   }
 
@@ -198,6 +199,7 @@ export async function POST(req: NextRequest) {
         auto_return: "approved",
         notification_url: `${SITE_URL}/api/webhooks/mercadopago`,
         external_reference: externalReference,
+        ...expiracionPreferencia(),
         // El webhook lo reenvía a GA4 para atribuir la compra.
         ...(gaClientId(req) ? { metadata: { ga_client_id: gaClientId(req) } } : {}),
       },

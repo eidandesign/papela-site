@@ -7,7 +7,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   // 5 solicitudes por IP cada 10 minutos
-  if (!rateLimit(`personalizacion:${getClientIp(req)}`, 5, 10 * 60_000)) {
+  if (!(await rateLimit(`personalizacion:${getClientIp(req)}`, 5, 10 * 60_000))) {
     return NextResponse.json({ error: "Demasiadas solicitudes. Intenta en unos minutos." }, { status: 429 });
   }
 

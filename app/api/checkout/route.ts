@@ -7,12 +7,19 @@ import { logger } from "@/lib/logger";
 import { gaClientId } from "@/lib/ga4";
 import { calzaConTipo } from "@/lib/clases-matching";
 import type { TipoClasePublico } from "@/lib/clases-tipos";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { expiracionPreferencia } from "@/lib/mercadopago";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
 });
 
 export async function POST(req: NextRequest) {
+  // 8 intentos de checkout por IP cada 5 minutos (igual que tienda/talleres).
+  if (!(await rateLimit(`clases-checkout:${getClientIp(req)}`, 8, 5 * 60_000))) {
+    return NextResponse.json({ error: "Demasiadas solicitudes. Intenta en unos minutos." }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const { horarioId, claseNombre, actividad, tipoClaseId, paqueteId, fechaHora, duracion } = body;
@@ -172,6 +179,7 @@ export async function POST(req: NextRequest) {
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         external_reference: horarioId,
+        ...expiracionPreferencia(),
       },
     });
 
