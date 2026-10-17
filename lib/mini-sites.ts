@@ -148,15 +148,24 @@ export function isMiniSitePath(pathname: string | null): boolean {
   return !SITE_ROOT_SEGMENTS.has(seg) && MINI_SITE_SLUG_RE.test(seg);
 }
 
+// Tag de caché de un Mini Site: lo invalida /api/revalidate/mini-site cuando
+// el admin publica/edita (lib/mini-sites/revalidar.ts del admin).
+export const miniSiteTag = (slug: string) => `mini-site:${slug.toLowerCase()}`;
+
 /**
  * Lee el Mini Site del admin. `cache` dedupe entre generateMetadata y la página.
  * Devuelve null si no existe o está en borrador (→ 404).
+ *
+ * ISR (auditoría 2026-10-16, Fase 1 #12): antes iba `no-store` y cada visita
+ * pegaba al admin (que además limita por IP — y todas las visitas llegan con
+ * la IP del servidor del site, así que 60 visitas/min de CUALQUIER mini site
+ * tiraban a todos). Ahora se cachea 60 s y el admin avisa por tag al publicar.
  */
 export const fetchMiniSite = cache(async (slug: string): Promise<MiniSiteLookup> => {
   const s = slug.toLowerCase();
   if (!MINI_SITE_SLUG_RE.test(s)) return null;
   try {
-    const res = await fetch(`${MINI_SITES_API}/${s}`, { cache: "no-store" });
+    const res = await fetch(`${MINI_SITES_API}/${s}`, { next: { revalidate: 60, tags: ["mini-sites", miniSiteTag(s)] } });
     if (!res.ok) return null;
     const data = await res.json();
     if (data?.status === "disabled") return { status: "disabled" };

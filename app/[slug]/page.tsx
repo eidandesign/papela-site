@@ -25,6 +25,10 @@ function WaIcon({ className }: { className?: string }) {
 // (/talleres, /clases…) sobre [slug]; lo que no exista responde el 404 normal.
 // Ruta standalone (sin navbar/footer del sitio, ver ConditionalShell).
 
+// ISR: la página se regenera cada 60 s o al instante cuando el admin avisa
+// (/api/revalidate/mini-site). Ver fetchMiniSite en lib/mini-sites.ts.
+export const revalidate = 60;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
