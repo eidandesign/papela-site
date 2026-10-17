@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import CotizacionDoc from "@/components/site/CotizacionDoc";
 
 // Cotización de proyecto — link privado que Papela comparte al cliente.
@@ -11,6 +12,20 @@ const COTIZACION_API =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3000/api/public/cotizacion"
     : "https://admin.papela-atelier.com/api/public/cotizacion";
+
+// Mismo formato que COTIZACION_TOKEN_RE del admin.
+const TOKEN_RE = /^[a-z0-9](?:[a-z0-9-]{1,78}[a-z0-9])?$/i;
+
+// Token inexistente → 404 real (auditoría 2026-10-16, Fase 1 #11); ver la
+// nota equivalente en app/club/[token]/page.tsx.
+async function existeEnAdmin(token: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${COTIZACION_API}/${token}`, { next: { revalidate: 300 } });
+    return res.status !== 404;
+  } catch {
+    return true;
+  }
+}
 
 // Preview al compartir el link por WhatsApp: título con el nombre del proyecto.
 // La IMAGEN de marca se genera al vuelo y la inyecta Next automáticamente
@@ -47,6 +62,9 @@ export async function generateMetadata({
   };
 }
 
-export default function CotizacionPage() {
+export default async function CotizacionPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  if (!TOKEN_RE.test(token)) notFound();
+  if (!(await existeEnAdmin(token))) notFound();
   return <CotizacionDoc />;
 }
