@@ -31,25 +31,72 @@ function vistaPrevia(premio: PremioSticker): string | null {
 // bien en el celular, pero cortada a 3 líneas para que los botones de abajo
 // (premio, portada, regalar) se vean sin hacer scroll. "Leer más" solo aparece
 // si el texto de verdad no cabe (una historia corta no lleva el link).
+//
+// Abrir/cerrar anima la ALTURA del contenedor (no un line-clamp, que salta de
+// golpe) y el corte se ve como un desvanecido a blanco que se funde al abrir.
+// Abierta termina en `height: auto` para que un giro de pantalla no la recorte;
+// al cerrar se vuelve a fijar en px para que la transición tenga de dónde partir.
+const LINEAS = 3;
+const reducirMovimiento = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 function Historia({ texto }: { texto: string }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const [abierta, setAbierta] = useState(false);
   const [cortada, setCortada] = useState(false);
+  const [colapsado, setColapsado] = useState(0);
+  const [alto, setAlto] = useState<number | "auto">("auto");
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || abierta) return;
-    setCortada(el.scrollHeight > el.clientHeight + 1);
-  }, [texto, abierta]);
+    if (!el) return;
+    const lh = parseFloat(getComputedStyle(el).lineHeight) || 24;
+    const tope = Math.round(lh * LINEAS);
+    const corta = el.scrollHeight > tope + 1;
+    setColapsado(tope);
+    setCortada(corta);
+    setAbierta(false);
+    setAlto(corta ? tope : "auto");
+  }, [texto]);
+
+  function alternar() {
+    const el = ref.current;
+    if (!el) return;
+    const completo = el.offsetHeight;
+    if (!abierta) {
+      setAbierta(true);
+      setAlto(reducirMovimiento() ? "auto" : completo);
+    } else {
+      setAbierta(false);
+      if (reducirMovimiento()) { setAlto(colapsado); return; }
+      // De "auto" no se puede animar: primero se fija la altura real y, ya
+      // pintada, se baja a las 3 líneas.
+      setAlto(completo);
+      requestAnimationFrame(() => requestAnimationFrame(() => setAlto(colapsado)));
+    }
+  }
 
   return (
     <div className="mt-3">
-      <p ref={ref}
-        className={`text-base text-[var(--color-muted)] leading-relaxed whitespace-pre-line ${abierta ? "" : "line-clamp-3"}`}>
-        {texto}
-      </p>
-      {(cortada || abierta) && (
-        <button type="button" onClick={() => setAbierta((v) => !v)} aria-expanded={abierta}
+      <div
+        className="relative overflow-hidden transition-[height] duration-500 ease-[cubic-bezier(.22,1,.36,1)] motion-reduce:transition-none"
+        style={{ height: alto === "auto" ? "auto" : `${alto}px` }}
+        onTransitionEnd={(e) => {
+          if (e.propertyName === "height" && abierta) setAlto("auto");
+        }}>
+        <p ref={ref}
+          className="text-base text-[var(--color-muted)] leading-relaxed whitespace-pre-line">
+          {texto}
+        </p>
+        {cortada && (
+          <div aria-hidden="true"
+            className={`pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent transition-opacity duration-500 motion-reduce:transition-none ${
+              abierta ? "opacity-0" : "opacity-100"
+            }`} />
+        )}
+      </div>
+      {cortada && (
+        <button type="button" onClick={alternar} aria-expanded={abierta}
           className="mt-1 text-sm font-semibold text-[var(--color-verde)] underline underline-offset-2">
           {abierta ? "Leer menos" : "Leer más"}
         </button>
