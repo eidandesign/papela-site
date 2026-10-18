@@ -8,7 +8,7 @@
 // Si el miembro NO tiene el coleccionable (`mio` vacío), la ficha se ve en
 // versión misteriosa: silueta grande y su número, sin revelar nada más.
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { CheckIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import {
@@ -25,6 +25,37 @@ const ES_IMAGEN = /\.(png|jpe?g|webp|gif|avif|svg)(\?|$)/i;
 function vistaPrevia(premio: PremioSticker): string | null {
   if (premio.imagen) return premio.imagen;
   return premio.url && ES_IMAGEN.test(premio.url) ? premio.url : null;
+}
+
+// La historia es un párrafo largo: va a la izquierda y en text-base para leerse
+// bien en el celular, pero cortada a 3 líneas para que los botones de abajo
+// (premio, portada, regalar) se vean sin hacer scroll. "Leer más" solo aparece
+// si el texto de verdad no cabe (una historia corta no lleva el link).
+function Historia({ texto }: { texto: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [abierta, setAbierta] = useState(false);
+  const [cortada, setCortada] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || abierta) return;
+    setCortada(el.scrollHeight > el.clientHeight + 1);
+  }, [texto, abierta]);
+
+  return (
+    <div className="mt-3">
+      <p ref={ref}
+        className={`text-base text-[var(--color-muted)] leading-relaxed whitespace-pre-line ${abierta ? "" : "line-clamp-3"}`}>
+        {texto}
+      </p>
+      {(cortada || abierta) && (
+        <button type="button" onClick={() => setAbierta((v) => !v)} aria-expanded={abierta}
+          className="mt-1 text-sm font-semibold text-[var(--color-verde)] underline underline-offset-2">
+          {abierta ? "Leer menos" : "Leer más"}
+        </button>
+      )}
+    </div>
+  );
 }
 
 // Portada = los óvalos de la tarjeta. `dentro` dice si este sticker ya está
@@ -49,6 +80,14 @@ export default function FichaSticker({
   const especial = sticker.rareza !== "comun";
   const src = stickerSrc(origen, sticker);
   const previaPremio = info?.premio ? vistaPrevia(info.premio) : null;
+
+  // El globo "Copiado" junto al botón se va solo: es una confirmación, no un
+  // estado que el miembro tenga que cerrar.
+  useEffect(() => {
+    if (copia !== "copiado") return;
+    const t = setTimeout(() => setCopia("idle"), 4000);
+    return () => clearTimeout(t);
+  }, [copia]);
 
   // Escape cierra primero el modal de regalo (está encima de la hoja).
   useEffect(() => {
@@ -78,7 +117,7 @@ export default function FichaSticker({
     <>
       <HojaClub label={sticker.nombre} onCerrar={onCerrar} escape={!regalo}>
         {() => (
-          <div className="text-center">
+          <div className="text-left">
           {mio ? (
             <>
               {/* El sticker con su botón de copiar DENTRO del recuadro, abajo a
@@ -116,6 +155,19 @@ export default function FichaSticker({
                     ? <CheckIcon className="w-5 h-5" aria-hidden="true" />
                     : <DocumentDuplicateIcon className={`w-5 h-5 ${copia === "copiando" ? "animate-pulse" : ""}`} aria-hidden="true" />}
                 </button>
+
+                {/* Globo de confirmación pegado al botón (arriba, con piquito
+                    apuntándolo). aria-live para que el lector lo anuncie. */}
+                <div role="status" aria-live="polite"
+                  className="absolute bottom-[60px] right-0 pointer-events-none">
+                  {copia === "copiado" && (
+                    <div className="ms-pop relative w-48 rounded-2xl bg-[var(--color-verde)] px-3.5 py-2.5 text-left text-sm leading-snug text-[var(--color-cremita)] shadow-[0_6px_20px_rgba(18,83,92,.22)]">
+                      <span className="font-semibold">¡Copiado!</span> Puedes enviarlo por WhatsApp
+                      <span aria-hidden="true"
+                        className="absolute -bottom-1.5 right-[26px] w-3 h-3 rotate-45 bg-[var(--color-verde)]" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <h3 className="font-serif italic text-2xl text-[var(--color-text)] mt-3">{sticker.nombre}</h3>
@@ -128,13 +180,7 @@ export default function FichaSticker({
                 <p className="text-xs text-[var(--color-muted)] mt-1">Lo tienes ×{mio.cantidad}</p>
               )}
 
-              <p className="text-sm text-[var(--color-muted)] leading-relaxed mt-3 whitespace-pre-line">
-                {info?.historia || "Su historia se escribirá muy pronto… ✍️"}
-              </p>
-
-              {copia === "copiado" && (
-                <p className="text-xs text-[var(--color-muted)] mt-3">Sticker copiado — pégalo donde quieras ✨</p>
-              )}
+              <Historia texto={info?.historia || "Su historia se escribirá muy pronto… ✍️"} />
               {copia === "descargado" && (
                 <p className="text-xs text-[var(--color-muted)] mt-3">Se descargó la imagen — revisa tus descargas 📥</p>
               )}
@@ -186,7 +232,7 @@ export default function FichaSticker({
               {portada && (
                 portada.dentro || !portada.llena ? (
                   <button onClick={portada.alternar}
-                    className={`mt-4 mx-auto flex items-center gap-1.5 px-5 py-2.5 rounded-full border-2 text-xs font-semibold transition ${
+                    className={`mt-4 flex items-center gap-1.5 px-5 py-2.5 rounded-full border-2 text-xs font-semibold transition ${
                       portada.dentro
                         ? "border-[var(--color-terracota)] text-[var(--color-terracota)] hover:bg-[var(--color-terracota)] hover:text-white"
                         : "border-[var(--color-verde)] text-[var(--color-verde)] hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)]"
