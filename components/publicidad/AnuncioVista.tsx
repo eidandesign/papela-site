@@ -12,6 +12,7 @@ import Resumen from "./Resumen";
 export default function AnuncioVista({
   anuncio,
   activo,
+  saliendo = false,
   onFin,
   onError,
   reduced,
@@ -20,6 +21,8 @@ export default function AnuncioVista({
   anuncio: AnuncioPublico;
   /** true = es la capa visible (corre su tiempo). Las capas en precarga no cuentan. */
   activo: boolean;
+  /** La info está saliendo (el reproductor está por cambiar de anuncio). */
+  saliendo?: boolean;
   onFin: () => void;
   onError: () => void;
   reduced: boolean;
@@ -125,7 +128,7 @@ export default function AnuncioVista({
         />
       )}
 
-      {esResumen ? <Resumen anuncio={anuncio} contexto={contexto} /> : !esLibre && <Plantilla anuncio={anuncio} />}
+      {esResumen ? <Resumen anuncio={anuncio} contexto={contexto} saliendo={saliendo} /> : !esLibre && <Plantilla anuncio={anuncio} saliendo={saliendo} />}
 
       {/* Barra de progreso discreta */}
       {activo && duracion > 0 && (

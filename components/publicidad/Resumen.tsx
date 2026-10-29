@@ -31,9 +31,12 @@ const ABAJO = M + 40 + QR_LADO + 220;
 export default function Resumen({
   anuncio,
   contexto,
+  saliendo = false,
 }: {
   anuncio: AnuncioPublico;
   contexto: AnuncioPublico[];
+  /** El reproductor está por cambiar: el menú se desvanece. */
+  saliendo?: boolean;
 }) {
   const reduced = useReducedMotion();
   // El fondo del resumen es SU color; cada renglón usa el color de su anuncio.
@@ -82,9 +85,12 @@ export default function Resumen({
   });
 
   return (
-    <div
+    <motion.div
       className="absolute inset-0"
       style={{ width: LIENZO.ancho, height: LIENZO.alto, color: par.tinta }}
+      initial={false}
+      animate={saliendo ? { opacity: 0, y: reduced ? 0 : -16 } : { opacity: 1, y: 0 }}
+      transition={{ duration: reduced ? 0.25 : 0.5, ease: [0.4, 0, 0.2, 1] }}
     >
       <div
         className="absolute flex flex-col"
@@ -297,12 +303,13 @@ export default function Resumen({
                 tinta={par.tinta}
                 acento={par.acento}
                 lado={QR_LADO}
+                revelar={reduced ? undefined : Math.min(0.15 + (ultimo + 2) * 0.07, 1.2) + 0.4}
               />
             </motion.div>
           )}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

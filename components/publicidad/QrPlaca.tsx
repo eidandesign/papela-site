@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { motion } from "framer-motion";
 import { conUtm } from "@/lib/utm";
 
 // QR sobre placa cremita, generado en el cliente con UTM (fuente pantalla ·
@@ -18,6 +19,7 @@ export default function QrPlaca({
   tinta,
   acento,
   lado = QR_LADO,
+  revelar,
 }: {
   url: string;
   campaign: string;
@@ -25,6 +27,8 @@ export default function QrPlaca({
   tinta: string;
   acento: string;
   lado?: number;
+  /** Segundos: el código se descubre de arriba abajo como un escáner (sin valor = ya visible). */
+  revelar?: number;
 }) {
   const [src, setSrc] = useState<string | null>(null);
   const destino = conUtm(url, { source: "pantalla", medium: "tienda", campaign });
@@ -50,10 +54,22 @@ export default function QrPlaca({
       className="flex flex-col items-center bg-[var(--color-cremita)]"
       style={{ padding: pad, gap: Math.round(36 * k), width: lado + pad * 2, borderRadius: Math.round(64 * k), boxShadow: "0 40px 120px rgba(0,0,0,.25)", borderTop: `${Math.round(16 * k)}px solid ${acento}` }}
     >
-      <div style={{ width: lado, height: lado, borderRadius: Math.round(24 * k) }} className="overflow-hidden bg-[var(--color-cremita)]">
+      <div style={{ width: lado, height: lado, borderRadius: Math.round(24 * k) }} className="relative overflow-hidden bg-[var(--color-cremita)]">
         {src && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={src} alt="" width={lado} height={lado} className="block" style={{ imageRendering: "pixelated" }} />
+        )}
+        {/* Escáner: una cortina cremita con borde de acento baja y destapa el código. */}
+        {revelar !== undefined && (
+          <motion.div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[var(--color-cremita)]"
+            initial={{ y: "0%" }}
+            animate={{ y: "120%" }}
+            transition={{ duration: 0.9, delay: revelar, ease: [0.65, 0, 0.35, 1] }}
+          >
+            <div className="absolute left-0 right-0 top-0" style={{ height: Math.max(6, Math.round(12 * k)), background: acento, boxShadow: `0 0 ${Math.round(40 * k)}px ${acento}` }} />
+          </motion.div>
         )}
       </div>
       {texto && (

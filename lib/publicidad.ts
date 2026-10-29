@@ -20,11 +20,13 @@ export const LIENZO = { ancho: 2160, alto: 3840 } as const;
 export const MARGEN_SEGURO = 120;
 /** Crossfade entre anuncios. */
 export const CROSSFADE_MS = 800;
+/** Antes del crossfade, la info del anuncio que se va sale (panel, textos y QR). */
+export const SALIDA_MS = 600;
 /** Sondeo de `version` a la API. */
 export const SONDEO_MS = 60_000;
 /** Recarga completa (fugas de memoria del navegador de la pantalla). */
 export const RECARGA_MS = 6 * 60 * 60 * 1000;
-export const DURACION_DEFAULT_SEG = 10;
+export const DURACION_DEFAULT_SEG = 6;
 
 export type Plantilla = "taller" | "clase" | "producto" | "especial" | "resumen" | "libre";
 export type FondoTipo = "imagen" | "video";
@@ -168,7 +170,7 @@ export const ANUNCIOS_DEMO: AnuncioPublico[] = [
     ctaTexto: "Escanea para reservar",
     qrUrl: "https://www.papela-atelier.com/talleres",
     fondo: F("/images/taller-papela-1.jpg", 40),
-    duracionSeg: 10,
+    duracionSeg: 6,
     iniciaEn: null,
     terminaEn: null,
   },
@@ -183,7 +185,7 @@ export const ANUNCIOS_DEMO: AnuncioPublico[] = [
     ctaTexto: "Pregunta en caja",
     qrUrl: "https://www.papela-atelier.com/clases",
     fondo: F("/images/modelado-arcillla-papela.jpg", 35),
-    duracionSeg: 10,
+    duracionSeg: 6,
     iniciaEn: null,
     terminaEn: null,
   },
@@ -198,7 +200,7 @@ export const ANUNCIOS_DEMO: AnuncioPublico[] = [
     ctaTexto: "Míralas en la vitrina",
     qrUrl: "https://www.papela-atelier.com/tienda",
     fondo: F("/images/dibujando-papela.jpg", 45),
-    duracionSeg: 10,
+    duracionSeg: 6,
     iniciaEn: null,
     terminaEn: null,
   },
@@ -213,7 +215,7 @@ export const ANUNCIOS_DEMO: AnuncioPublico[] = [
     ctaTexto: "Escanea para apartar",
     qrUrl: "https://www.papela-atelier.com/talleres",
     fondo: F("/images/inspirados-artistas-papela.jpg", 40),
-    duracionSeg: 10,
+    duracionSeg: 6,
     iniciaEn: null,
     terminaEn: null,
   },

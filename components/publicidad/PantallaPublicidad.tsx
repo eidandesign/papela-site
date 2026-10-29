@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { PREVIEW_ALLOWED_ORIGINS, PUBLICIDAD_MSG_READY, PUBLICIDAD_MSG_RENDER, RECARGA_MS, pareceAnuncio, quitarResumenesVacios, type AnuncioPublico } from "@/lib/publicidad";
+import { PREVIEW_ALLOWED_ORIGINS, PUBLICIDAD_MSG_READY, PUBLICIDAD_MSG_RENDER, RECARGA_MS, SALIDA_MS, pareceAnuncio, quitarResumenesVacios, type AnuncioPublico } from "@/lib/publicidad";
 import Escenario from "./Escenario";
 import Reproductor from "./Reproductor";
 import AnuncioVista from "./AnuncioVista";
@@ -34,6 +34,15 @@ export default function PantallaPublicidad() {
   // Los demás anuncios (solo los manda el editor cuando el borrador es un Resumen).
   const [contextoPreview, setContextoPreview] = useState<AnuncioPublico[]>([]);
   const [vuelta, setVuelta] = useState(0);
+  // Igual que la pantalla: al terminar, la info sale y luego se repite la entrada.
+  const [saliendoPreview, setSaliendoPreview] = useState(false);
+  const terminarVuelta = useCallback(() => {
+    setSaliendoPreview(true);
+    setTimeout(() => {
+      setSaliendoPreview(false);
+      setVuelta((v) => v + 1);
+    }, SALIDA_MS);
+  }, []);
   useEffect(() => {
     if (!preview) return;
     function onMessage(e: MessageEvent) {
@@ -78,7 +87,7 @@ export default function PantallaPublicidad() {
         borrador ? (
           // Cada vuelta remonta la vista para repetir la entrada animada.
           <>
-            <AnuncioVista key={`${borrador.id}-${vuelta}`} anuncio={borrador} activo onFin={() => setVuelta((v) => v + 1)} onError={() => {}} reduced={false} contexto={contextoPreview} />
+            <AnuncioVista key={`${borrador.id}-${vuelta}`} anuncio={borrador} activo saliendo={saliendoPreview} onFin={terminarVuelta} onError={() => {}} reduced={false} contexto={contextoPreview} />
             <LogoFijo />
           </>
         ) : (

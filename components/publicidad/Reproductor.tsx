@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { CROSSFADE_MS, LIENZO, type AnuncioPublico } from "@/lib/publicidad";
+import { CROSSFADE_MS, LIENZO, SALIDA_MS, type AnuncioPublico } from "@/lib/publicidad";
 import AnuncioVista from "./AnuncioVista";
 import LogoFijo from "./LogoFijo";
 import AnimatedLogo from "@/components/site/AnimatedLogo";
 
-// Reproductor en bucle con crossfade de 800 ms: la capa que entra se monta
-// encima con opacity 0→1 y la anterior se desmonta al terminar el fundido
-// (solo se anima opacity). Mientras un anuncio corre, se precarga el medio del
+// Reproductor en bucle. Cada cambio va en dos tiempos: primero la info del
+// anuncio que se va sale (SALIDA_MS, ver coreografia.ts) y luego el crossfade
+// de 800 ms: la capa que entra se monta encima con opacity 0→1 y la anterior
+// se desmonta al terminar el fundido (solo se anima opacity). Mientras un anuncio corre, se precarga el medio del
 // siguiente. Un medio que falla se salta y se sigue con el próximo.
 //
 // `anuncios` puede cambiar en caliente (versión nueva del admin): la lista
@@ -17,7 +18,7 @@ import AnimatedLogo from "@/components/site/AnimatedLogo";
 // `antesDeAvanzar` deja que el padre haga algo entre anuncios (aplicar la
 // lista pendiente, recargar la página cada 6 h).
 
-type Capa = { key: number; anuncio: AnuncioPublico; entrando: boolean };
+type Capa = { key: number; anuncio: AnuncioPublico; entrando: boolean; saliendo?: boolean };
 
 export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: AnuncioPublico[]; antesDeAvanzar?: () => "recargar" | void }) {
   const reduced = !!useReducedMotion();
@@ -45,7 +46,17 @@ export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: An
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anuncios]);
 
-  const avanzar = useCallback(() => {
+  // Antes de cambiar, la info del anuncio visible sale (SALIDA_MS) con la foto
+  // todavía detrás; después entra la capa nueva con el crossfade. `cambiando`
+  // evita que un onFin/onError repetido dispare dos cambios.
+  const cambiando = useRef(false);
+  const estadoRef = useRef({ capas, visibleKey });
+  useEffect(() => {
+    estadoRef.current = { capas, visibleKey };
+  }, [capas, visibleKey]);
+
+  const cambiar = useCallback(() => {
+    cambiando.current = false;
     if (antesDeAvanzar?.() === "recargar") {
       window.location.reload();
       return;
@@ -55,13 +66,14 @@ export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: An
       setCapas([]);
       return;
     }
-    const actual = capas.find((c) => c.key === visibleKey)?.anuncio;
+    const { capas: actuales, visibleKey: vk } = estadoRef.current;
+    const actual = actuales.find((c) => c.key === vk)?.anuncio;
     const idxActual = actual ? lista.findIndex((a) => a.id === actual.id) : -1;
     const siguiente = (idxActual >= 0 ? idxActual + 1 : indiceRef.current + 1) % lista.length;
     indiceRef.current = siguiente;
     keyRef.current += 1;
     const k = keyRef.current;
-    setCapas((prev) => [...prev.filter((c) => c.key === visibleKey), { key: k, anuncio: lista[siguiente], entrando: true }]);
+    setCapas((prev) => [...prev.filter((c) => c.key === vk), { key: k, anuncio: lista[siguiente], entrando: true }]);
     // Dos frames después, la capa nueva pasa a opacity 1 (transición CSS).
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
@@ -70,7 +82,15 @@ export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: An
       }),
     );
     setTimeout(() => setCapas((prev) => prev.filter((c) => c.key === k)), CROSSFADE_MS + 50);
-  }, [antesDeAvanzar, capas, visibleKey]);
+  }, [antesDeAvanzar]);
+
+  const avanzar = useCallback(() => {
+    if (cambiando.current) return;
+    cambiando.current = true;
+    const vk = estadoRef.current.visibleKey;
+    setCapas((prev) => prev.map((c) => (c.key === vk ? { ...c, saliendo: true } : c)));
+    setTimeout(cambiar, reduced ? 250 : SALIDA_MS);
+  }, [cambiar, reduced]);
 
   // Precarga del siguiente medio.
   useEffect(() => {
@@ -108,7 +128,7 @@ export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: An
             className="absolute inset-0"
             style={{ opacity: c.entrando ? 0 : 1, transition: `opacity ${reduced ? 150 : CROSSFADE_MS}ms ease-in-out`, zIndex: c.key }}
           >
-            <AnuncioVista anuncio={c.anuncio} activo={c.key === visibleKey} onFin={avanzar} onError={avanzar} reduced={reduced} contexto={anuncios} />
+            <AnuncioVista anuncio={c.anuncio} activo={c.key === visibleKey} saliendo={!!c.saliendo} onFin={avanzar} onError={avanzar} reduced={reduced} contexto={anuncios} />
           </div>
         ))}
       </div>
