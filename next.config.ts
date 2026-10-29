@@ -47,6 +47,19 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Pantalla de la tienda: el editor del admin la embebe como vista
+        // previa (postMessage), igual que /mini-site-preview.
+        source: "/publicidad",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: `frame-ancestors 'self' https://admin.papela-atelier.com${
+              process.env.NODE_ENV === "development" ? " http://localhost:*" : ""
+            }`,
+          },
+        ],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Frame-Options", value: "SAMEORIGIN" },

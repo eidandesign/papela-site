@@ -12,6 +12,7 @@ import { isMiniSitePath } from "@/lib/mini-sites";
 // /club-creativo/dopamina = juego inmersivo (lienzo a pantalla completa, botón Salir propio)
 // /whoweare = Brand Book 2026 (presentación a pantalla completa, iframe a public/brand-book)
 // /mini-site-preview = preview del editor de Mini Sites (iframe del admin)
+// /publicidad = pantalla vertical de la tienda (reproductor de anuncios; también es el preview del admin)
 // Los Mini Sites de clientes (/<slug>, un solo segmento que no es página del
 // sitio) también son standalone: ver isMiniSitePath en lib/mini-sites.ts.
 const STANDALONE_ROUTES = [
@@ -23,6 +24,7 @@ const STANDALONE_ROUTES = [
   "/cotizacion",
   "/club-creativo/dopamina",
   "/whoweare",
+  "/publicidad",
 ];
 
 export default function ConditionalShell({ children }: { children: React.ReactNode }) {

@@ -129,6 +129,7 @@ export const SITE_ROOT_SEGMENTS = new Set([
   "personaliza",
   "privacidad",
   "productos",
+  "publicidad",
   "satisfaccion-clases",
   "satisfaccion-talleres",
   "servicios",

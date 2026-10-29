@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from "react";
  * - Ojos y boca son paths vectoriales (extraídos de Logo-papela-verde.svg,
  *   viewBox 116×116) que se trasladan hacia el cursor en desktop y de forma
  *   aleatoria en mobile / dispositivos sin puntero fino.
+ * - `mirada="aleatoria"` fuerza la mirada aleatoria aunque haya mouse: la
+ *   pantalla de la tienda (/publicidad) no tiene a nadie moviendo un cursor.
  */
 
 const RING_SRC = "/site/logo-ring.svg";
@@ -31,9 +33,11 @@ type Offset = { x: number; y: number };
 export default function AnimatedLogo({
   color = "var(--color-cremita)",
   className = "",
+  mirada = "auto",
 }: {
   color?: string;
   className?: string;
+  mirada?: "auto" | "aleatoria";
 }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [gaze, setGaze] = useState<Offset>({ x: 0, y: 0 });
@@ -65,7 +69,7 @@ export default function AnimatedLogo({
     // Respeta la preferencia de movimiento reducido: cara quieta.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const fine = window.matchMedia("(pointer: fine)").matches;
+    const fine = mirada === "auto" && window.matchMedia("(pointer: fine)").matches;
 
     if (fine) {
       // Throttle a un update por frame: mousemove dispara muchos eventos,
@@ -115,7 +119,7 @@ export default function AnimatedLogo({
     };
     timer = setTimeout(wander, 600);
     return () => clearTimeout(timer);
-  }, []);
+  }, [mirada]);
 
   const eyeT = `translate(${(gaze.x * EYE_SHIFT).toFixed(2)} ${(gaze.y * EYE_SHIFT).toFixed(2)})`;
   const mouthT = `translate(${(gaze.x * MOUTH_SHIFT).toFixed(2)} ${(gaze.y * MOUTH_SHIFT * 0.6).toFixed(2)})`;

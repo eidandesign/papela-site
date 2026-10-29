@@ -704,3 +704,28 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .dopa-nube-x, .dopa-nube-y { animation: none; }
 }
+
+/* Publicidad (pantalla vertical de la tienda, /publicidad). Ken Burns solo
+   con transform; la barra de progreso solo con transform (scaleX). La
+   duración la pone cada anuncio por inline style. */
+@keyframes pub-kenburns {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+.pub-kenburns {
+  animation: pub-kenburns 10s linear forwards;
+  will-change: transform;
+}
+@keyframes pub-progreso {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.pub-progreso {
+  transform-origin: left center;
+  animation: pub-progreso 10s linear forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pub-kenburns {
+    animation: none !important;
+  }
+}
