@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { PREVIEW_ALLOWED_ORIGINS, PUBLICIDAD_MSG_READY, PUBLICIDAD_MSG_RENDER, RECARGA_MS, SALIDA_MS, pareceAnuncio, quitarResumenesVacios, type AnuncioPublico } from "@/lib/publicidad";
+import { reportarDiag, PREVIEW_ALLOWED_ORIGINS, PUBLICIDAD_MSG_READY, PUBLICIDAD_MSG_RENDER, RECARGA_MS, SALIDA_MS, pareceAnuncio, quitarResumenesVacios, type AnuncioPublico } from "@/lib/publicidad";
 import Escenario from "./Escenario";
 import Reproductor from "./Reproductor";
 import AnuncioVista from "./AnuncioVista";
@@ -56,6 +56,25 @@ export default function PantallaPublicidad() {
     window.addEventListener("message", onMessage);
     if (window.parent && window.parent !== window) window.parent.postMessage({ type: PUBLICIDAD_MSG_READY }, "*");
     return () => window.removeEventListener("message", onMessage);
+  }, [preview]);
+
+  // Errores de JavaScript de la pantalla → diagnóstico (máx. 5 por carga).
+  useEffect(() => {
+    if (preview) return;
+    let n = 0;
+    const enviar = (tipo: string, msg: unknown) => {
+      if (n++ >= 5) return;
+      reportarDiag({ tipo, error: String(msg).slice(0, 500) });
+    };
+    const onError = (e: ErrorEvent) => enviar("error-js", `${e.message} @ ${e.filename}:${e.lineno}`);
+    const onRechazo = (e: PromiseRejectionEvent) => enviar("promesa", e.reason instanceof Error ? `${e.reason.name}: ${e.reason.message}` : e.reason);
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRechazo);
+    reportarDiag({ tipo: "arranque", sw: !!navigator.serviceWorker?.controller, enLinea: navigator.onLine, pantalla: [window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, window.devicePixelRatio] });
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRechazo);
+    };
   }, [preview]);
 
   // ── Modo pantalla ──────────────────────────────────────────────────────────

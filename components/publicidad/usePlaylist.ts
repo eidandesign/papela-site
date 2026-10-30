@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ANUNCIOS_DEMO, PUBLICIDAD_API, SONDEO_MS, pareceRespuesta, type AnuncioPublico, type PublicidadRespuesta } from "@/lib/publicidad";
+import { ANUNCIOS_DEMO, PUBLICIDAD_API, SONDEO_MS, pareceRespuesta, reportarDiag, type AnuncioPublico, type PublicidadRespuesta } from "@/lib/publicidad";
 import { logger } from "@/lib/logger";
 
 // Lista de anuncios de la pantalla:
@@ -56,6 +56,7 @@ export function usePlaylist(pantalla: string, activo: boolean, demo = false) {
       return;
     }
     let vivo = true;
+    let ultimoReporte = 0;
     const cache = leerCache(pantalla);
     if (cache) {
       versionRef.current = cache.version;
@@ -84,6 +85,11 @@ export function usePlaylist(pantalla: string, activo: boolean, demo = false) {
         if (!vivo) return;
         if (primera && versionRef.current < 0) setEstado({ version: 0, anuncios: [], origen: "vacio" });
         logger.warn("publicidad: no se pudo leer la API", { error: e instanceof Error ? e.message : String(e) });
+        // Una vez al arrancar y luego cada 10 minutos como máximo.
+        if (primera || Date.now() - ultimoReporte > 10 * 60_000) {
+          ultimoReporte = Date.now();
+          reportarDiag({ tipo: "api", error: e instanceof Error ? `${e.name}: ${e.message}` : String(e), enLinea: navigator.onLine, cache: versionRef.current });
+        }
       }
     }
 

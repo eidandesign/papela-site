@@ -163,6 +163,23 @@ export function quitarResumenesVacios(lista: AnuncioPublico[]): AnuncioPublico[]
   return lista.filter((a) => a.plantilla !== "resumen" || entradasResumen(lista, a.id).length > 0);
 }
 
+/**
+ * Manda un reporte a /api/public/publicidad-diag (se lee en los logs de
+ * Vercel con "[publicidad-diag]"). Para ver qué le pasa a la pantalla de la
+ * tienda, que no tiene consola a la mano. Nunca lanza.
+ */
+export function reportarDiag(datos: Record<string, unknown>): void {
+  try {
+    if (typeof window === "undefined" || new URLSearchParams(window.location.search).get("preview") === "1") return;
+    const cuerpo = JSON.stringify({ ...datos, pagina: window.location.href.slice(0, 200) });
+    if (!navigator.sendBeacon?.("/api/public/publicidad-diag", cuerpo)) {
+      fetch("/api/public/publicidad-diag", { method: "POST", body: cuerpo, keepalive: true }).catch(() => {});
+    }
+  } catch {
+    // el diagnóstico nunca rompe la pantalla
+  }
+}
+
 export function pareceAnuncio(v: unknown): v is AnuncioPublico {
   if (!v || typeof v !== "object") return false;
   const a = v as Record<string, unknown>;

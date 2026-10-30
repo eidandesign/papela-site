@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LIENZO, duracionDe, parDe, type AnuncioPublico } from "@/lib/publicidad";
+import { LIENZO, duracionDe, parDe, reportarDiag, type AnuncioPublico } from "@/lib/publicidad";
 import Plantilla from "./Plantilla";
 import Resumen from "./Resumen";
 
@@ -85,7 +85,7 @@ export default function AnuncioVista({
   // corriendo y, si no, por qué (ver /api/public/publicidad-diag). Una vez por
   // anuncio y por carga de página. No aplica a la vista previa del admin.
   useEffect(() => {
-    if (!activo || !esVideo || typeof window === "undefined" || new URLSearchParams(window.location.search).get("preview") === "1") return;
+    if (!activo || !esVideo || typeof window === "undefined") return;
     const v = videoRef.current;
     if (!v) return;
     const clave = `diag:${anuncio.id}`;
@@ -114,14 +114,7 @@ export default function AnuncioVista({
         h264Main31: v.canPlayType('video/mp4; codecs="avc1.4d401f"'),
         pantalla: [window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, window.devicePixelRatio],
       };
-      try {
-        const cuerpo = JSON.stringify(datos);
-        if (!navigator.sendBeacon?.("/api/public/publicidad-diag", cuerpo)) {
-          fetch("/api/public/publicidad-diag", { method: "POST", body: cuerpo, keepalive: true }).catch(() => {});
-        }
-      } catch {
-        // el diagnóstico nunca rompe la pantalla
-      }
+      reportarDiag({ tipo: "video", ...datos });
     }, 3000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
