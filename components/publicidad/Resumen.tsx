@@ -143,24 +143,18 @@ export default function Resumen({
                 className="flex items-center"
                 style={{ gap: 32, minHeight: porGrupo - 32, marginBottom: conPaquete(g) ? 16 : 0 }}
               >
+                {/* Título del grupo grande y sin línea (oct-2026, a petición del dueño: "Clases" no se leía) */}
                 <span
-                  className="label"
+                  className="font-serif italic flex-1 min-w-0"
                   style={{
-                    fontSize: 40,
-                    letterSpacing: "0.22em",
+                    fontSize: 84,
+                    lineHeight: 1.05,
                     color: par.acento,
+                    paddingLeft: pad,
                   }}
                 >
                   {g.titulo}
                 </span>
-                <span
-                  className="flex-1"
-                  style={{
-                    height: 3,
-                    background: "currentColor",
-                    opacity: 0.25,
-                  }}
-                />
                 {/* Encabezados de las columnas de precio, alineados con las celdas de cada renglón */}
                 {conPaquete(g) && (
                   <span className="flex shrink-0 self-stretch" style={{ paddingRight: pad }}>
@@ -392,8 +386,7 @@ function conPaquete(g: GrupoResumen): boolean {
 
 function EncabezadoCol({ titulo, nota, acento }: { titulo: string; nota?: string; acento: string }) {
   return (
-    <span className="relative flex flex-col items-center justify-end text-center" style={{ width: COL, padding: `0 ${COL_AIRE}px 8px` }}>
-      <Divisor />
+    <span className="flex flex-col items-center justify-end text-center" style={{ width: COL, padding: `0 ${COL_AIRE}px 8px` }}>
       <span className="label" style={{ fontSize: 34, lineHeight: "42px", letterSpacing: "0.12em", color: acento }}>
         {titulo}
       </span>
