@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { reportarDiag, PREVIEW_ALLOWED_ORIGINS, PUBLICIDAD_MSG_READY, PUBLICIDAD_MSG_RENDER, RECARGA_MS, SALIDA_MS, pareceAnuncio, quitarResumenesVacios, type AnuncioPublico } from "@/lib/publicidad";
+import { reportarDiag, fechaHoraMX, tocaRecargar, PREVIEW_ALLOWED_ORIGINS, PUBLICIDAD_MSG_READY, PUBLICIDAD_MSG_RENDER, SALIDA_MS, pareceAnuncio, quitarResumenesVacios, type AnuncioPublico } from "@/lib/publicidad";
 import Escenario from "./Escenario";
 import Reproductor from "./Reproductor";
 import AnuncioVista from "./AnuncioVista";
@@ -14,6 +14,8 @@ import { usePlaylist } from "./usePlaylist";
 //     service worker y recarga cada 6 h;
 //   · preview (?preview=1, iframe del editor del admin): pinta el borrador que
 //     llega por postMessage con el MISMO AnuncioVista, en bucle sobre sí mismo.
+
+const CLAVE_RECARGA = "papela_publicidad_recarga_dia";
 
 function origenPermitido(origin: string): boolean {
   if (PREVIEW_ALLOWED_ORIGINS.includes(origin)) return true;
@@ -78,24 +80,38 @@ export default function PantallaPublicidad() {
   }, [preview]);
 
   // ── Modo pantalla ──────────────────────────────────────────────────────────
-  const { estado, aplicarPendiente, codigoNuevo } = usePlaylist(pantalla, !preview, demo);
-  const recargarRef = useRef(false);
+  const { estado, aplicarPendiente } = usePlaylist(pantalla, !preview, demo);
+  const cargadaEnRef = useRef(0);
 
   useEffect(() => {
     if (preview) return;
-    const t = setTimeout(() => {
-      recargarRef.current = true;
-    }, RECARGA_MS);
+    cargadaEnRef.current = Date.now();
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
       navigator.serviceWorker.register("/publicidad-sw.js", { scope: "/publicidad" }).catch(() => {});
     }
-    return () => clearTimeout(t);
   }, [preview]);
 
+  // Entre anuncios: recarga de madrugada (una vez al día, ver tocaRecargar) o
+  // aplica la lista pendiente. El día de la recarga queda en localStorage
+  // para no recargar en bucle durante esa hora.
   const antesDeAvanzar = useCallback((): "recargar" | void => {
-    if (recargarRef.current || codigoNuevo) return "recargar";
+    const ahora = new Date();
+    let recargadaDia: string | null = null;
+    try {
+      recargadaDia = localStorage.getItem(CLAVE_RECARGA);
+    } catch {
+      /* sin storage */
+    }
+    if (tocaRecargar({ ahora, cargadaEn: cargadaEnRef.current, recargadaDia })) {
+      try {
+        localStorage.setItem(CLAVE_RECARGA, fechaHoraMX(ahora).dia);
+      } catch {
+        /* sin storage */
+      }
+      return "recargar";
+    }
     aplicarPendiente();
-  }, [aplicarPendiente, codigoNuevo]);
+  }, [aplicarPendiente]);
 
   // Un Resumen sin nada que listar se salta (sería una pantalla vacía).
   const anuncios = useMemo(() => quitarResumenesVacios(estado?.anuncios ?? []), [estado]);

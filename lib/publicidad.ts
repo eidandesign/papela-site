@@ -26,8 +26,34 @@ export const CROSSFADE_MS = 800;
 export const SALIDA_MS = 600;
 /** Sondeo de `version` a la API. */
 export const SONDEO_MS = 60_000;
-/** Recarga completa (fugas de memoria del navegador de la pantalla). */
-export const RECARGA_MS = 6 * 60 * 60 * 1000;
+/**
+ * Recarga completa de la página (fugas de memoria del navegador de la
+ * pantalla y código nuevo): UNA vez al día, en la madrugada (hora de
+ * México), cuando la tienda está cerrada — a petición del dueño (oct-2026):
+ * la pantalla de carga (verde con el logo) se veía en horario de tienda
+ * cada vez que se subía un cambio. Si por lo que sea se pasó la ventana,
+ * se recarga al cumplir RECARGA_MAX_MS encendida.
+ */
+export const RECARGA_HORA_MX = 4;
+export const RECARGA_MAX_MS = 26 * 60 * 60 * 1000;
+const TZ_MX = "America/Mexico_City";
+
+/** "YYYY-MM-DD" y hora (0–23) en hora de México. */
+export function fechaHoraMX(d: Date): { dia: string; hora: number } {
+  const partes = new Intl.DateTimeFormat("en-CA", { timeZone: TZ_MX, year: "numeric", month: "2-digit", day: "2-digit", hour: "numeric", hour12: false }).formatToParts(d);
+  const v = (t: string) => partes.find((p) => p.type === t)?.value ?? "";
+  return { dia: `${v("year")}-${v("month")}-${v("day")}`, hora: Number(v("hour")) % 24 };
+}
+
+/**
+ * ¿Toca recargar la página entre un anuncio y el siguiente? Puro.
+ * `recargadaDia` = el día (MX) en que ya se recargó dentro de la ventana.
+ */
+export function tocaRecargar(opts: { ahora: Date; cargadaEn: number; recargadaDia: string | null }): boolean {
+  const { dia, hora } = fechaHoraMX(opts.ahora);
+  if (hora === RECARGA_HORA_MX && opts.recargadaDia !== dia) return true;
+  return opts.ahora.getTime() - opts.cargadaEn >= RECARGA_MAX_MS;
+}
 export const DURACION_DEFAULT_SEG = 6;
 
 export type Plantilla = "taller" | "clase" | "producto" | "especial" | "resumen" | "libre";

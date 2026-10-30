@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ANUNCIOS_DEMO, PUBLICIDAD_API, PUBLICIDAD_BUILD, SONDEO_MS, pareceRespuesta, reportarDiag, type AnuncioPublico, type PublicidadRespuesta } from "@/lib/publicidad";
+import { ANUNCIOS_DEMO, PUBLICIDAD_API, SONDEO_MS, pareceRespuesta, reportarDiag, type AnuncioPublico, type PublicidadRespuesta } from "@/lib/publicidad";
 import { logger } from "@/lib/logger";
 
 // Lista de anuncios de la pantalla:
@@ -41,8 +41,6 @@ function guardarCache(pantalla: string, r: PublicidadRespuesta) {
 export function usePlaylist(pantalla: string, activo: boolean, demo = false) {
   const [estado, setEstado] = useState<Estado | null>(null);
   const [pendiente, setPendiente] = useState<Estado | null>(null);
-  // true = hay un deploy más nuevo que el código que corre esta página.
-  const [codigoNuevo, setCodigoNuevo] = useState(false);
   const versionRef = useRef<number>(-1);
   // ¿Se está reproduciendo algo? Sin anuncios en pantalla no hay "fin del
   // anuncio en curso" que aplique la versión pendiente, así que una versión
@@ -95,31 +93,8 @@ export function usePlaylist(pantalla: string, activo: boolean, demo = false) {
       }
     }
 
-    // Build del deploy en vivo vs. el incrustado: si cambió, el reproductor
-    // recarga la página al terminar el anuncio en curso. Una sola vez por
-    // build (sessionStorage) para no recargar en bucle si el HTML nuevo
-    // tardara en llegar.
-    async function revisarBuild() {
-      if (PUBLICIDAD_BUILD === "dev") return;
-      try {
-        const res = await fetch("/api/public/pantalla-build", { cache: "no-store", signal: AbortSignal.timeout(8000) });
-        if (!res.ok) return;
-        const j = (await res.json()) as { build?: string };
-        if (!vivo || !j.build || j.build === "dev" || j.build === PUBLICIDAD_BUILD) return;
-        if (sessionStorage.getItem("papela_publicidad_recarga_por") === j.build) return;
-        sessionStorage.setItem("papela_publicidad_recarga_por", j.build);
-        setCodigoNuevo(true);
-      } catch {
-        /* sin red: nada */
-      }
-    }
-
     void sondear(true);
-    void revisarBuild();
-    const t = setInterval(() => {
-      void sondear(false);
-      void revisarBuild();
-    }, SONDEO_MS);
+    const t = setInterval(() => void sondear(false), SONDEO_MS);
     return () => {
       vivo = false;
       clearInterval(t);
@@ -136,5 +111,5 @@ export function usePlaylist(pantalla: string, activo: boolean, demo = false) {
     return true;
   }
 
-  return { estado, hayPendiente: !!pendiente, aplicarPendiente, codigoNuevo };
+  return { estado, hayPendiente: !!pendiente, aplicarPendiente };
 }
