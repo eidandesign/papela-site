@@ -193,6 +193,17 @@ export default function AnuncioVista({
         />
       )}
 
+      {/* Degradado ligero arriba, donde va el logo fijo: sobre una foto o un
+          video claros se perdía (oct-2026, a petición del dueño). El Resumen
+          no lo lleva (su fondo ya es el verde de marca). Cubre el logo y un
+          poco más (450 px de logo + margen) y se apaga antes del título. */}
+      {!esResumen && !sinMedio && (
+        <div
+          className="absolute left-0 right-0 top-0 pointer-events-none"
+          style={{ height: 900, background: "linear-gradient(180deg, rgba(0,0,0,.42) 0%, rgba(0,0,0,.22) 45%, rgba(0,0,0,0) 100%)" }}
+        />
+      )}
+
       {esResumen ? <Resumen anuncio={anuncio} contexto={contexto} saliendo={saliendo} /> : !esLibre && <Plantilla anuncio={anuncio} saliendo={saliendo} />}
 
       {/* Barra de progreso discreta */}
