@@ -142,7 +142,7 @@ export default function Resumen({
                 {...entra(g.orden)}
                 className="flex items-center"
                 // Con columnas, la nota "(incluye todos los materiales)" cuelga bajo PAQUETE: se le deja sitio.
-                style={{ gap: 32, minHeight: porGrupo - 32, marginBottom: conPaquete(g) ? 52 : 0 }}
+                style={{ gap: 32, minHeight: porGrupo - 32, marginBottom: conPaquete(g) ? 60 : 0 }}
               >
                 {/* Título del grupo grande y sin línea (oct-2026, a petición del dueño: "Clases" no se leía) */}
                 <span
@@ -388,12 +388,12 @@ function conPaquete(g: GrupoResumen): boolean {
 function EncabezadoCol({ titulo, nota, acento }: { titulo: string; nota?: string; acento: string }) {
   return (
     <span className="relative flex items-center justify-center text-center" style={{ width: COL, padding: `0 ${COL_AIRE}px` }}>
-      <span className="label" style={{ fontSize: 40, lineHeight: "48px", letterSpacing: "0.18em", color: acento }}>
+      <span className="label" style={{ fontSize: 56, lineHeight: "64px", letterSpacing: "0.16em", color: acento }}>
         {titulo}
       </span>
       {/* La nota va absoluta para que CLASE y PAQUETE queden a la misma altura */}
       {nota && (
-        <span className="absolute left-0 right-0 font-sans font-medium" style={{ top: "calc(50% + 28px)", fontSize: 30, lineHeight: "36px", opacity: 0.9 }}>
+        <span className="absolute left-0 right-0 font-sans font-medium" style={{ top: "calc(50% + 36px)", fontSize: 32, lineHeight: "38px", opacity: 0.9 }}>
           ({nota.toLowerCase()})
         </span>
       )}
