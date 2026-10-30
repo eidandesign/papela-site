@@ -81,6 +81,52 @@ export default function AnuncioVista({
     };
   }, [activo, esVideo, reduced]);
 
+  // Diagnóstico: a los 3 s del slide de video se reporta si de verdad está
+  // corriendo y, si no, por qué (ver /api/public/publicidad-diag). Una vez por
+  // anuncio y por carga de página. No aplica a la vista previa del admin.
+  useEffect(() => {
+    if (!activo || !esVideo || typeof window === "undefined" || new URLSearchParams(window.location.search).get("preview") === "1") return;
+    const v = videoRef.current;
+    if (!v) return;
+    const clave = `diag:${anuncio.id}`;
+    const w = window as unknown as Record<string, unknown>;
+    if (w[clave]) return;
+    let errorPlay = "";
+    v.play()?.catch((e: unknown) => {
+      errorPlay = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    });
+    const t = setTimeout(() => {
+      w[clave] = true;
+      const datos = {
+        anuncio: anuncio.id,
+        corre: !v.paused && v.currentTime > 0,
+        paused: v.paused,
+        currentTime: Number(v.currentTime.toFixed(2)),
+        readyState: v.readyState,
+        networkState: v.networkState,
+        error: v.error ? `${v.error.code} ${v.error.message || ""}`.trim() : null,
+        errorPlay: errorPlay || null,
+        reduced,
+        tam: [v.videoWidth, v.videoHeight],
+        src: v.currentSrc.split("/").pop(),
+        mp4: v.canPlayType("video/mp4"),
+        h264High41: v.canPlayType('video/mp4; codecs="avc1.640029"'),
+        h264Main31: v.canPlayType('video/mp4; codecs="avc1.4d401f"'),
+        pantalla: [window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, window.devicePixelRatio],
+      };
+      try {
+        const cuerpo = JSON.stringify(datos);
+        if (!navigator.sendBeacon?.("/api/public/publicidad-diag", cuerpo)) {
+          fetch("/api/public/publicidad-diag", { method: "POST", body: cuerpo, keepalive: true }).catch(() => {});
+        }
+      } catch {
+        // el diagnóstico nunca rompe la pantalla
+      }
+    }, 3000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activo, esVideo]);
+
   // Sin medio nunca se queda colgado: si no carga en 12 s, se salta.
   useEffect(() => {
     if (!activo || listo) return;
