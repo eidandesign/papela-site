@@ -48,22 +48,37 @@ export default function AnuncioVista({
 
   // Video: muted forzado (React no escribe el atributo), play() desde efecto,
   // reintento al volver a ser visible; con reduced-motion se queda en el póster.
+  // El navegador de la pantalla (Tizen) puede rechazar o ignorar un play()
+  // pedido antes de que el video tenga datos y lo dejaba en el póster: se
+  // reintenta en cuanto puede reproducir y, mientras siga en pausa, cada segundo.
   useEffect(() => {
     const v = videoRef.current;
     if (!v || !esVideo) return;
     v.muted = true;
+    v.defaultMuted = true;
+    v.setAttribute("muted", "");
     if (!activo) {
       v.pause();
       return;
     }
     if (reduced) return;
-    const play = () => v.play().catch(() => {});
+    const play = () => {
+      if (v.paused && !v.ended) v.play().catch(() => {});
+    };
     play();
     const onVis = () => {
       if (document.visibilityState === "visible") play();
     };
+    v.addEventListener("loadeddata", play);
+    v.addEventListener("canplay", play);
+    const reintento = setInterval(play, 1000);
     document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
+    return () => {
+      clearInterval(reintento);
+      v.removeEventListener("loadeddata", play);
+      v.removeEventListener("canplay", play);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [activo, esVideo, reduced]);
 
   // Sin medio nunca se queda colgado: si no carga en 12 s, se salta.
@@ -89,6 +104,7 @@ export default function AnuncioVista({
           src={anuncio.fondo.url}
           poster={anuncio.fondo.poster || undefined}
           muted
+          autoPlay={activo && !reduced}
           playsInline
           preload="auto"
           loop={anuncio.duracionSeg > 0}
