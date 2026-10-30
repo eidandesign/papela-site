@@ -103,15 +103,13 @@ export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: An
     if (sig.fondo.tipo === "imagen") {
       const img = new Image();
       img.src = sig.fondo.url;
-    } else {
-      const v = document.createElement("video");
-      v.preload = "auto";
-      v.muted = true;
-      v.src = sig.fondo.url;
-      if (sig.fondo.poster) {
-        const p = new Image();
-        p.src = sig.fondo.poster;
-      }
+    } else if (sig.fondo.poster) {
+      // Del video solo se precarga el póster. Antes se creaba un <video>
+      // suelto con preload="auto": en la pantalla de la tienda (Samsung
+      // Tizen, un solo decodificador de video) ese elemento se quedaba con
+      // el decodificador y el <video> real del anuncio nunca arrancaba.
+      const p = new Image();
+      p.src = sig.fondo.poster;
     }
   }, [capas, visibleKey]);
 

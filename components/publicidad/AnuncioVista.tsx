@@ -81,42 +81,52 @@ export default function AnuncioVista({
     };
   }, [activo, esVideo, reduced]);
 
-  // Diagnóstico: a los 3 s del slide de video se reporta si de verdad está
-  // corriendo y, si no, por qué (ver /api/public/publicidad-diag). Una vez por
-  // anuncio y por carga de página. No aplica a la vista previa del admin.
+  // Diagnóstico: cada vez que el slide de video está activo se reporta a los
+  // 3 s y a los 9 s si de verdad está corriendo y, si no, por qué (ver
+  // /api/public/publicidad-diag). Máximo 6 reportes por anuncio y carga de
+  // página. No aplica a la vista previa del admin.
   useEffect(() => {
     if (!activo || !esVideo || typeof window === "undefined") return;
     const v = videoRef.current;
     if (!v) return;
     const clave = `diag:${anuncio.id}`;
-    const w = window as unknown as Record<string, unknown>;
-    if (w[clave]) return;
+    const w = window as unknown as Record<string, number | undefined>;
+    if ((w[clave] ?? 0) >= 6) return;
     let errorPlay = "";
     v.play()?.catch((e: unknown) => {
       errorPlay = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
     });
-    const t = setTimeout(() => {
-      w[clave] = true;
-      const datos = {
+    const muestra = (momento: number) => {
+      w[clave] = (w[clave] ?? 0) + 1;
+      const rangos: number[][] = [];
+      for (let i = 0; i < v.buffered.length; i++) rangos.push([Number(v.buffered.start(i).toFixed(1)), Number(v.buffered.end(i).toFixed(1))]);
+      reportarDiag({
+        tipo: "video",
+        momento,
         anuncio: anuncio.id,
         corre: !v.paused && v.currentTime > 0,
         paused: v.paused,
         currentTime: Number(v.currentTime.toFixed(2)),
         readyState: v.readyState,
         networkState: v.networkState,
+        buffered: rangos,
         error: v.error ? `${v.error.code} ${v.error.message || ""}`.trim() : null,
         errorPlay: errorPlay || null,
         reduced,
         tam: [v.videoWidth, v.videoHeight],
         src: v.currentSrc.split("/").pop(),
-        mp4: v.canPlayType("video/mp4"),
-        h264High41: v.canPlayType('video/mp4; codecs="avc1.640029"'),
-        h264Main31: v.canPlayType('video/mp4; codecs="avc1.4d401f"'),
+        srcAttr: v.getAttribute("src")?.split("/").pop(),
+        videosEnPagina: document.querySelectorAll("video").length,
+        h264High40: v.canPlayType('video/mp4; codecs="avc1.640028"'),
         pantalla: [window.screen.width, window.screen.height, window.innerWidth, window.innerHeight, window.devicePixelRatio],
-      };
-      reportarDiag({ tipo: "video", ...datos });
-    }, 3000);
-    return () => clearTimeout(t);
+      });
+    };
+    const t1 = setTimeout(() => muestra(3), 3000);
+    const t2 = setTimeout(() => muestra(9), 9000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activo, esVideo]);
 
