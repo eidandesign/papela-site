@@ -9,6 +9,8 @@ import {
   entradasResumen,
   type AnuncioPublico,
   type GrupoResumen,
+  montoDe,
+  detallePaquete,
 } from "@/lib/publicidad";
 import QrPlaca from "./QrPlaca";
 import { LOGO_LADO } from "./LogoFijo";
@@ -23,6 +25,10 @@ import { LOGO_LADO } from "./LogoFijo";
 
 const M = MARGEN_SEGURO;
 const QR_LADO = 340;
+/** Ancho de cada columna de precio (por clase · por paquete) en las secciones con paquetes. */
+const COL = 420;
+/** Aire mínimo entre la línea de una columna y su contenido. */
+const COL_AIRE = 40;
 /** Donde empieza el contenido: debajo del logo fijo + aire. */
 const TOP = M + LOGO_LADO + 80;
 /** Alto reservado abajo para la fila de QR + llamado a la acción. */
@@ -135,7 +141,7 @@ export default function Resumen({
               <motion.div
                 {...entra(g.orden)}
                 className="flex items-center"
-                style={{ gap: 32, height: porGrupo - 32 }}
+                style={{ gap: 32, minHeight: porGrupo - 32, marginBottom: conPaquete(g) ? 16 : 0 }}
               >
                 <span
                   className="label"
@@ -155,6 +161,13 @@ export default function Resumen({
                     opacity: 0.25,
                   }}
                 />
+                {/* Encabezados de las columnas de precio, alineados con las celdas de cada renglón */}
+                {conPaquete(g) && (
+                  <span className="flex shrink-0 self-stretch" style={{ paddingRight: pad }}>
+                    <EncabezadoCol titulo="Precio por clase" acento={par.acento} />
+                    <EncabezadoCol titulo="Precio por paquete" nota="Incluye todos los materiales" acento={par.acento} />
+                  </span>
+                )}
               </motion.div>
               <ul>
                 {g.items.map((a, i) => {
@@ -170,7 +183,7 @@ export default function Resumen({
                         height: fila,
                         marginBottom: separacion,
                         gap: 40,
-                        padding: `0 ${pad + 8}px 0 ${pad}px`,
+                        padding: `0 ${conPaquete(g) ? 0 : pad + 8}px 0 ${pad}px`,
                         borderRadius: Math.min(56, Math.round(fila * 0.2)),
                         background: c.panel,
                         color: c.tinta,
@@ -179,8 +192,9 @@ export default function Resumen({
                       <span
                         className="shrink-0 overflow-hidden"
                         style={{
-                          width: foto,
-                          height: foto,
+                          // Con columnas de precio la foto cede un poco de ancho al título.
+                          width: conPaquete(g) ? Math.round(foto * 0.8) : foto,
+                          height: conPaquete(g) ? Math.round(foto * 0.8) : foto,
                           borderRadius: Math.min(40, Math.round(foto * 0.16)),
                           background: c.tinte,
                         }}
@@ -205,10 +219,17 @@ export default function Resumen({
                           className="font-serif"
                           style={{
                             // Títulos largos un poco más chicos: caben en 2 líneas sin "…".
-                            fontSize:
-                              a.titulo.length > 26
-                                ? Math.round(tituloItem * 0.78)
-                                : tituloItem,
+                            // Con las columnas de precio queda menos ancho: un escalón más chico.
+                            fontSize: Math.round(
+                              tituloItem *
+                                (conPaquete(g)
+                                  ? a.titulo.length > 26
+                                    ? 0.54
+                                    : 0.7
+                                  : a.titulo.length > 26
+                                    ? 0.78
+                                    : 1),
+                            ),
                             lineHeight: 1.05,
                             color: c.acento,
                             display: "-webkit-box",
@@ -223,7 +244,7 @@ export default function Resumen({
                           <span
                             className="font-sans font-medium truncate"
                             style={{
-                              fontSize: meta,
+                              fontSize: conPaquete(g) ? Math.round(meta * 0.88) : meta,
                               lineHeight: 1.2,
                               opacity: 0.9,
                             }}
@@ -232,7 +253,58 @@ export default function Resumen({
                           </span>
                         )}
                       </span>
-                      {a.precioTexto && (
+                      {conPaquete(g) ? (
+                        <span className="flex shrink-0 self-stretch" style={{ paddingRight: pad }}>
+                          <span className="relative flex items-center justify-center" style={{ width: COL, padding: `0 ${COL_AIRE}px` }}>
+                            <Divisor />
+                            {a.precioTexto ? (
+                              <span
+                                className="font-serif rounded-full whitespace-nowrap"
+                                style={{
+                                  fontSize: precio,
+                                  lineHeight: 1,
+                                  padding: `${Math.round(precio * 0.32)}px ${Math.round(precio * 0.7)}px`,
+                                  background: c.tinta,
+                                  color: c.panel,
+                                }}
+                              >
+                                {montoDe(a.precioTexto)}
+                              </span>
+                            ) : (
+                              <Guion size={precio} />
+                            )}
+                          </span>
+                          <span className="relative flex flex-col items-center justify-center" style={{ width: COL, padding: `0 ${COL_AIRE}px`, gap: Math.round(fila * 0.05) }}>
+                            <Divisor />
+                            {a.paqueteTexto ? (
+                              <>
+                                <span
+                                  className="font-serif rounded-full whitespace-nowrap"
+                                  style={{
+                                    fontSize: precio,
+                                    lineHeight: 1,
+                                    padding: `${Math.round(precio * 0.32) - 4}px ${Math.round(precio * 0.7) - 4}px`,
+                                    border: `4px solid ${c.tinta}`,
+                                    color: c.tinta,
+                                  }}
+                                >
+                                  {montoDe(a.paqueteTexto)}
+                                </span>
+                                {detallePaquete(a.paqueteTexto) && (
+                                  <span
+                                    className="font-sans font-medium whitespace-nowrap"
+                                    style={{ fontSize: Math.round(meta * 0.72), lineHeight: 1.1, opacity: 0.9 }}
+                                  >
+                                    {detallePaquete(a.paqueteTexto)}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <Guion size={precio} />
+                            )}
+                          </span>
+                        </span>
+                      ) : a.precioTexto && (
                         <span
                           className="font-serif shrink-0 rounded-full whitespace-nowrap"
                           style={{
@@ -310,6 +382,41 @@ export default function Resumen({
         </div>
       )}
     </motion.div>
+  );
+}
+
+/** La sección lleva columnas de precio si alguno de sus anuncios tiene paquete. */
+function conPaquete(g: GrupoResumen): boolean {
+  return g.items.some((a) => !!a.paqueteTexto);
+}
+
+function EncabezadoCol({ titulo, nota, acento }: { titulo: string; nota?: string; acento: string }) {
+  return (
+    <span className="relative flex flex-col items-center justify-end text-center" style={{ width: COL, padding: `0 ${COL_AIRE}px 8px` }}>
+      <Divisor />
+      <span className="label" style={{ fontSize: 34, lineHeight: "42px", letterSpacing: "0.12em", color: acento }}>
+        {titulo}
+      </span>
+      {nota && (
+        <span className="font-sans font-medium" style={{ fontSize: 32, lineHeight: "40px", opacity: 0.9 }}>
+          ({nota.toLowerCase()})
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** Línea vertical a la izquierda de cada columna de precio (separa las columnas). */
+function Divisor() {
+  return <span aria-hidden="true" className="absolute left-0" style={{ top: "14%", bottom: "14%", width: 3, borderRadius: 2, background: "currentColor", opacity: 0.22 }} />;
+}
+
+/** Celda sin ese precio. */
+function Guion({ size }: { size: number }) {
+  return (
+    <span className="font-serif" style={{ fontSize: size, lineHeight: 1, opacity: 0.5 }} aria-label="No aplica">
+      —
+    </span>
   );
 }
 

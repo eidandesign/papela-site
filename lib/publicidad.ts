@@ -39,6 +39,8 @@ export type AnuncioPublico = {
   subtitulo: string;
   fechaTexto: string;
   precioTexto: string;
+  /** Precio en paquete ("Paquete 4 clases · $1,100 al mes"). Snapshots viejos no lo traen. */
+  paqueteTexto?: string;
   ctaTexto: string;
   qrUrl: string;
   fondo: { tipo: FondoTipo; url: string; poster: string; enfoqueX: number; enfoqueY: number };
@@ -119,6 +121,31 @@ const ORDEN_GRUPOS: { plantilla: GrupoResumen["plantilla"]; titulo: string }[] =
 /** Máximo de renglones que caben legibles en el lienzo; el resto se resume en "y N más". */
 export const RESUMEN_MAX = 12;
 
+/**
+ * Para las columnas de precio del Resumen: el monto de un texto de precio
+ * ("$250 por clase" → "$250", "Paquete 4 clases · $1,100 al mes" → "$1,100").
+ * Sin monto reconocible devuelve el texto tal cual.
+ */
+export function montoDe(texto: string | undefined): string {
+  const t = (texto ?? "").trim();
+  const m = t.match(/\$\s?\d[\d,.]*/);
+  return m ? m[0].replace(/\s/g, "").replace(/[.,]$/, "") : t;
+}
+
+/** Lo que acompaña al monto del paquete: "Paquete 4 clases · $1,100 al mes" → "4 clases al mes". */
+export function detallePaquete(texto: string | undefined): string {
+  const t = (texto ?? "").trim();
+  const monto = montoDe(t);
+  if (!monto || monto === t) return "";
+  return t
+    .replace(monto, " ")
+    .replace(/\bMXN\b/gi, " ")
+    .replace(/^\s*paquete( mensual)?\b/i, " ")
+    .replace(/[·:|•/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function entradasResumen(lista: AnuncioPublico[], excluirId?: string): GrupoResumen[] {
   const vistos = new Set<string>();
   const validos = lista.filter((a) => {
@@ -182,6 +209,7 @@ export const ANUNCIOS_DEMO: AnuncioPublico[] = [
     subtitulo: "Para peques de 6 a 12 años",
     fechaTexto: "Jueves · 5:00 p.m.",
     precioTexto: "$250 MXN",
+    paqueteTexto: "Paquete 4 clases · $900 al mes",
     ctaTexto: "Pregunta en caja",
     qrUrl: "https://www.papela-atelier.com/clases",
     fondo: F("/images/modelado-arcillla-papela.jpg", 35),
