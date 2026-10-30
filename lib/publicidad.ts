@@ -18,6 +18,8 @@ export const PUBLICIDAD_MSG_RENDER = "papela-publicidad-preview:render";
 export const LIENZO = { ancho: 2160, alto: 3840 } as const;
 /** Margen de seguridad (se ve con ?guias=1). */
 export const MARGEN_SEGURO = 120;
+/** Build de la página incrustado al compilar (ver next.config.ts). */
+export const PUBLICIDAD_BUILD = process.env.NEXT_PUBLIC_PUBLICIDAD_BUILD ?? "dev";
 /** Crossfade entre anuncios. */
 export const CROSSFADE_MS = 800;
 /** Antes del crossfade, la info del anuncio que se va sale (panel, textos y QR). */

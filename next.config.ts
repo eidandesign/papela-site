@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    // Identificador del build que queda INCRUSTADO en la página de la pantalla
+    // (/publicidad); /api/public/pantalla-build devuelve el del deploy en
+    // vivo y, si difieren, la pantalla se recarga sola al cambiar de anuncio.
+    // En desarrollo es "dev" (nunca recarga).
+    NEXT_PUBLIC_PUBLICIDAD_BUILD: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ?? process.env.VERCEL_DEPLOYMENT_ID ?? "dev",
+  },
   // Hay un package-lock.json suelto en ~/ que confunde la auto-detección
   // del root del workspace; lo fijamos explícitamente a este repo.
   turbopack: {

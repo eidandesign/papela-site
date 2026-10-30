@@ -78,7 +78,7 @@ export default function PantallaPublicidad() {
   }, [preview]);
 
   // ── Modo pantalla ──────────────────────────────────────────────────────────
-  const { estado, aplicarPendiente } = usePlaylist(pantalla, !preview, demo);
+  const { estado, aplicarPendiente, codigoNuevo } = usePlaylist(pantalla, !preview, demo);
   const recargarRef = useRef(false);
 
   useEffect(() => {
@@ -93,9 +93,9 @@ export default function PantallaPublicidad() {
   }, [preview]);
 
   const antesDeAvanzar = useCallback((): "recargar" | void => {
-    if (recargarRef.current) return "recargar";
+    if (recargarRef.current || codigoNuevo) return "recargar";
     aplicarPendiente();
-  }, [aplicarPendiente]);
+  }, [aplicarPendiente, codigoNuevo]);
 
   // Un Resumen sin nada que listar se salta (sería una pantalla vacía).
   const anuncios = useMemo(() => quitarResumenesVacios(estado?.anuncios ?? []), [estado]);
