@@ -141,7 +141,8 @@ export default function Resumen({
               <motion.div
                 {...entra(g.orden)}
                 className="flex items-center"
-                style={{ gap: 32, minHeight: porGrupo - 32, marginBottom: conPaquete(g) ? 16 : 0 }}
+                // Con columnas, la nota "(incluye todos los materiales)" cuelga bajo PAQUETE: se le deja sitio.
+                style={{ gap: 32, minHeight: porGrupo - 32, marginBottom: conPaquete(g) ? 52 : 0 }}
               >
                 {/* Título del grupo grande y sin línea (oct-2026, a petición del dueño: "Clases" no se leía) */}
                 <span
@@ -158,8 +159,8 @@ export default function Resumen({
                 {/* Encabezados de las columnas de precio, alineados con las celdas de cada renglón */}
                 {conPaquete(g) && (
                   <span className="flex shrink-0 self-stretch" style={{ paddingRight: pad }}>
-                    <EncabezadoCol titulo="Precio por clase" acento={par.acento} />
-                    <EncabezadoCol titulo="Precio por paquete" nota="Incluye todos los materiales" acento={par.acento} />
+                    <EncabezadoCol titulo="Clase" acento={par.acento} />
+                    <EncabezadoCol titulo="Paquete" nota="Incluye todos los materiales" acento={par.acento} />
                   </span>
                 )}
               </motion.div>
@@ -386,12 +387,13 @@ function conPaquete(g: GrupoResumen): boolean {
 
 function EncabezadoCol({ titulo, nota, acento }: { titulo: string; nota?: string; acento: string }) {
   return (
-    <span className="flex flex-col items-center justify-end text-center" style={{ width: COL, padding: `0 ${COL_AIRE}px 8px` }}>
-      <span className="label" style={{ fontSize: 34, lineHeight: "42px", letterSpacing: "0.12em", color: acento }}>
+    <span className="relative flex items-center justify-center text-center" style={{ width: COL, padding: `0 ${COL_AIRE}px` }}>
+      <span className="label" style={{ fontSize: 40, lineHeight: "48px", letterSpacing: "0.18em", color: acento }}>
         {titulo}
       </span>
+      {/* La nota va absoluta para que CLASE y PAQUETE queden a la misma altura */}
       {nota && (
-        <span className="font-sans font-medium" style={{ fontSize: 32, lineHeight: "40px", opacity: 0.9 }}>
+        <span className="absolute left-0 right-0 font-sans font-medium" style={{ top: "calc(50% + 28px)", fontSize: 30, lineHeight: "36px", opacity: 0.9 }}>
           ({nota.toLowerCase()})
         </span>
       )}
