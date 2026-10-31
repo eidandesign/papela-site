@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { CROSSFADE_MS, LIENZO, SALIDA_MS, type AnuncioPublico } from "@/lib/publicidad";
+import { CROSSFADE_MS, LIENZO, SALIDA_MS, reportarDiag, type AnuncioPublico } from "@/lib/publicidad";
 import AnuncioVista from "./AnuncioVista";
 import LogoFijo from "./LogoFijo";
 import AnimatedLogo from "@/components/site/AnimatedLogo";
@@ -20,7 +20,13 @@ import AnimatedLogo from "@/components/site/AnimatedLogo";
 
 type Capa = { key: number; anuncio: AnuncioPublico; entrando: boolean; saliendo?: boolean };
 
-export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: AnuncioPublico[]; antesDeAvanzar?: () => "recargar" | void }) {
+/** Sin cambio de anuncio en este tiempo (el más largo dura 20 s) = la pantalla se atoró. */
+const ATORADA_MS = 3 * 60_000;
+/** Latido con el estado de la pantalla a los logs (ver /api/public/publicidad-diag). */
+const LATIDO_MS = 5 * 60_000;
+const CLAVE_RECARGA_VIGILANTE = "papela_publicidad_vigilante";
+
+export default function Reproductor({ anuncios, antesDeAvanzar, version = 0 }: { anuncios: AnuncioPublico[]; antesDeAvanzar?: () => "recargar" | void; version?: number }) {
   const reduced = !!useReducedMotion();
   const listaRef = useRef(anuncios);
   const indiceRef = useRef(0);
@@ -112,6 +118,63 @@ export default function Reproductor({ anuncios, antesDeAvanzar }: { anuncios: An
       p.src = sig.fondo.poster;
     }
   }, [capas, visibleKey]);
+
+  // Vigilante (oct-2026): la tele se quedaba en el logo verde (sin anuncios)
+  // con la página viva —seguía sondeando— y había que reiniciarla a mano.
+  // Mientras se encuentra la causa, se reporta el estado cada 5 min y, si no
+  // hay cambio de anuncio en 3 min (o lleva 3 min en reposo con lista vacía),
+  // se reporta y se recarga la página, como máximo una vez cada 10 min.
+  const ultimoCambioRef = useRef(0);
+  useEffect(() => {
+    ultimoCambioRef.current = Date.now();
+  }, [visibleKey]);
+  useEffect(() => {
+    if (!anuncios.length) {
+      reportarDiag({ tipo: "lista-vacia", version, capas: capas.length });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anuncios.length]);
+  useEffect(() => {
+    const estadoActual = () => {
+      const { capas: cs, visibleKey: vk } = estadoRef.current;
+      const mem = (performance as unknown as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+      return {
+        version,
+        anuncios: listaRef.current.length,
+        capas: cs.length,
+        visible: cs.find((c) => c.key === vk)?.anuncio.titulo ?? null,
+        sinCambioSeg: Math.round((Date.now() - ultimoCambioRef.current) / 1000),
+        memoriaMB: mem ? Math.round(mem.usedJSHeapSize / 1048576) : null,
+        videos: document.querySelectorAll("video").length,
+        visibilidad: document.visibilityState,
+      };
+    };
+    let ultimoLatido = Date.now();
+    const t = setInterval(() => {
+      const e = estadoActual();
+      if (Date.now() - ultimoLatido >= LATIDO_MS) {
+        ultimoLatido = Date.now();
+        reportarDiag({ tipo: "latido", ...e });
+      }
+      if (e.sinCambioSeg * 1000 < ATORADA_MS) return;
+      let ultimaRecarga = 0;
+      try {
+        ultimaRecarga = Number(sessionStorage.getItem(CLAVE_RECARGA_VIGILANTE)) || 0;
+      } catch {
+        /* sin storage */
+      }
+      if (Date.now() - ultimaRecarga < 10 * 60_000) return;
+      try {
+        sessionStorage.setItem(CLAVE_RECARGA_VIGILANTE, String(Date.now()));
+      } catch {
+        /* sin storage */
+      }
+      reportarDiag({ tipo: "atorada", ...e });
+      setTimeout(() => window.location.reload(), 1500);
+    }, 30_000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!capas.length) return <Reposo />;
 

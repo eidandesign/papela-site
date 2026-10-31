@@ -131,7 +131,7 @@ export default function PantallaPublicidad() {
           </div>
         )
       ) : (
-        <Reproductor anuncios={anuncios} antesDeAvanzar={antesDeAvanzar} />
+        <Reproductor anuncios={anuncios} antesDeAvanzar={antesDeAvanzar} version={estado?.version ?? 0} />
       )}
     </Escenario>
   );

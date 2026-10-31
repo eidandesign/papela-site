@@ -72,6 +72,12 @@ export function usePlaylist(pantalla: string, activo: boolean, demo = false) {
         if (!pareceRespuesta(j) || !vivo) return;
         guardarCache(pantalla, j);
         if (j.version === versionRef.current) return;
+        // Las versiones solo suben: una menor (p. ej. un 0 "sin publicación"
+        // por un fallo del lado del admin) no debe borrar la lista que ya se ve.
+        if (j.version < versionRef.current) {
+          reportarDiag({ tipo: "version-atras", recibida: j.version, actual: versionRef.current, n: j.anuncios.length });
+          return;
+        }
         const nuevo: Estado = { version: j.version, anuncios: j.anuncios, origen: j.anuncios.length ? "api" : "vacio" };
         if ((primera && versionRef.current < 0) || !hayAnunciosRef.current) {
           versionRef.current = j.version;
