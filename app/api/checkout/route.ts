@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
 
       if (paqueteId && typeof paqueteId === "string") {
         const paquetes = (clase?.paquetes_clase ?? []) as {
-          id: string; tipoId?: string; nombre: string; precio: number; inscripcion?: number; sesiones?: number;
+          id: string; tipoId?: string; nombre: string; precio: number; inscripcion?: number; sesiones?: number; soloMostrador?: boolean;
         }[];
         const pq = paquetes.find((x) => x.id === paqueteId);
         // El paquete tiene que ser de ESTA maestra y, si es de una clase, de la
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         // de arte) — se comprueba contra el horario aunque el cliente no mande
         // tipoClaseId.
         const pqTipo = pq && typeof pq.tipoId === "string" && pq.tipoId ? pq.tipoId : null;
-        if (!pq || (pqTipo && tipoEfectivo && pqTipo !== tipoEfectivo) || (pqTipo && !tipoCalza(pqTipo))) {
+        if (!pq || pq.soloMostrador || (pqTipo && tipoEfectivo && pqTipo !== tipoEfectivo) || (pqTipo && !tipoCalza(pqTipo))) {
           return NextResponse.json({ error: "Paquete no disponible" }, { status: 400 });
         }
         paquete = {

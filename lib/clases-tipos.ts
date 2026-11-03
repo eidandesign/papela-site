@@ -74,6 +74,7 @@ interface PaqueteClaseRaw {
   sesiones?: number;
   vigenciaDias?: number;
   inscripcion?: number;
+  soloMostrador?: boolean;
   descripcion?: string;
   imagen?: string;
   incluye?: unknown;
@@ -142,7 +143,8 @@ export async function getPaquetesClase(claseId?: string): Promise<PaqueteClasePu
     return (data ?? []).flatMap((c) => {
       const paquetes = (c.paquetes_clase ?? []) as PaqueteClaseRaw[];
       return paquetes
-        .filter((p) => p.id && p.nombre?.trim())
+        // Los de solo mostrador no existen para el sitio.
+        .filter((p) => p.id && p.nombre?.trim() && !p.soloMostrador)
         .map((p) => ({
           claseId: c.id as string,
           id: p.id!,
