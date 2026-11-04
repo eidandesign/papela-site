@@ -54,20 +54,29 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Pantalla de la tienda: el editor del admin la embebe como vista
-        // previa (postMessage), igual que /mini-site-preview.
+        // Pantalla de la tienda (nov-2026, aprobado por Adan): la tele la
+        // reproduce con Yodeck, que la carga DENTRO de su app y la rechaza
+        // ("This web page is not available for playback") si ve
+        // X-Frame-Options o frame-ancestors. Por eso SOLO /publicidad va sin
+        // restricción de iframe (la regla global de abajo la excluye): es una
+        // página pública de solo lectura, sin formularios, pagos ni sesión.
         source: "/publicidad",
         headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
-            key: "Content-Security-Policy",
-            value: `frame-ancestors 'self' https://admin.papela-atelier.com${
-              process.env.NODE_ENV === "development" ? " http://localhost:*" : ""
-            }`,
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
           },
         ],
       },
       {
-        source: "/:path*",
+        // Todo el sitio menos /publicidad (ver arriba).
+        source: "/:path((?!publicidad$).*)",
         headers: [
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "X-Content-Type-Options", value: "nosniff" },
