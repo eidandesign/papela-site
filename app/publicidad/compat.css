@@ -1,0 +1,91 @@
+/*
+ * Compatibilidad de /publicidad con navegadores viejos (nov-2026).
+ *
+ * El reproductor de Yodeck en la tele (Samsung QM43C, Tizen 7) abre la página
+ * con Chrome 94. Tailwind v4 mete TODAS sus utilidades y el preflight dentro
+ * de @layer, que llegó en Chrome 99: en Chrome 94 esas reglas se ignoran
+ * completas y la pantalla sale sin layout. Aquí van, SIN @layer y acotadas a
+ * .pub-compat (la raíz de Escenario), las clases que usan los componentes de
+ * components/publicidad/. En navegadores modernos repiten los mismos valores.
+ * Si un componente de la pantalla usa una clase de Tailwind nueva, agrégala aquí.
+ */
+
+/* Preflight mínimo (especificidad cero para no ganarle a las clases de abajo) */
+:where(.pub-compat) h1, :where(.pub-compat) h2, :where(.pub-compat) h3,
+:where(.pub-compat) h4, :where(.pub-compat) p, :where(.pub-compat) figure,
+:where(.pub-compat) blockquote { margin: 0; }
+:where(.pub-compat) h1, :where(.pub-compat) h2, :where(.pub-compat) h3,
+:where(.pub-compat) h4 { font-size: inherit; font-weight: inherit; }
+:where(.pub-compat) img, :where(.pub-compat) svg, :where(.pub-compat) video,
+:where(.pub-compat) canvas { display: block; vertical-align: middle; }
+:where(.pub-compat) img, :where(.pub-compat) video { max-width: 100%; height: auto; }
+:where(.pub-compat) *, :where(.pub-compat) *::before, :where(.pub-compat) *::after {
+  border: 0 solid; margin: 0; padding: 0;
+}
+
+/* Posición */
+.pub-compat.fixed, .pub-compat .fixed { position: fixed; }
+.pub-compat .absolute { position: absolute; }
+.pub-compat .relative { position: relative; }
+.pub-compat.inset-0, .pub-compat .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.pub-compat .top-0 { top: 0; }
+.pub-compat .right-0 { right: 0; }
+.pub-compat .bottom-0 { bottom: 0; }
+.pub-compat .left-0 { left: 0; }
+.pub-compat .top-1\/2 { top: 50%; }
+.pub-compat .left-1\/2 { left: 50%; }
+
+/* Display y flex */
+.pub-compat .block { display: block; }
+.pub-compat .inline-block { display: inline-block; }
+.pub-compat .flex { display: flex; }
+.pub-compat .inline-flex { display: inline-flex; }
+.pub-compat .flex-col { flex-direction: column; }
+.pub-compat .flex-wrap { flex-wrap: wrap; }
+.pub-compat .flex-1 { flex: 1 1 0%; }
+.pub-compat .shrink-0 { flex-shrink: 0; }
+.pub-compat .items-center { align-items: center; }
+.pub-compat .items-end { align-items: flex-end; }
+.pub-compat .justify-center { justify-content: center; }
+.pub-compat .justify-end { justify-content: flex-end; }
+.pub-compat .self-stretch { align-self: stretch; }
+
+/* Tamaño */
+.pub-compat .w-full { width: 100%; }
+.pub-compat .h-full { height: 100%; }
+.pub-compat .min-w-0 { min-width: 0; }
+.pub-compat .w-\[520px\] { width: 520px; }
+.pub-compat .h-\[520px\] { height: 520px; }
+
+/* Overflow, eventos, bordes */
+.pub-compat.overflow-hidden, .pub-compat .overflow-hidden { overflow: hidden; }
+.pub-compat .pointer-events-none { pointer-events: none; }
+.pub-compat .rounded-full { border-radius: 9999px; }
+.pub-compat .object-cover { object-fit: cover; }
+
+/* Colores (las variables viven en :root, fuera de @layer) */
+.pub-compat.bg-\[var\(--color-bg\)\], .pub-compat .bg-\[var\(--color-bg\)\] { background-color: var(--color-bg); }
+.pub-compat .bg-\[var\(--color-cremita\)\] { background-color: var(--color-cremita); }
+.pub-compat .bg-\[var\(--color-verde\)\] { background-color: var(--color-verde); }
+.pub-compat .text-\[var\(--color-muted\)\] { color: var(--color-muted); }
+
+/* Tipografía */
+.pub-compat .font-serif { font-family: 'PP Editorial New', Georgia, serif; }
+.pub-compat .font-sans { font-family: 'Satoshi', system-ui, sans-serif; }
+.pub-compat .italic { font-style: italic; }
+.pub-compat .font-normal { font-weight: 400; }
+.pub-compat .font-medium { font-weight: 500; }
+.pub-compat .font-semibold { font-weight: 600; }
+.pub-compat .text-center { text-align: center; }
+.pub-compat .whitespace-nowrap { white-space: nowrap; }
+.pub-compat .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pub-compat .leading-\[1\.15\] { line-height: 1.15; }
+.pub-compat .align-bottom { vertical-align: bottom; }
+.pub-compat .label {
+  font-family: 'Satoshi', system-ui, sans-serif;
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}

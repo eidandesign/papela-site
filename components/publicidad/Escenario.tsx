@@ -27,7 +27,7 @@ export default function Escenario({ rotar, guias, children }: { rotar: 0 | 90 | 
   }, [rotar]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[var(--color-bg)]" style={{ cursor: "none" }}>
+    <div className="pub-compat fixed inset-0 overflow-hidden bg-[var(--color-bg)]" style={{ cursor: "none" }}>
       <div
         className="absolute left-1/2 top-1/2 overflow-hidden"
         style={{

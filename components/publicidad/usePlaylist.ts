@@ -4,6 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { ANUNCIOS_DEMO, PUBLICIDAD_API, SONDEO_MS, pareceRespuesta, reportarDiag, type AnuncioPublico, type PublicidadRespuesta } from "@/lib/publicidad";
 import { logger } from "@/lib/logger";
 
+// AbortSignal.timeout llegó en Chrome 103; el reproductor de Yodeck en la tele
+// (Tizen 7) corre Chrome 94 y truena con "AbortSignal.timeout is not a function".
+function senalConTiempo(ms: number): AbortSignal {
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") return AbortSignal.timeout(ms);
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
 // Lista de anuncios de la pantalla:
 //   1. arranca con lo último guardado en localStorage (si el Wi-Fi está caído
 //      sigue reproduciendo lo que tenía);
@@ -66,7 +75,7 @@ export function usePlaylist(pantalla: string, activo: boolean, demo = false) {
 
     async function sondear(primera: boolean) {
       try {
-        const res = await fetch(`${PUBLICIDAD_API}?pantalla=${encodeURIComponent(pantalla)}`, { cache: "no-store", signal: AbortSignal.timeout(8000) });
+        const res = await fetch(`${PUBLICIDAD_API}?pantalla=${encodeURIComponent(pantalla)}`, { cache: "no-store", signal: senalConTiempo(8000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const j = await res.json();
         if (!pareceRespuesta(j) || !vivo) return;

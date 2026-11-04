@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+// Clases de la pantalla SIN @layer para el Chrome 94 del reproductor Yodeck (ver el archivo).
+import "./compat.css";
 
 // Pantalla vertical de la tienda (señalización digital): no es para personas
 // en el navegador, así que no se indexa ni entra al sitemap (robots.ts la
