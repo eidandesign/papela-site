@@ -5,13 +5,18 @@ import { useReducedMotion } from "framer-motion";
 import { CROSSFADE_MS, LIENZO, SALIDA_MS, reportarDiag, type AnuncioPublico } from "@/lib/publicidad";
 import AnuncioVista from "./AnuncioVista";
 import LogoFijo from "./LogoFijo";
+import { estadoMedios, medioEnCamino, medioLocal, sincronizarMedios } from "./medios";
 import AnimatedLogo from "@/components/site/AnimatedLogo";
 
 // Reproductor en bucle. Cada cambio va en dos tiempos: primero la info del
 // anuncio que se va sale (SALIDA_MS, ver coreografia.ts) y luego el crossfade
 // de 800 ms: la capa que entra se monta encima con opacity 0→1 y la anterior
-// se desmonta al terminar el fundido (solo se anima opacity). Mientras un anuncio corre, se precarga el medio del
-// siguiente. Un medio que falla se salta y se sigue con el próximo.
+// se desmonta al terminar el fundido (solo se anima opacity). Un medio que
+// falla se salta y se sigue con el próximo.
+//
+// Los medios (videos, pósters, fotos) se bajan UNA vez y se reutilizan desde
+// memoria: ver medios.ts. Cada vuelta monta un <video>/<img> nuevo y la tele no
+// guarda nada entre una y otra; sin esa caché volvía a descargarlos siempre.
 //
 // `anuncios` puede cambiar en caliente (versión nueva del admin): la lista
 // nueva se aplica al pasar al siguiente anuncio, nunca a media reproducción.
@@ -98,7 +103,16 @@ export default function Reproductor({ anuncios, antesDeAvanzar, version = 0 }: {
     setTimeout(cambiar, reduced ? 250 : SALIDA_MS);
   }, [cambiar, reduced]);
 
-  // Precarga del siguiente medio.
+  // La lista que corre manda qué medios se guardan en memoria (y cuáles se sueltan).
+  useEffect(() => {
+    sincronizarMedios(anuncios);
+  }, [anuncios]);
+
+  // Precarga del siguiente medio: se decodifica antes de que entre. Del video
+  // solo el póster — un <video> suelto con preload="auto" se quedaba con el
+  // único decodificador de la tele (Samsung Tizen) y el video real del anuncio
+  // nunca arrancaba. Si el archivo todavía se está bajando a memoria no se
+  // pide aparte: sería descargarlo dos veces.
   useEffect(() => {
     const lista = listaRef.current;
     if (!lista.length) return;
@@ -106,17 +120,10 @@ export default function Reproductor({ anuncios, antesDeAvanzar, version = 0 }: {
     const idx = actual ? lista.findIndex((a) => a.id === actual.id) : -1;
     const sig = lista[(idx + 1) % lista.length];
     if (!sig || sig.id === actual?.id || !sig.fondo.url) return;
-    if (sig.fondo.tipo === "imagen") {
-      const img = new Image();
-      img.src = sig.fondo.url;
-    } else if (sig.fondo.poster) {
-      // Del video solo se precarga el póster. Antes se creaba un <video>
-      // suelto con preload="auto": en la pantalla de la tienda (Samsung
-      // Tizen, un solo decodificador de video) ese elemento se quedaba con
-      // el decodificador y el <video> real del anuncio nunca arrancaba.
-      const p = new Image();
-      p.src = sig.fondo.poster;
-    }
+    const url = sig.fondo.tipo === "imagen" ? sig.fondo.url : sig.fondo.poster;
+    if (!url || medioEnCamino(url)) return;
+    const img = new Image();
+    img.src = medioLocal(url);
   }, [capas, visibleKey]);
 
   // Vigilante (oct-2026): la tele se quedaba en el logo verde (sin anuncios)
@@ -147,6 +154,7 @@ export default function Reproductor({ anuncios, antesDeAvanzar, version = 0 }: {
         memoriaMB: mem ? Math.round(mem.usedJSHeapSize / 1048576) : null,
         videos: document.querySelectorAll("video").length,
         visibilidad: document.visibilityState,
+        medios: estadoMedios(),
       };
     };
     let ultimoLatido = Date.now();

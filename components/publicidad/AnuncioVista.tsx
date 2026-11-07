@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { LIENZO, duracionDe, parDe, reportarDiag, type AnuncioPublico } from "@/lib/publicidad";
 import Plantilla from "./Plantilla";
 import Resumen from "./Resumen";
+import { medioNoSirve, medioSirve, useMedio } from "./medios";
 
 // Un anuncio completo: medio de fondo (imagen con Ken Burns o video), tinte
 // del par, textos y barra de progreso. Avisa `onFin` cuando toca el siguiente
@@ -37,6 +38,18 @@ export default function AnuncioVista({
   const esLibre = anuncio.plantilla === "libre";
   const esResumen = anuncio.plantilla === "resumen";
   const par = anuncio.plantilla === "libre" ? null : parDe(anuncio);
+  // El medio sale de la copia en memoria si ya se bajó (ver medios.ts): así la
+  // tele no vuelve a descargar el video ni su póster en cada vuelta.
+  const medio = useMedio(anuncio.fondo.url);
+  const poster = useMedio(anuncio.fondo.poster);
+
+  // La copia local no cargó: se pide directo (como antes de la caché) en vez
+  // de saltarse el anuncio. Un error con la URL directa sí lo salta.
+  const alFallarMedio = () => {
+    if (!medio.local) return onError();
+    medioNoSirve(anuncio.fondo.url, "error al cargar la copia local", true);
+    medio.directo();
+  };
 
   // Tiempo del anuncio (imágenes y videos con duración fija).
   useEffect(() => {
@@ -81,6 +94,24 @@ export default function AnuncioVista({
     };
   }, [activo, esVideo, reduced]);
 
+  // Red de seguridad de la copia local: si a los 4 s el video sigue sin
+  // avanzar, este anuncio cambia a la URL directa. Al segundo tropiezo seguido
+  // ese archivo deja de usarse desde memoria (medioNoSirve). No aplica con la
+  // página oculta (el navegador pausa el video) ni con reduced-motion.
+  useEffect(() => {
+    if (!activo || !esVideo || reduced || !medio.local) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const t = setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
+      if (v.currentTime > 0) return medioSirve(anuncio.fondo.url);
+      medioNoSirve(anuncio.fondo.url, `no arrancó: readyState ${v.readyState}, error ${v.error ? v.error.code : "ninguno"}`);
+      medio.directo();
+    }, 4000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activo, esVideo, reduced, medio.local]);
+
   // Diagnóstico: cada vez que el slide de video está activo se reporta a los
   // 3 s y a los 9 s si de verdad está corriendo y, si no, por qué (ver
   // /api/public/publicidad-diag). Máximo 6 reportes por anuncio y carga de
@@ -114,7 +145,8 @@ export default function AnuncioVista({
         errorPlay: errorPlay || null,
         reduced,
         tam: [v.videoWidth, v.videoHeight],
-        src: v.currentSrc.split("/").pop(),
+        src: anuncio.fondo.url.split("/").pop(),
+        local: v.currentSrc.indexOf("blob:") === 0,
         srcAttr: v.getAttribute("src")?.split("/").pop(),
         videosEnPagina: document.querySelectorAll("video").length,
         h264High40: v.canPlayType('video/mp4; codecs="avc1.640028"'),
@@ -150,8 +182,8 @@ export default function AnuncioVista({
       {sinMedio ? null : esVideo ? (
         <video
           ref={videoRef}
-          src={anuncio.fondo.url}
-          poster={anuncio.fondo.poster || undefined}
+          src={medio.src}
+          poster={poster.src || undefined}
           muted
           autoPlay={activo && !reduced}
           playsInline
@@ -165,17 +197,17 @@ export default function AnuncioVista({
           onEnded={() => {
             if (anuncio.duracionSeg === 0 && activo) onFin();
           }}
-          onError={onError}
+          onError={alFallarMedio}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ objectPosition: posicion }}
         />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={anuncio.fondo.url}
+          src={medio.src}
           alt=""
           decoding="async"
-          onError={onError}
+          onError={alFallarMedio}
           className={`absolute inset-0 w-full h-full object-cover ${kenBurns ? "pub-kenburns" : ""}`}
           style={{ objectPosition: posicion, animationDuration: kenBurns ? `${duracion + 1}s` : undefined }}
         />

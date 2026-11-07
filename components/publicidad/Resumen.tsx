@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   LIENZO,
@@ -14,6 +15,7 @@ import {
 } from "@/lib/publicidad";
 import QrPlaca from "./QrPlaca";
 import { LOGO_LADO } from "./LogoFijo";
+import { medioLocal } from "./medios";
 
 // Slide "Resumen": el menú de todo lo que hay en Papela, armado SOLO con los
 // demás anuncios de la lista que está reproduciendo la pantalla (agrupados
@@ -48,6 +50,13 @@ export default function Resumen({
   // El fondo del resumen es SU color; cada renglón usa el color de su anuncio.
   const par = parDe(anuncio);
   const grupos = entradasResumen(contexto, anuncio.id);
+  // Fotos de los renglones, resueltas UNA vez al montar: si cambiaran a media
+  // pantalla (la copia local termina de bajar) las miniaturas parpadearían.
+  const [fotos] = useState(() => {
+    const m: Record<string, string> = {};
+    for (const g of grupos) for (const a of g.items) m[a.id] = medioLocal(a.fondo.tipo === "video" ? a.fondo.poster : a.fondo.url);
+    return m;
+  });
 
   const { visibles, mostrados, ocultos, ultimo } = recortar(grupos);
 
@@ -165,8 +174,8 @@ export default function Resumen({
               </motion.div>
               <ul>
                 {g.items.map((a, i) => {
-                  const src =
-                    a.fondo.tipo === "video" ? a.fondo.poster : a.fondo.url;
+                  // Desde la copia en memoria si ya se bajó (ver medios.ts).
+                  const src = fotos[a.id] ?? (a.fondo.tipo === "video" ? a.fondo.poster : a.fondo.url);
                   const c = parDe(a);
                   return (
                     <motion.li
