@@ -33,8 +33,24 @@ const COL = 420;
 const COL_AIRE = 40;
 /** Donde empieza el contenido: debajo del logo fijo + aire. */
 const TOP = M + LOGO_LADO + 80;
-/** Alto reservado abajo para la fila de QR + llamado a la acción. */
-const ABAJO = M + 40 + QR_LADO + 220;
+/** Alto reservado abajo: con QR, la fila de QR; sin QR, solo el llamado a la acción. */
+const ABAJO_QR = M + 40 + QR_LADO + 120;
+const ABAJO_CTA = M + 40 + 260;
+const ABAJO_NADA = M;
+/** Tamaño del título de cada grupo ("Clases", "Talleres"). */
+const GRUPO_PX = 100;
+/** Alto que ocupa el encabezado de un grupo (título + aire). */
+const POR_GRUPO = 150;
+/** Separación entre tarjetas. */
+const SEPARACION = 44;
+/**
+ * Con pocos renglones cada uno es una TARJETA GRANDE (foto a todo el alto,
+ * título y precios con su etiqueta, todo legible a varios metros). Con
+ * muchos, se usa la fila compacta. El cambio ocurre cuando la tarjeta grande
+ * ya no tendría este alto.
+ */
+const GRANDE_MIN = 400;
+const GRANDE_MAX = 760;
 
 export default function Resumen({
   anuncio,
@@ -61,32 +77,28 @@ export default function Resumen({
   const { visibles, mostrados, ocultos, ultimo } = recortar(grupos);
 
   const titulo = anuncio.titulo.trim() || "Todo lo que hay";
-  const tituloPx = titulo.length <= 16 ? 200 : titulo.length <= 26 ? 168 : 140;
-  const encabezado = (anuncio.eyebrow ? 80 : 0) + tituloPx * 1.1 + 100;
+  const tituloPx = titulo.length <= 16 ? 220 : titulo.length <= 26 ? 190 : 156;
+  const eyebrowPx = 56;
+  const encabezado = (anuncio.eyebrow ? Math.round(eyebrowPx * 1.25) + 20 : 0) + tituloPx * 1.05 + 56;
+  const abajo = anuncio.qrUrl ? ABAJO_QR : anuncio.ctaTexto ? ABAJO_CTA : ABAJO_NADA;
 
   // Alto de renglón según cuántos hay: llena el espacio sin pasarse.
-  const disponible =
-    LIENZO.alto - TOP - ABAJO - encabezado - (ocultos ? 90 : 0);
-  const porGrupo = 104;
-  // Cada renglón es una tarjeta con aire entre una y otra. Pocos renglones =
-  // más grandes (hasta 380 px); muchos = hasta 150 px.
-  const separacion = 48;
-  const fila = Math.max(
-    150,
-    Math.min(
-      380,
-      Math.floor(
-        (disponible - visibles.length * porGrupo - mostrados * separacion) /
-          Math.max(1, mostrados),
-      ),
-    ),
-  );
+  const disponible = LIENZO.alto - TOP - abajo - encabezado - (ocultos ? 110 : 0);
+  const altoCon = (sep: number) =>
+    Math.floor((disponible - visibles.length * POR_GRUPO - mostrados * sep) / Math.max(1, mostrados));
+  const grande = altoCon(SEPARACION) >= GRANDE_MIN;
+  // Muchos renglones: menos aire entre ellos para darle ese alto a la letra.
+  const separacion = grande ? SEPARACION : 28;
+  // Tarjeta grande: hasta 760 px. Fila compacta: crece hasta donde empieza la grande.
+  const fila = grande
+    ? Math.min(GRANDE_MAX, altoCon(separacion))
+    : Math.max(150, Math.min(GRANDE_MIN - 1, altoCon(separacion)));
   // La foto llena el alto de la tarjeta menos su margen interno.
   const pad = Math.round(fila * 0.12);
   const foto = fila - pad * 2;
   const tituloItem = Math.round(fila * 0.3);
-  const meta = Math.max(38, Math.round(fila * 0.17));
-  const precio = Math.max(40, Math.round(fila * 0.2));
+  const meta = Math.max(40, Math.round(fila * 0.17));
+  const precio = Math.max(48, Math.round(fila * 0.2));
 
   const oculto = reduced ? { opacity: 0 } : { opacity: 0, y: 40 };
   const entra = (i: number) => ({
@@ -109,18 +121,18 @@ export default function Resumen({
     >
       <div
         className="absolute flex flex-col"
-        style={{ top: TOP, left: M, right: M, bottom: ABAJO }}
+        style={{ top: TOP, left: M, right: M, bottom: abajo }}
       >
         {anuncio.eyebrow && (
           <motion.span
             {...entra(0)}
             className="label text-center"
             style={{
-              fontSize: 44,
-              lineHeight: "56px",
-              letterSpacing: "0.22em",
+              fontSize: eyebrowPx,
+              lineHeight: 1.25,
+              letterSpacing: "0.2em",
               opacity: 0.9,
-              marginBottom: 24,
+              marginBottom: 20,
             }}
           >
             {anuncio.eyebrow}
@@ -134,7 +146,7 @@ export default function Resumen({
             lineHeight: 1.05,
             color: par.acento,
             textWrap: "balance",
-            marginBottom: 72,
+            marginBottom: 56,
           }}
         >
           {titulo}
@@ -146,26 +158,26 @@ export default function Resumen({
           style={{ minHeight: 0 }}
         >
           {visibles.map((g) => (
-            <section key={g.plantilla} style={{ marginBottom: 32 }}>
+            <section key={g.plantilla}>
               <motion.div
                 {...entra(g.orden)}
                 className="flex items-center"
-                style={{ gap: 32, minHeight: porGrupo - 32, marginBottom: conPaquete(g) ? 16 : 0 }}
+                style={{ gap: 32, minHeight: POR_GRUPO - 40, marginBottom: 24 }}
               >
                 {/* Título del grupo grande y sin línea (oct-2026, a petición del dueño: "Clases" no se leía) */}
                 <span
                   className="font-serif italic flex-1 min-w-0"
                   style={{
-                    fontSize: 84,
+                    fontSize: GRUPO_PX,
                     lineHeight: 1.05,
                     color: par.acento,
-                    paddingLeft: pad,
+                    paddingLeft: grande ? 0 : pad,
                   }}
                 >
                   {g.titulo}
                 </span>
                 {/* Encabezados de las columnas de precio, alineados con las celdas de cada renglón */}
-                {conPaquete(g) && (
+                {!grande && conPaquete(g) && (
                   <span className="flex shrink-0 self-stretch" style={{ paddingRight: pad }}>
                     <EncabezadoCol titulo="Clase" acento={par.acento} />
                     <EncabezadoCol titulo="Paquete" acento={par.acento} />
@@ -177,6 +189,13 @@ export default function Resumen({
                   // Desde la copia en memoria si ya se bajó (ver medios.ts).
                   const src = fotos[a.id] ?? (a.fondo.tipo === "video" ? a.fondo.poster : a.fondo.url);
                   const c = parDe(a);
+                  if (grande) {
+                    return (
+                      <motion.li key={a.id} {...entra(g.orden + 1 + i)} style={{ marginBottom: separacion }}>
+                        <TarjetaGrande anuncio={a} src={src} alto={fila} />
+                      </motion.li>
+                    );
+                  }
                   return (
                     <motion.li
                       key={a.id}
@@ -223,20 +242,24 @@ export default function Resumen({
                           style={{
                             // Títulos largos un poco más chicos: caben en 2 líneas sin "…".
                             // Con las columnas de precio queda menos ancho: un escalón más chico.
-                            fontSize: Math.round(
-                              tituloItem *
-                                (conPaquete(g)
-                                  ? a.titulo.length > 26
-                                    ? 0.54
-                                    : 0.7
-                                  : a.titulo.length > 26
-                                    ? 0.78
-                                    : 1),
+                            // Nunca menos de 56 px: a varios metros, menos ya no se lee.
+                            fontSize: Math.max(
+                              56,
+                              Math.round(
+                                tituloItem *
+                                  (conPaquete(g)
+                                    ? a.titulo.length > 26
+                                      ? 0.62
+                                      : 0.78
+                                    : a.titulo.length > 26
+                                      ? 0.8
+                                      : 1),
+                              ),
                             ),
                             lineHeight: 1.05,
                             color: c.acento,
                             display: "-webkit-box",
-                            WebkitLineClamp: 2,
+                            WebkitLineClamp: fila < 240 ? 1 : 2,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
                           }}
@@ -247,7 +270,7 @@ export default function Resumen({
                           <span
                             className="font-sans font-medium truncate"
                             style={{
-                              fontSize: conPaquete(g) ? Math.round(meta * 0.88) : meta,
+                              fontSize: Math.max(40, conPaquete(g) ? Math.round(meta * 0.88) : meta),
                               lineHeight: 1.2,
                               opacity: 0.9,
                             }}
@@ -296,7 +319,7 @@ export default function Resumen({
                                 {detallePaquete(a.paqueteTexto) && (
                                   <span
                                     className="font-sans font-medium whitespace-nowrap"
-                                    style={{ fontSize: Math.round(meta * 0.72), lineHeight: 1.1, opacity: 0.9 }}
+                                    style={{ fontSize: Math.max(36, Math.round(meta * 0.72)), lineHeight: 1.1, opacity: 0.9 }}
                                   >
                                     {detallePaquete(a.paqueteTexto)}
                                   </span>
@@ -332,7 +355,7 @@ export default function Resumen({
             <motion.p
               {...entra(ultimo)}
               className="font-serif italic text-center"
-              style={{ fontSize: 60, opacity: 0.85, marginTop: 8 }}
+              style={{ fontSize: 76, opacity: 0.85, marginTop: 8 }}
             >
               y {ocultos} más en papela-atelier.com
             </motion.p>
@@ -357,7 +380,7 @@ export default function Resumen({
               {...entra(ultimo + 1)}
               className="font-serif italic"
               style={{
-                fontSize: 96,
+                fontSize: 108,
                 lineHeight: 1.05,
                 color: par.acento,
                 textAlign: anuncio.qrUrl ? "left" : "center",
@@ -385,6 +408,120 @@ export default function Resumen({
         </div>
       )}
     </motion.div>
+  );
+}
+
+/**
+ * Renglón grande (pocos anuncios): la foto a todo el alto a la izquierda y, a
+ * su lado, título, día y hora, y los precios con su etiqueta. Todo escala con
+ * el alto de la tarjeta (`alto`, 480–760 px del lienzo).
+ */
+function TarjetaGrande({ anuncio: a, src, alto }: { anuncio: AnuncioPublico; src: string; alto: number }) {
+  const c = parDe(a);
+  // Un título corto cabe en un renglón y deja aire para subir todo un escalón;
+  // uno largo ocupa dos y el resto se ajusta para no cortarse.
+  const largo = a.titulo.length;
+  const corto = largo <= 22;
+  // Tarjeta baja (varios anuncios): los precios pasan a la derecha del título
+  // en vez de debajo, para no perder tamaño de letra.
+  const lado = alto < 560;
+  // En la baja el límite es el ANCHO (título y precios comparten fila): la
+  // foto se angosta y la letra sube hasta donde cabe sin cortarse.
+  const pad = Math.round(alto * (lado ? 0.08 : corto ? 0.075 : 0.06));
+  const fotoAncho = Math.round(alto * (lado ? 0.5 : 0.62));
+  const tituloPx = Math.round(alto * (lado ? (corto ? 0.24 : largo > 40 ? 0.15 : 0.18) : corto ? 0.19 : largo > 40 ? 0.12 : 0.141));
+  const fechaPx = Math.round(alto * (lado ? 0.125 : corto ? 0.1 : 0.094));
+  const etiquetaPx = Math.max(40, Math.round(alto * (lado ? 0.098 : corto ? 0.068 : 0.064)));
+  const montoPx = Math.round(alto * (lado ? 0.25 : corto ? 0.19 : 0.178));
+  const detallePx = Math.max(40, Math.round(alto * (lado ? 0.098 : corto ? 0.072 : 0.068)));
+  const aire = Math.round(alto * (lado ? 0.06 : 0.07));
+
+  // Precios: la clase (o el precio del anuncio) y, si hay, el paquete.
+  const precios: { etiqueta: string; monto: string; detalle?: string }[] = [];
+  if (a.precioTexto) {
+    precios.push({
+      etiqueta: a.plantilla === "clase" ? "Por clase" : a.paqueteTexto ? "Precio" : "",
+      monto: montoDe(a.precioTexto),
+    });
+  }
+  if (a.paqueteTexto) {
+    precios.push({ etiqueta: "Paquete", monto: montoDe(a.paqueteTexto), detalle: detallePaquete(a.paqueteTexto) || undefined });
+  }
+
+  return (
+    <div
+      className="flex overflow-hidden"
+      style={{ height: alto, borderRadius: 64, background: c.panel, color: c.tinta }}
+    >
+      <span className="shrink-0 overflow-hidden" style={{ width: fotoAncho, height: alto, background: c.tinte }}>
+        {src && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src}
+            alt=""
+            className="w-full h-full object-cover"
+            style={{ objectPosition: `${a.fondo.enfoqueX}% ${a.fondo.enfoqueY}%` }}
+          />
+        )}
+      </span>
+      <span
+        className={`flex-1 min-w-0 flex ${lado ? "items-center" : "flex-col justify-center"}`}
+        style={{ padding: `${pad}px ${pad + 8}px`, gap: lado ? Math.round(alto * 0.07) : 0 }}
+      >
+        <span className="flex-1 min-w-0 flex flex-col">
+          <span
+            className="font-serif"
+            style={{
+              fontSize: tituloPx,
+              lineHeight: 1.04,
+              color: c.acento,
+              textWrap: "balance",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {a.titulo}
+          </span>
+          {a.fechaTexto && (
+            <span
+              className="font-sans font-medium"
+              style={{ fontSize: fechaPx, lineHeight: 1.2, marginTop: Math.round(alto * 0.03) }}
+            >
+              {a.fechaTexto}
+            </span>
+          )}
+        </span>
+        {precios.length > 0 && (
+          <span className="flex shrink-0" style={{ marginTop: lado ? 0 : Math.round(alto * 0.06) }}>
+            {precios.map((p, i) => (
+              <span
+                key={p.etiqueta || i}
+                className={`relative flex flex-col min-w-0 ${lado ? "justify-center" : ""}`}
+                style={i > 0 ? { marginLeft: aire, paddingLeft: aire } : undefined}
+              >
+                {/* Línea entre precios (sin color-mix: Yodeck corre Chrome 94) */}
+                {i > 0 && <Divisor />}
+                {p.etiqueta && (
+                  <span className="label whitespace-nowrap" style={{ fontSize: etiquetaPx, lineHeight: 1.2, letterSpacing: "0.14em", opacity: 0.85 }}>
+                    {p.etiqueta}
+                  </span>
+                )}
+                <span className="font-serif whitespace-nowrap" style={{ fontSize: montoPx, lineHeight: 1.05, marginTop: p.etiqueta ? Math.round(alto * 0.035) : 0 }}>
+                  {p.monto}
+                </span>
+                {p.detalle && (
+                  <span className="font-sans font-medium whitespace-nowrap" style={{ fontSize: detallePx, lineHeight: 1.2, opacity: 0.9, marginTop: Math.round(alto * 0.018) }}>
+                    {p.detalle}
+                  </span>
+                )}
+              </span>
+            ))}
+          </span>
+        )}
+      </span>
+    </div>
   );
 }
 
