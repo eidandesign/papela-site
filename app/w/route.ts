@@ -8,6 +8,11 @@ const UTM = { source: "whatsapp", medium: "grupo_vecinos", campaign: "semanal" }
 export function GET(req: NextRequest) {
   const to = req.nextUrl.searchParams.get("to");
   // Solo rutas internas: "/algo", nunca "//dominio" ni "/\dominio" (open redirect).
-  const destino = to && /^\/(?![/\\])/.test(to) ? to : "/";
-  return NextResponse.redirect(new URL(conUtm(destino, UTM), req.nextUrl.origin), 307);
+  // Además se compara el origen del resultado: "/.//dominio" pasa la primera
+  // prueba y al normalizarse la ruta queda "//dominio" (otro sitio).
+  const destino = to && /^\/(?![/\\])[A-Za-z0-9\-_./~%?&=#]*$/.test(to) ? to : "/";
+  const origen = req.nextUrl.origin;
+  let url = new URL(conUtm(destino, UTM), origen);
+  if (url.origin !== origen) url = new URL(conUtm("/", UTM), origen);
+  return NextResponse.redirect(url, 307);
 }

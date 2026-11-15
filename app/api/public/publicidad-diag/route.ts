@@ -14,6 +14,10 @@ export async function POST(req: Request) {
   if (!(await rateLimit(`publicidad-diag:${getClientIp(req)}`, 30, 60_000))) {
     return new NextResponse(null, { status: 429 });
   }
+  // Sin leer cuerpos grandes: el reporte real pesa menos de 2 KB.
+  if (Number(req.headers.get("content-length") ?? 0) > 8_000) {
+    return new NextResponse(null, { status: 413 });
+  }
   const texto = (await req.text()).slice(0, MAX);
   let datos: unknown = texto;
   try {

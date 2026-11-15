@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
+const CSP_BASE = "base-uri 'self'; object-src 'none'; frame-ancestors 'self'";
+
 const nextConfig: NextConfig = {
+  // No anunciar el framework en cada respuesta.
+  poweredByHeader: false,
   env: {
     // Identificador del build que queda INCRUSTADO en la página de la pantalla
     // (/publicidad); /api/public/pantalla-build devuelve el del deploy en
@@ -40,20 +44,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Preview de Mini Sites: se embebe en un iframe del admin. CSP
-        // frame-ancestors manda sobre X-Frame-Options en navegadores modernos
-        // (la regla global de abajo sigue aplicando SAMEORIGIN al resto).
-        source: "/mini-site-preview",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value: `frame-ancestors 'self' https://admin.papela-atelier.com${
-              process.env.NODE_ENV === "development" ? " http://localhost:*" : ""
-            }`,
-          },
-        ],
-      },
-      {
         // Pantalla de la tienda (nov-2026, aprobado por Adan): la tele la
         // reproduce con Yodeck, que la carga DENTRO de su app y la rechaza
         // ("This web page is not available for playback") si ve
@@ -62,6 +52,7 @@ const nextConfig: NextConfig = {
         // página pública de solo lectura, sin formularios, pagos ni sesión.
         source: "/publicidad",
         headers: [
+          { key: "Content-Security-Policy", value: "base-uri 'self'; object-src 'none'" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
@@ -79,6 +70,11 @@ const nextConfig: NextConfig = {
         source: "/:path((?!publicidad$).*)",
         headers: [
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // CSP base (nov-2026): sin plugins, sin <base> ajeno y sin poder
+          // embeberse fuera del sitio. A propósito NO lleva script-src: GTM
+          // carga etiquetas de terceros que cambian desde su panel y una lista
+          // cerrada las rompería sin avisar.
+          { key: "Content-Security-Policy", value: CSP_BASE },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-DNS-Prefetch-Control", value: "on" },
@@ -89,6 +85,21 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+      {
+        // Preview de Mini Sites: se embebe en un iframe del admin. CSP
+        // frame-ancestors manda sobre X-Frame-Options en navegadores modernos
+        // (la regla global sigue aplicando SAMEORIGIN al resto). Va DESPUÉS de la
+        // global: con la misma llave gana la última regla que coincide.
+        source: "/mini-site-preview",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: `base-uri 'self'; object-src 'none'; frame-ancestors 'self' https://admin.papela-atelier.com${
+              process.env.NODE_ENV === "development" ? " http://localhost:*" : ""
+            }`,
           },
         ],
       },
