@@ -5,32 +5,49 @@ import {
   ArrowRightIcon,
   ChevronDownIcon,
   GiftIcon,
-  SparklesIcon,
-  BellIcon,
-  PaintBrushIcon,
   ShoppingBagIcon,
   DevicePhoneMobileIcon,
+  ChatBubbleLeftRightIcon,
+  BuildingStorefrontIcon,
+  CheckBadgeIcon,
+  BanknotesIcon,
+  ClockIcon,
+  SparklesIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/solid";
 import HeroSection from "@/components/site/HeroSection";
 import ScrollReveal from "@/components/site/ScrollReveal";
 import TarjetaPreview from "@/components/site/club/TarjetaPreview";
+import { TarjetaAnatomiaVisual, TarjetaAnatomiaLeyenda } from "@/components/site/club/TarjetaAnatomia";
 import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 // Página que explica la Tarjeta de Lealtad del Club Creativo (nov-2026).
-// Las cifras salen de `club_cashback_config` en el admin (3% de cashback,
-// compra mínima de $100 para GANAR, sin vencimiento, canje hasta el 100%).
-// ⚠️ Si se cambian en el admin, actualizar PROGRAMA aquí.
+// Las reglas salen del admin (tabla `club_cashback_config` + cómo se han
+// registrado las ventas): 3% de cashback en compras de $100 o más, calculado
+// sobre lo pagado en dinero (no sobre lo pagado con Coins); sin vencimiento;
+// se puede pagar hasta el 100% con Coins. Cada compra da 1 estampita y su
+// rareza depende del monto (`estampitas_niveles`: raro desde $200,
+// legendario desde $500). Los premios de ejemplo son reales de `club_stickers`.
+// ⚠️ Si cambian en el admin, actualizar PROGRAMA y PREMIOS aquí.
 const PROGRAMA = {
   porcentaje: 3,
   compraMinima: 100,
+  raroDesde: 200,
+  legendarioDesde: 500,
   ejemploCompra: 500,
+};
+
+const PREMIOS: Record<"comun" | "raro" | "legendario", string[]> = {
+  comun: ["Impresiones a color", "Sacapuntas metálico", "10% en tu próxima compra", "Bolsita de diamantina", "Lápiz con las tablas"],
+  raro: ["Cerámica mini", "20% en tu próxima clase de arte", "Botón personalizado", "Lápiz con semilla", "Impresión fotográfica"],
+  legendario: ["Cabalgata en Calpan", "Planilla de stickers personalizada", "Tarjetas de presentación con diseño"],
 };
 
 export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: { absolute: "Tarjeta de Lealtad — Club Creativo Papela" },
-  description: `Gana ${PROGRAMA.porcentaje}% en Papela Coins en cada compra, colecciona estampitas con premios y personaliza tu tarjeta digital. Es gratis.`,
+  description: `Gratis: gana ${PROGRAMA.porcentaje}% en Papela Coins en cada compra y una estampita sorpresa que puede traer premio. Así funciona la Tarjeta de Lealtad de Papela.`,
   alternates: { canonical: "https://www.papela-atelier.com/club-creativo/tarjeta" },
   openGraph: {
     title: "Tarjeta de Lealtad — Club Creativo Papela",
@@ -40,81 +57,26 @@ export const metadata: Metadata = {
 
 const mxn = (n: number) =>
   n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 2 });
+const mxn0 = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
 
-const PASOS = [
-  {
-    n: "01",
-    titulo: "Pide tu tarjeta",
-    texto: "Pídela en tienda o por WhatsApp. Es gratis y te llega como un enlace personal: vive en tu celular, sin app ni contraseña.",
-  },
-  {
-    n: "02",
-    titulo: "Compra y acumula",
-    texto: `En cada compra ganas ${PROGRAMA.porcentaje}% en Papela Coins y una estampita sorpresa para rascar en tu tarjeta.`,
-  },
-  {
-    n: "03",
-    titulo: "Usa tus recompensas",
-    texto: "Paga con tus Papela Coins en caja y reclama los premios que traen algunas estampitas.",
-  },
-];
+const TEXTO_WA = "Hola Papela 🌿 quiero mi Tarjeta de Lealtad del Club Creativo";
 
-const RAREZAS = [
-  { nombre: "Común", img: "flor", texto: "Las que más vas a encontrar. Arma tu colección poco a poco." },
-  { nombre: "Raro ✦", img: "monstera", texto: "Más difíciles de conseguir, con marco holográfico en tu planilla." },
-  { nombre: "Legendario ★", img: "caballo", texto: "Las joyas de la colección. Entre más grande tu compra, más chance de que te toque una." },
-];
-
-const EXTRAS = [
-  { Icon: PaintBrushIcon, titulo: "Hazla tuya", texto: "Elige colores, fondos, texturas, brillo holográfico y charms. Tu tarjeta no se parece a ninguna otra." },
-  { Icon: SparklesIcon, titulo: "Tu portada", texto: "Escoge tus 6 estampitas favoritas para lucirlas al frente de tu tarjeta." },
-  { Icon: GiftIcon, titulo: "Regala repetidas", texto: "¿Te salió doble? Regálala a otro miembro con un código que dura 72 horas." },
-  { Icon: BellIcon, titulo: "Avisos primero", texto: "En la campana de tu tarjeta te llegan noticias, lanzamientos y sorpresas del Club." },
-];
-
-const PREGUNTAS = [
-  {
-    p: "¿Cuánto cuesta?",
-    r: "Nada. La Tarjeta de Lealtad del Club Creativo es gratuita.",
-  },
-  {
-    p: "¿Cómo gano Papela Coins?",
-    r: `Con cada compra de ${mxn(PROGRAMA.compraMinima)} o más recibes el ${PROGRAMA.porcentaje}% de lo que pagaste en Papela Coins. Por ejemplo, en una compra de ${mxn(PROGRAMA.ejemploCompra)} ganas ${mxn((PROGRAMA.ejemploCompra * PROGRAMA.porcentaje) / 100)}.`,
-  },
-  {
-    p: "¿Cómo uso mis Papela Coins?",
-    r: "Avísanos en caja que quieres pagar con tus Coins. Puedes usarlos para cubrir parte o el total de tu compra. Tu saldo siempre está a la vista en tu tarjeta.",
-  },
-  {
-    p: "¿Mis Papela Coins vencen?",
-    r: "Hoy no tienen fecha de vencimiento. Si algún día cambia, lo verás en tu tarjeta junto al saldo, con la fecha exacta.",
-  },
-  {
-    p: "¿Qué son las estampitas y cómo las gano?",
-    r: "Son coleccionables digitales que aparecen en tu tarjeta después de compras, talleres, clases y actividades de Papela. Llegan tapadas: las rascas con el dedo para descubrir cuál te tocó.",
-  },
-  {
-    p: "¿Qué premios traen las estampitas?",
-    r: "Algunas estampitas traen un premio: puede ser un descargable (como un imprimible) o algo físico que recoges en tienda. Lo ves en la ficha de la estampita en cuanto la rascas. Los premios no son canjeables por dinero.",
-  },
-  {
-    p: "¿Puedo compartir mi tarjeta?",
-    r: "Tu tarjeta es personal e intransferible y vive en un enlace: quien lo tenga puede verla, así que compártelo solo con quien quieras. Lo que sí puedes regalar son tus estampitas repetidas.",
-  },
-];
-
-function CtaPedir({ ubicacion }: { ubicacion: string }) {
+function CtaPedir({ ubicacion, claro = false }: { ubicacion: string; claro?: boolean }) {
   return (
     <WhatsAppLink
       ubicacion={ubicacion}
-      texto="Hola Papela 🌿 quiero mi Tarjeta de Lealtad del Club Creativo"
+      texto={TEXTO_WA}
       itemName="Tarjeta de Lealtad"
       lead={{ tipo: "club", item_name: "Tarjeta de Lealtad" }}
-      className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] font-sans text-[15px] font-semibold px-7 py-3.5"
+      className={`group relative inline-flex items-center gap-2 overflow-hidden rounded-full font-sans text-[15px] font-semibold px-7 py-3.5 ${
+        claro ? "bg-[var(--color-cremita)] text-[var(--color-verde)]" : "bg-[var(--color-verde)] text-[var(--color-cremita)]"
+      }`}
     >
       <span
         aria-hidden="true"
-        className="absolute inset-0 bg-[var(--color-terracota)] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out"
+        className={`absolute inset-0 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out ${
+          claro ? "bg-white" : "bg-[var(--color-terracota)]"
+        }`}
       />
       <span className="relative">Pedir mi tarjeta</span>
       <ArrowRightIcon className="relative w-4 h-4" aria-hidden="true" />
@@ -122,21 +84,74 @@ function CtaPedir({ ubicacion }: { ubicacion: string }) {
   );
 }
 
-function CtaPedirHero() {
+function Encabezado({ eyebrow, titulo, texto }: { eyebrow: string; titulo: string; texto?: string }) {
   return (
-    <WhatsAppLink
-      ubicacion="tarjeta_lealtad_hero"
-      texto="Hola Papela 🌿 quiero mi Tarjeta de Lealtad del Club Creativo"
-      itemName="Tarjeta de Lealtad"
-      lead={{ tipo: "club", item_name: "Tarjeta de Lealtad" }}
-      className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-[var(--color-cremita)] text-[var(--color-verde)] font-sans text-[15px] font-semibold px-7 py-3.5"
-    >
-      <span aria-hidden="true" className="absolute inset-0 bg-white origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out" />
-      <span className="relative">Pedir mi tarjeta</span>
-      <ArrowRightIcon className="relative w-4 h-4" aria-hidden="true" />
-    </WhatsAppLink>
+    <ScrollReveal>
+      <p className="label text-[var(--color-terracota)] mb-3">{eyebrow}</p>
+      <h2 className="font-serif font-extralight text-[#403C3C] text-[clamp(2rem,4vw,3.25rem)] leading-[1.1] mb-4 max-w-3xl">
+        {titulo}
+      </h2>
+      {texto && <p className="font-sans text-[18px] leading-[26px] text-[var(--color-muted)] max-w-2xl">{texto}</p>}
+    </ScrollReveal>
   );
 }
+
+const PASOS = [
+  { n: "01", titulo: "Pide tu tarjeta", texto: "En caja o por WhatsApp. Es gratis y te mandamos tu enlace personal: vive en tu celular, sin app ni contraseña." },
+  { n: "02", titulo: "Compra como siempre", texto: `Cada compra suma ${PROGRAMA.porcentaje}% en Papela Coins y te da una estampita sorpresa para rascar.` },
+  { n: "03", titulo: "Disfruta tus recompensas", texto: "Paga con tus Coins y reclama en caja los premios que traen tus estampitas." },
+];
+
+const NIVELES = [
+  { clave: "comun" as const, nombre: "Común", img: "flor", monto: `Compras de hasta ${mxn0(PROGRAMA.raroDesde - 1)}`, bg: "#F0D9CC" },
+  { clave: "raro" as const, nombre: "Raro ✦", img: "monstera", monto: `Compras desde ${mxn0(PROGRAMA.raroDesde)}`, bg: "#EEC3D7" },
+  { clave: "legendario" as const, nombre: "Legendario ★", img: "caballo", monto: `Compras desde ${mxn0(PROGRAMA.legendarioDesde)}`, bg: "#E8C9A8" },
+];
+
+const REGLAS = [
+  { Icon: BanknotesIcon, titulo: "Cuesta $0", texto: "La tarjeta es gratis, sin mensualidad ni compra mínima para tenerla." },
+  { Icon: CheckBadgeIcon, titulo: "Ya está activa", texto: "No es una preventa: desde hoy tus compras ya suman." },
+  { Icon: ShoppingBagIcon, titulo: "Papelería y clases", texto: "Aplica en papelería, materiales e impresiones, y en clases y paquetes de clases." },
+  { Icon: SparklesIcon, titulo: `Cashback desde ${mxn0(PROGRAMA.compraMinima)}`, texto: `Las compras de ${mxn0(PROGRAMA.compraMinima)} o más generan Coins. La estampita te toca en cualquier compra.` },
+  { Icon: ClockIcon, titulo: "Sin vencimiento", texto: "Tus Papela Coins no caducan. Si algún día cambia, lo verás en tu tarjeta con fecha." },
+  { Icon: GiftIcon, titulo: "Premios en tienda", texto: "Los premios físicos se recogen en Papela y no se cambian por dinero." },
+];
+
+const PREGUNTAS = [
+  { p: "¿Cuánto cuesta?", r: "Nada. La Tarjeta de Lealtad del Club Creativo es gratuita." },
+  {
+    p: "¿Cuánto cashback me dan?",
+    r: `El ${PROGRAMA.porcentaje}% de lo que pagas, en compras de ${mxn0(PROGRAMA.compraMinima)} o más. En una compra de ${mxn0(PROGRAMA.ejemploCompra)} ganas ${mxn((PROGRAMA.ejemploCompra * PROGRAMA.porcentaje) / 100)} en Papela Coins.`,
+  },
+  {
+    p: "¿Se acumula? ¿Cómo lo uso?",
+    r: "Sí, tus Coins se van sumando compra tras compra. Para usarlos, avísanos en caja: pagas parte o el total de tu compra con ellos. No hay mínimo para usarlos.",
+  },
+  {
+    p: "Si pago con Coins, ¿también gano cashback?",
+    r: `Sí, sobre la parte que pagas con dinero. Por ejemplo, si tu compra es de $350 y usas $200 en Coins, ganas ${PROGRAMA.porcentaje}% de los $150 restantes.`,
+  },
+  {
+    p: "¿Es un sello por compra? ¿Cuántos necesito para un regalo?",
+    r: `No hay que juntar sellos: cada compra te da una estampita y cada estampita es su propia sorpresa. Algunas traen un premio directo, sin importar cuántas tengas. Entre más grande la compra, más rara la estampita: común hasta ${mxn0(PROGRAMA.raroDesde - 1)}, rara desde ${mxn0(PROGRAMA.raroDesde)} y legendaria desde ${mxn0(PROGRAMA.legendarioDesde)}.`,
+  },
+  {
+    p: "¿Todas las estampitas traen premio?",
+    r: "No, más o menos la mitad. Las demás son para coleccionar, lucir en tu portada o regalar si te salen repetidas.",
+  },
+  {
+    p: "¿Cómo reclamo un premio?",
+    r: "Abre la estampita en tu tarjeta y enséñala en caja. Los premios descargables (como imprimibles) los bajas directo desde la ficha.",
+  },
+  {
+    p: "¿Qué pasa si me sale una repetida?",
+    r: "Puedes regalarla a otro miembro del Club con un código de un solo uso que dura 72 horas.",
+  },
+  {
+    p: "¿Puedo compartir mi tarjeta?",
+    r: "Tu tarjeta es personal e intransferible y vive en un enlace: quien lo tenga puede verla, así que compártelo solo con quien quieras.",
+  },
+];
 
 export default function TarjetaLealtadPage() {
   const ejemploCoins = (PROGRAMA.ejemploCompra * PROGRAMA.porcentaje) / 100;
@@ -152,26 +167,21 @@ export default function TarjetaLealtadPage() {
             Cada compra te regresa algo
           </h1>
           <p className="font-sans text-[18px] leading-[24px] text-[var(--color-cremita)]/90 max-w-xl mb-10">
-            Gana {PROGRAMA.porcentaje}% en Papela Coins, rasca estampitas con premios y lleva en tu celular una tarjeta que es solo tuya. Gratis.
+            {PROGRAMA.porcentaje}% en Papela Coins y una estampita sorpresa en cada compra. Gratis y ya activa.
           </p>
           <div className="my-4 md:my-8">
             <TarjetaPreview className="-rotate-[4deg] scale-110 md:scale-125" />
           </div>
           <div className="mt-10 md:mt-12">
-            <CtaPedirHero />
+            <CtaPedir ubicacion="tarjeta_lealtad_hero" claro />
           </div>
         </div>
       </HeroSection>
 
-      {/* Cómo funciona */}
+      {/* Resumen en 3 pasos */}
       <section className="w-[90%] mx-auto py-12 md:py-16">
-        <ScrollReveal>
-          <p className="label text-[var(--color-terracota)] mb-3">Cómo funciona</p>
-          <h2 className="font-serif font-extralight text-[#403C3C] text-[clamp(2rem,4vw,3.25rem)] leading-[1.1] mb-10 md:mb-12">
-            Tres pasos, cero complicaciones
-          </h2>
-        </ScrollReveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Encabezado eyebrow="Cómo funciona" titulo="Tres pasos, cero complicaciones" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 md:mt-10">
           {PASOS.map((paso, i) => (
             <ScrollReveal key={paso.n} delay={i * 0.08} className="h-full">
               <div className="h-full rounded-[28px] bg-white/60 border border-[var(--color-border)] p-7 md:p-8">
@@ -184,8 +194,25 @@ export default function TarjetaLealtadPage() {
         </div>
       </section>
 
+      {/* Anatomía de la tarjeta */}
+      <section className="w-[90%] mx-auto py-12 md:py-16">
+        <Encabezado
+          eyebrow="Anatomía"
+          titulo="Conoce tu tarjeta"
+          texto="Así se ve tu tarjeta en el celular. Cada número es algo que puedes hacer con ella."
+        />
+        <div className="mt-10 md:mt-12 rounded-[32px] md:rounded-[48px] bg-[var(--color-cremita-3)] border border-[var(--color-border)] px-6 py-10 md:px-14 md:py-14 grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-12 lg:gap-16 items-center">
+          <ScrollReveal>
+            <TarjetaAnatomiaVisual />
+          </ScrollReveal>
+          <ScrollReveal delay={0.1}>
+            <TarjetaAnatomiaLeyenda />
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Papela Coins — par Raíz */}
-      <section className="w-[90%] mx-auto py-6 md:py-10">
+      <section className="w-[90%] mx-auto py-12 md:py-16">
         <ScrollReveal>
           <div className="rounded-[32px] md:rounded-[48px] bg-[var(--color-verde)] text-[var(--color-cremita)] px-7 py-10 md:px-16 md:py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             <div>
@@ -194,16 +221,16 @@ export default function TarjetaLealtadPage() {
                 Papela Coins
               </h2>
               <p className="font-sans text-[18px] leading-[26px] text-[var(--color-cremita)]/90 mb-6 max-w-md">
-                Es dinero que vuelve a ti. En cada compra de {mxn(PROGRAMA.compraMinima)} o más te regresamos el {PROGRAMA.porcentaje}% en Papela Coins, y los usas como pago en tu siguiente visita.
+                Dinero que vuelve a ti: en cada compra de {mxn0(PROGRAMA.compraMinima)} o más te regresamos el {PROGRAMA.porcentaje}% en Papela Coins.
               </p>
-              <ul className="font-sans text-[16px] leading-[24px] text-[var(--color-cremita)]/90 space-y-2.5">
-                <li className="flex gap-3"><ShoppingBagIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-pistache)]" aria-hidden="true" />Paga parte o el total de tu compra con tus Coins.</li>
-                <li className="flex gap-3"><DevicePhoneMobileIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-pistache)]" aria-hidden="true" />Tu saldo siempre visible en tu tarjeta.</li>
-                <li className="flex gap-3"><SparklesIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-pistache)]" aria-hidden="true" />Sin fecha de vencimiento.</li>
+              <ul className="font-sans text-[16px] leading-[24px] text-[var(--color-cremita)]/90 space-y-3">
+                <li className="flex gap-3"><ArrowPathIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-pistache)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">Se acumulan</strong> compra tras compra.</span></li>
+                <li className="flex gap-3"><ShoppingBagIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-pistache)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">Se canjean en caja:</strong> pagas parte o el total de tu compra con ellos, sin mínimo.</span></li>
+                <li className="flex gap-3"><DevicePhoneMobileIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-pistache)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">Siempre a la vista</strong> en tu tarjeta.</span></li>
+                <li className="flex gap-3"><ClockIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-pistache)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">No vencen.</strong></span></li>
               </ul>
             </div>
 
-            {/* Ejemplo */}
             <div className="rounded-[28px] bg-[var(--color-cremita)] text-[#403C3C] p-7 md:p-9">
               <p className="label text-[var(--color-terracota)] mb-5">Por ejemplo</p>
               <div className="flex items-baseline justify-between border-b border-[var(--color-border)] pb-4 mb-4">
@@ -221,72 +248,111 @@ export default function TarjetaLealtadPage() {
                 </span>
               </div>
               <p className="font-sans text-[14px] leading-[20px] text-[var(--color-muted)] mt-5">
-                en Papela Coins, listos para tu próxima compra.
+                en Papela Coins, más una estampita legendaria 🐴. Si pagas una parte con Coins, el cashback se calcula sobre lo que pagas con dinero.
               </p>
             </div>
           </div>
         </ScrollReveal>
       </section>
 
-      {/* Estampitas — par Cacao */}
+      {/* Estampitas y premios */}
       <section className="w-[90%] mx-auto py-12 md:py-16">
-        <ScrollReveal>
-          <p className="label text-[var(--color-terracota)] mb-3">Coleccionables</p>
-          <h2 className="font-serif font-extralight text-[#403C3C] text-[clamp(2rem,4vw,3.25rem)] leading-[1.1] mb-4 max-w-2xl">
-            Estampitas que se rascan y traen premios
-          </h2>
-          <p className="font-sans text-[18px] leading-[26px] text-[var(--color-muted)] max-w-2xl mb-10 md:mb-12">
-            Después de tus compras, talleres y clases aparece una estampita sorpresa en tu tarjeta. La rascas con el dedo, descubres cuál te tocó y la guardas en tu planilla. Hay 100 por coleccionar.
-          </p>
-        </ScrollReveal>
+        <Encabezado
+          eyebrow="Estampitas y regalos"
+          titulo="Una estampita en cada compra, sin juntar sellos"
+          texto="Aquí no cuentas sellos: cada compra te da una estampita sorpresa que rascas en tu tarjeta, y cada una es su propio premio. Su rareza depende del monto de tu compra."
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {RAREZAS.map((r, i) => (
-            <ScrollReveal key={r.nombre} delay={i * 0.08} className="h-full">
-              <div className="h-full rounded-[28px] bg-[#F0D9CC] p-7 flex flex-col">
-                <div className="relative w-24 h-24 mb-6">
-                  <Image src={`/images/club/preview/${r.img}.webp`} alt="" fill sizes="96px" className="object-contain" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 md:mt-12 mb-6">
+          {NIVELES.map((nv, i) => (
+            <ScrollReveal key={nv.clave} delay={i * 0.08} className="h-full">
+              <div className="h-full rounded-[28px] p-7 flex flex-col" style={{ backgroundColor: nv.bg }}>
+                <div className="flex items-start justify-between gap-4 mb-5">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-cacao)] mb-1.5">{nv.monto}</p>
+                    <h3 className="font-serif italic text-[30px] leading-tight text-[var(--color-cacao)]">{nv.nombre}</h3>
+                  </div>
+                  <div className="relative w-20 h-20 shrink-0 -mt-1">
+                    <Image src={`/images/club/preview/${nv.img}.webp`} alt="" fill sizes="80px" className="object-contain" />
+                  </div>
                 </div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-terracota)] mb-2">Rareza</p>
-                <h3 className="font-serif italic text-[28px] leading-tight text-[#403C3C] mb-2">{r.nombre}</h3>
-                <p className="font-sans text-[16px] leading-[24px] text-[#403C3C]/80">{r.texto}</p>
+                <p className="font-sans text-[13px] font-semibold text-[var(--color-cacao)] mb-2.5">Premios que puedes encontrar</p>
+                <ul className="flex flex-wrap gap-2">
+                  {PREMIOS[nv.clave].map((pr) => (
+                    <li key={pr} className="rounded-full bg-white/65 px-3 py-1.5 font-sans text-[13px] leading-tight text-[var(--color-cacao)]">
+                      {pr}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </ScrollReveal>
           ))}
         </div>
 
         <ScrollReveal>
-          <div className="rounded-[28px] bg-[var(--color-cacao)] text-[var(--color-rosa-papel)] p-7 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
-            <span className="shrink-0 w-16 h-16 rounded-full bg-[var(--color-rosa-papel)] flex items-center justify-center">
-              <GiftIcon className="w-8 h-8 text-[var(--color-cacao)]" aria-hidden="true" />
-            </span>
+          <div className="rounded-[28px] bg-[var(--color-cacao)] text-[var(--color-rosa-papel)] p-7 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="font-serif italic text-[clamp(1.75rem,3vw,2.5rem)] leading-tight mb-2">Algunas traen premio 🎁</h3>
-              <p className="font-sans text-[17px] leading-[25px] text-[var(--color-rosa-papel)] max-w-2xl">
-                Cuando una estampita trae premio lo verás en cuanto la rasques: puede ser un descargable, como un imprimible, o un regalo físico que recoges en tienda.
-              </p>
+              <GiftIcon className="w-7 h-7 mb-3" aria-hidden="true" />
+              <h3 className="font-serif italic text-[24px] leading-tight mb-2">Premio directo</h3>
+              <p className="font-sans text-[15px] leading-[22px]">Más o menos la mitad de las estampitas trae un regalo. Lo ves en cuanto la rascas, con un 🎁.</p>
+            </div>
+            <div>
+              <BuildingStorefrontIcon className="w-7 h-7 mb-3" aria-hidden="true" />
+              <h3 className="font-serif italic text-[24px] leading-tight mb-2">Reclámalo en caja</h3>
+              <p className="font-sans text-[15px] leading-[22px]">Enseña la estampita en Papela y te damos tu premio. Los imprimibles los descargas desde la tarjeta.</p>
+            </div>
+            <div>
+              <ArrowPathIcon className="w-7 h-7 mb-3" aria-hidden="true" />
+              <h3 className="font-serif italic text-[24px] leading-tight mb-2">¿Te salió repetida?</h3>
+              <p className="font-sans text-[15px] leading-[22px]">Regálala a otro miembro del Club con un código que dura 72 horas.</p>
             </div>
           </div>
         </ScrollReveal>
       </section>
 
-      {/* Extras */}
+      {/* Cómo se consigue */}
       <section className="w-[90%] mx-auto py-12 md:py-16">
-        <ScrollReveal>
-          <p className="label text-[var(--color-terracota)] mb-3">Y además</p>
-          <h2 className="font-serif font-extralight text-[#403C3C] text-[clamp(2rem,4vw,3.25rem)] leading-[1.1] mb-10 md:mb-12">
-            Una tarjeta que se siente tuya
-          </h2>
-        </ScrollReveal>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {EXTRAS.map(({ Icon, titulo, texto }, i) => (
+        <Encabezado
+          eyebrow="Cómo se consigue"
+          titulo="Pídela en caja o por WhatsApp"
+          texto="La tarjeta es digital: no hay que descargar nada ni crear contraseña."
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 md:mt-12">
+          {[
+            { Icon: BuildingStorefrontIcon, titulo: "En caja", texto: "Pídela en tu próxima visita a Papela y te registramos ahí mismo." },
+            { Icon: ChatBubbleLeftRightIcon, titulo: "Por WhatsApp", texto: "Escríbenos y te damos de alta sin ir a la tienda." },
+            { Icon: DevicePhoneMobileIcon, titulo: "Te llega un enlace", texto: "Tu tarjeta vive en un enlace personal. Guárdalo en favoritos o en la pantalla de inicio de tu celular." },
+          ].map(({ Icon, titulo, texto }, i) => (
             <ScrollReveal key={titulo} delay={i * 0.06} className="h-full">
-              <div className="h-full rounded-[28px] bg-[#C9D3C0] p-7">
+              <div className="h-full rounded-[28px] bg-[#CED8D9] p-7">
                 <span className="w-10 h-10 rounded-full bg-[var(--color-verde)] flex items-center justify-center mb-5">
                   <Icon className="w-5 h-5 text-[var(--color-cremita)]" aria-hidden="true" />
                 </span>
                 <h3 className="font-serif italic text-[24px] leading-tight text-[#403C3C] mb-2">{titulo}</h3>
                 <p className="font-sans text-[16px] leading-[24px] text-[#403C3C]/80">{texto}</p>
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
+        <div className="mt-8">
+          <CtaPedir ubicacion="tarjeta_lealtad_consigue" />
+        </div>
+      </section>
+
+      {/* Reglas */}
+      <section className="w-[90%] mx-auto py-12 md:py-16">
+        <Encabezado eyebrow="Reglas" titulo="Lo importante, en corto" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10 md:mt-12">
+          {REGLAS.map(({ Icon, titulo, texto }, i) => (
+            <ScrollReveal key={titulo} delay={i * 0.05} className="h-full">
+              <div className="h-full rounded-[28px] bg-[#C9D3C0] p-7 flex gap-4">
+                <span className="shrink-0 w-10 h-10 rounded-full bg-[var(--color-verde)] flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-[var(--color-cremita)]" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="font-serif italic text-[22px] leading-tight text-[#403C3C] mb-1.5">{titulo}</h3>
+                  <p className="font-sans text-[15px] leading-[22px] text-[#403C3C]/80">{texto}</p>
+                </div>
               </div>
             </ScrollReveal>
           ))}
@@ -332,7 +398,7 @@ export default function TarjetaLealtadPage() {
               Empieza a juntar recompensas
             </h2>
             <p className="font-sans text-[18px] leading-[26px] text-[#403C3C]/85 max-w-lg mb-8">
-              Escríbenos por WhatsApp o pídela en tu próxima visita a Papela. Empiezas a ganar desde tu siguiente compra.
+              Escríbenos por WhatsApp o pídela en tu próxima visita. Empiezas a ganar desde tu siguiente compra.
             </p>
             <CtaPedir ubicacion="tarjeta_lealtad_final" />
           </div>
