@@ -31,7 +31,7 @@ function Marca({ n, className }: { n: number; className: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`absolute z-20 w-7 h-7 rounded-full bg-[var(--color-terracota)] text-white font-sans text-[13px] font-bold flex items-center justify-center ring-[3px] ring-[var(--color-bg)] shadow-[0_4px_10px_rgba(0,0,0,0.25)] ${className}`}
+      className={`absolute z-20 w-7 h-7 rounded-full bg-[#DD5A8B] text-white font-sans text-[13px] font-bold flex items-center justify-center ring-[3px] ring-[var(--color-bg)] shadow-[0_4px_10px_rgba(0,0,0,0.25)] ${className}`}
     >
       {n}
     </span>
@@ -45,7 +45,7 @@ export function TarjetaAnatomiaVisual() {
       <div className="absolute top-0 right-0 flex items-center gap-1 rounded-full bg-white/70 border border-white px-2 py-1.5 shadow-[0_6px_18px_rgba(18,83,92,0.15)]">
         <span className="w-8 h-8 rounded-full flex items-center justify-center relative">
           <BellIcon className="w-5 h-5 text-[var(--color-verde)]" />
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--color-terracota)]" />
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#DD5A8B]" />
         </span>
         <span className="w-8 h-8 rounded-full flex items-center justify-center">
           <Bars3Icon className="w-5 h-5 text-[var(--color-verde)]" />
@@ -129,7 +129,7 @@ export function TarjetaAnatomiaLeyenda() {
     <ol className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
       {PARTES.map((p) => (
         <li key={p.n} className="flex gap-4">
-          <span className="shrink-0 w-7 h-7 rounded-full bg-[var(--color-terracota)] text-white font-sans text-[13px] font-bold flex items-center justify-center">
+          <span className="shrink-0 w-7 h-7 rounded-full bg-[#DD5A8B] text-white font-sans text-[13px] font-bold flex items-center justify-center">
             {p.n}
           </span>
           <div>

@@ -254,7 +254,8 @@ export default function SiteNavbar() {
       pathname.includes("/checkout") ||
       pathname.startsWith("/productos/coleccion/") ||
       pathname === "/privacidad" ||
-      pathname === "/terminos");
+      pathname === "/terminos" ||
+      pathname === "/club-creativo/tarjeta");
   const linkClass = onLight
     ? "text-[var(--color-verde)]/85 hover:text-[var(--color-verde)]"
     : "text-[var(--color-cremita)]/80 hover:text-[var(--color-cremita)]";

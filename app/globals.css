@@ -729,3 +729,38 @@ body {
     animation: none !important;
   }
 }
+
+/* ── /club-creativo/tarjeta (nov-2026) ───────────────────────────────────
+   Tarjetas que flotan en el hero y monedas Papela Coins. Dos envoltorios
+   anidados porque cada movimiento necesita su propio transform: .club-deriva
+   (vaivén horizontal + giro) por fuera y .club-flota (sube y baja) por dentro;
+   con ciclos distintos el camino casi no se repite. Solo transform. */
+@keyframes club-deriva {
+  0%, 100% { transform: translateX(0) rotate(var(--giro, 0deg)); }
+  50%      { transform: translateX(var(--dx, 12px)) rotate(calc(var(--giro, 0deg) + 3deg)); }
+}
+@keyframes club-flota {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(var(--dy, -16px)); }
+}
+.club-deriva {
+  transform: rotate(var(--giro, 0deg));
+  animation: club-deriva var(--t1, 13s) ease-in-out infinite;
+  animation-delay: var(--retraso, 0s);
+}
+.club-flota {
+  animation: club-flota var(--t2, 6s) ease-in-out infinite;
+  animation-delay: var(--retraso, 0s);
+}
+/* La moneda "voltea" un poco (rotateY) mientras flota */
+@keyframes club-moneda-gira {
+  0%, 100% { transform: perspective(500px) rotateY(-28deg) rotateZ(-6deg); }
+  50%      { transform: perspective(500px) rotateY(28deg) rotateZ(6deg); }
+}
+.club-moneda-gira {
+  animation: club-moneda-gira var(--t3, 7s) ease-in-out infinite;
+  animation-delay: var(--retraso, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .club-deriva, .club-flota, .club-moneda-gira { animation: none; }
+}
