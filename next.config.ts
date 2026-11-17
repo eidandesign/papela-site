@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const CSP_BASE = "base-uri 'self'; object-src 'none'; frame-ancestors 'self'";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Actualizaciones de Next.js por avisos de seguridad (next upgrade --agent=security).
+    agentUpgrade: "security",
+  },
   // No anunciar el framework en cada respuesta.
   poweredByHeader: false,
   env: {
