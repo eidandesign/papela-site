@@ -5,7 +5,7 @@ import BackToTop from "./BackToTop";
 import WhatsAppLink from "./WhatsAppLink";
 import TrackedLink from "./TrackedLink";
 
-const SITEMAP: { title: string; links: { href: string; label: string }[] }[] = [
+const SITEMAP: { title: string; links: { href: string; label: string; nofollow?: boolean }[] }[] = [
   {
     title: "Explora",
     links: [
@@ -27,6 +27,9 @@ const SITEMAP: { title: string; links: { href: string; label: string }[] }[] = [
     title: "Papela",
     links: [
       { href: "/nosotros", label: "Nosotros" },
+      // Página privada para maestros (con contraseña). nofollow: que los
+      // buscadores no la sigan; además lleva noindex.
+      { href: "/colabora/maestros", label: "Colabora con nosotros", nofollow: true },
       { href: "/privacidad", label: "Aviso de privacidad" },
       { href: "/terminos", label: "Términos" },
     ],
@@ -104,6 +107,7 @@ export default function SiteFooter({ showClubBanner = true }: { showClubBanner?:
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    rel={link.nofollow ? "nofollow" : undefined}
                     className="font-sans text-[15px] text-[var(--color-text)] hover:text-[var(--color-verde)] transition-colors"
                   >
                     {link.label}

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { horarioId, tipoClaseId, paqueteId, sinPromociones } = body;
+    const { horarioId, tipoClaseId, paqueteId, sinPromociones, referidoPor } = body;
     // Estos textos solo titulan el cobro en MercadoPago. Vienen del navegador,
     // así que se limitan a texto corto de una línea (nunca fijan el precio).
     const linea = (v: unknown, max: number) =>
@@ -159,6 +159,13 @@ export async function POST(req: NextRequest) {
 
     const baseUrl = SITE_URL;
 
+    let referido: string | null = null;
+    if (typeof referidoPor === "string" && referidoPor.trim()) {
+      const buscado = referidoPor.trim().slice(0, 120).toLowerCase();
+      const { data: activas } = await supabase.from("clases").select("nombre").eq("activa", true);
+      referido = (activas ?? []).find((m) => (m.nombre ?? "").trim().toLowerCase() === buscado)?.nombre ?? null;
+    }
+
     const preference = new Preference(client);
     const result = await preference.create({
       body: {
@@ -170,6 +177,9 @@ export async function POST(req: NextRequest) {
           ...(gaClientId(req) ? { ga_client_id: gaClientId(req) } : {}),
           // Casilla del aviso de privacidad; el webhook la anota en la reserva.
           ...(sinPromociones === true ? { sin_promociones: true } : {}),
+          // "¿Alguien te recomendó?" (bono por alumno nuevo): solo si es una
+          // maestra activa; el webhook lo anota en la reserva.
+          ...(referido ? { referido_por: referido } : {}),
           ...(paquete
             ? {
                 paquete_id: paquete.id,

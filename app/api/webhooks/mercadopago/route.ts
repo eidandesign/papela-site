@@ -254,6 +254,18 @@ export async function POST(req: NextRequest) {
     if (error) logger.error("webhook: no se pudo anotar sin_promociones", { tabla, paymentId, code: error.code });
   }
 
+  // "¿Alguien te recomendó?" del modal de reserva (bono por alumno nuevo del
+  // contrato de clases). El checkout ya lo validó contra las maestras activas.
+  // Columna de 20261116_referido_por (admin). Nunca rompe el webhook.
+  const referido = (payment.metadata as { referido_por?: unknown } | undefined)?.referido_por;
+  if (nuevo && typeof referido === "string" && referido.trim() && !externalRef.startsWith("taller:") && !externalRef.startsWith("tienda:")) {
+    const { error } = await supabase
+      .from("clases_reservas")
+      .update({ referido_por: referido.trim().slice(0, 120) })
+      .eq("payment_id", paymentId);
+    if (error) logger.error("webhook: no se pudo anotar referido_por", { paymentId, code: error.code });
+  }
+
   // Compra para GA4 (mismo transaction_id que la página de gracias). Nunca rompe el webhook.
   if (nuevo) await enviarPurchaseServidor(payment);
 

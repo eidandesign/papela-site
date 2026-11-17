@@ -64,7 +64,7 @@ export default function PrivacidadPage() {
         Aviso de privacidad
       </h1>
       <p className="font-sans text-sm text-[var(--color-muted)] mb-12">
-        Última actualización: 17 de octubre de 2026
+        Última actualización: 16 de noviembre de 2026
       </p>
 
       <Seccion title="Quién es responsable de tus datos">
@@ -109,6 +109,14 @@ export default function PrivacidadPage() {
             indexa en buscadores: compártelo solo con quien quieras.
           </li>
           <li>
+            <Dato>Maestros que colaboran con Papela:</Dato> nombre, teléfono, correo,
+            domicilio, redes sociales, la liga a su página o portafolio, los datos de la
+            clase o taller que proponen y los archivos que comparten (PDF o fotos de su
+            trabajo). Los usamos solo para revisar la propuesta y preparar el acuerdo de
+            colaboración; los archivos se guardan en un espacio privado al que solo accede
+            el equipo de Papela.
+          </li>
+          <li>
             <Dato>WhatsApp:</Dato> cuando nos escribes, tu número y los mensajes que
             intercambiamos para atender tu pedido, reserva o proyecto.
           </li>
@@ -141,6 +149,7 @@ export default function PrivacidadPage() {
           <li>Operar tu membresía del Club Creativo: registrar coleccionables, premios y regalos entre socios.</li>
           <li>Contactarte sobre tu compra, reserva o proyecto (confirmaciones, cambios, aclaraciones).</li>
           <li>Mejorar nuestros talleres y clases a partir de las encuestas de satisfacción.</li>
+          <li>Revisar las propuestas de maestros y preparar los acuerdos de colaboración.</li>
         </ul>
         <p>
           Finalidades secundarias (puedes oponerte a ellas marcando la casilla &ldquo;No quiero

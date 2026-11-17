@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 const IG_POSTS = [
   { src: "/images/instagram-1.jpg", href: "https://instagram.com/papela.atelier" },
   { src: "/images/Instagram-2.jpg", href: "https://instagram.com/papela.atelier" },
-  { src: "/images/Instagram-3.jpg", href: "https://www.instagram.com/p/DaoS-NMJyQS/" },
+  { src: "/images/instagram-clase.jpg", href: "https://instagram.com/papela.atelier" },
 ];
 
 const INFO_CARDS = [
@@ -43,7 +43,7 @@ const INFO_CARDS = [
     href: "/clases",
     bg: "#C9D3C0",
     text: "#2b3a2e",
-    image: "/images/clases.avif",
+    image: "/images/clase-papela.jpg",
   },
   {
     slug: "personaliza",

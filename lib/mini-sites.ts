@@ -122,6 +122,7 @@ export const SITE_ROOT_SEGMENTS = new Set([
   "clases",
   "club",
   "club-creativo",
+  "colabora", // página privada para maestros (app/colabora/maestros)
   "cotizacion",
   "links",
   "mini-site-preview",

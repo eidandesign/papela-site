@@ -103,7 +103,22 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Página privada para maestros (contraseña + cookie, ver
+        // lib/maestros/sesion.ts). Fuera de buscadores y de cualquier caché
+        // compartida: lo que ve alguien con sesión nunca se sirve a otro.
+        source: "/colabora/:path*",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+          { key: "Cache-Control", value: "private, no-store, max-age=0" },
+        ],
+      },
     ];
+  },
+  // El PDF del acuerdo usa PP Editorial (TTF) leída con fs desde el servidor;
+  // sin esto la fuente no viaja en la función de Vercel y el título cae a Times.
+  outputFileTracingIncludes: {
+    "/colabora/maestros/contrato": ["./lib/maestros/fuentes/*.ttf"],
   },
 };
 

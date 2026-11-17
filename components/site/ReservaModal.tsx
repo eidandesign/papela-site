@@ -10,6 +10,8 @@ import { track } from "@/lib/analitica";
 import WhatsAppLink from "./WhatsAppLink";
 import ConsentimientoPrivacidad from "./ConsentimientoPrivacidad";
 import useDialogo from "./useDialogo";
+import Select from "./Select";
+import { createClient } from "@/lib/supabase/client";
 
 const WHATSAPP_FALLBACK = "522211865590";
 
@@ -40,12 +42,35 @@ export default function ReservaModal() {
   const [selected, setSelected] = useState<string | null>(null);
   const [prevClase, setPrevClase] = useState<string | null>(null);
   const [sinPromociones, setSinPromociones] = useState(false);
+  // "¿Alguien te recomendó?": bono por alumno nuevo que Papela paga a sus
+  // maestros (contrato de clases). Las maestras activas se leen una vez con la
+  // llave pública (clases.nombre está en el grant de anon); el checkout lo
+  // vuelve a validar contra la base.
+  const [maestras, setMaestras] = useState<string[]>([]);
+  const [referidoPor, setReferidoPor] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
   const raizRef = useRef<HTMLDivElement>(null);
 
   // Patrón estándar para render solo-cliente (createPortal necesita document).
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
+
+  const abierto = !!data;
+  useEffect(() => {
+    if (!abierto || maestras.length > 0) return;
+    let vivo = true;
+    createClient()
+      .from("clases")
+      .select("nombre")
+      .eq("activa", true)
+      .order("nombre")
+      .then(({ data: filas }) => {
+        if (vivo && filas) setMaestras(filas.map((f) => f.nombre).filter(Boolean));
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [abierto, maestras.length]);
 
   // Al abrir resetea la selección: a la clase elegida desde su tarjeta, o a
   // "Todas las clases" (así nunca se oculta un horario que aún no tiene tipo
@@ -259,6 +284,22 @@ export default function ReservaModal() {
 
         {/* Sin `key` por selección: cambiar de clase NO debe remontar el
             calendario (perdería la semana a la que navegó el usuario). */}
+        {data.horarios.length > 0 && maestras.length > 0 && (
+          <div className="mx-auto mb-5 max-w-md">
+            <label htmlFor="reserva-referido" className="block font-sans text-sm font-semibold text-[var(--color-text)] mb-1.5">
+              ¿Alguien te recomendó? <span className="font-normal text-[var(--color-muted)]">(opcional)</span>
+            </label>
+            <Select id="reserva-referido" value={referidoPor} onChange={(e) => setReferidoPor(e.target.value)}>
+              <option value="">Nadie, llegué por mi cuenta</option>
+              {maestras.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
+
         {data.horarios.length > 0 ? (
           <ClaseCalendar
             horarios={data.horarios}
@@ -267,6 +308,7 @@ export default function ReservaModal() {
             tipos={data.tipos}
             paquete={paquete ?? undefined}
             sinPromociones={sinPromociones}
+            referidoPor={referidoPor}
           />
         ) : (
           <div className="bg-[#f2f0e9] rounded-xl px-5 py-8 text-center">

@@ -68,6 +68,7 @@ export default function ClaseCalendar({
   tipos = [],
   paquete,
   sinPromociones = false,
+  referidoPor = "",
 }: {
   horarios: Horario[];
   claseNombre: string;
@@ -78,6 +79,8 @@ export default function ClaseCalendar({
   paquete?: { id: string; precio: number; inscripcion: number };
   // Casilla "no quiero promociones" del modal (ConsentimientoPrivacidad).
   sinPromociones?: boolean;
+  // "¿Alguien te recomendó?" del modal: nombre de la maestra ("" = nadie).
+  referidoPor?: string;
 }) {
   // Sin tipo elegido ("Todas las clases") se muestran todos los horarios.
   const horarios = tipo
@@ -175,6 +178,7 @@ export default function ClaseCalendar({
           fechaHora,
           duracion: duracionDeSlot(h, tipoSlot),
           sinPromociones,
+          ...(referidoPor ? { referidoPor } : {}),
         }),
       });
       if (!res.ok) {

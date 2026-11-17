@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: "Clases de arte en Puebla — Papela Atelier",
     description:
       "Clases regulares de pintura y técnicas artísticas para todos los niveles en Puebla.",
-    images: [{ url: "/images/clases.avif", alt: "Clases de arte Papela Atelier Puebla" }],
+    images: [{ url: "/images/clase-papela.jpg", alt: "Clases de arte Papela Atelier Puebla" }],
   },
 };
 
