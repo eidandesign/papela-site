@@ -79,6 +79,14 @@ export async function POST(req: NextRequest) {
 
   const paymentId = String(body.data.id);
 
+  // La firma cubre el id de la URL; el pago que se procesa es el del cuerpo.
+  // Deben ser el mismo: si no, alguien reusó una firma válida con otro pago.
+  const q = new URL(req.url).searchParams;
+  const idFirmado = q.get("data.id") ?? q.get("id");
+  if (idFirmado && idFirmado.toLowerCase() !== paymentId.toLowerCase()) {
+    return NextResponse.json({ error: "Firma inválida" }, { status: 401 });
+  }
+
   // Consultar el pago directamente a MP (nunca confiar en el body del webhook)
   let payment;
   try {
@@ -116,8 +124,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  // Todos los cobros se crean en MXN. Otra moneda no se puede comparar con los
+  // precios: no se registra nada y queda el aviso para revisarlo a mano
+  // (200 para que MercadoPago no reintente durante días).
   if (payment.currency_id && payment.currency_id !== "MXN") {
-    logger.error("webhook: moneda inesperada", { paymentId, currency: payment.currency_id });
+    logger.error("webhook: moneda inesperada, pago NO procesado", { paymentId, currency: payment.currency_id });
+    return NextResponse.json({ ok: true, omitido: "moneda" });
   }
 
   const externalRef = payment.external_reference ?? "";
@@ -188,6 +200,14 @@ export async function POST(req: NextRequest) {
   // ── Clase (horario) ────────────────────────────────────────────────────────
   else {
     const horarioId = externalRef;
+
+    // Cobros de la misma cuenta que no nacieron en el sitio (QR, link, terminal)
+    // llegan sin referencia o con una ajena: no son reservas. Sin esto la RPC
+    // fallaba con un uuid inválido, se respondía 500 y MP reintentaba por días.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(horarioId)) {
+      logger.info("webhook: pago ajeno al sitio, ignorado", { paymentId });
+      return NextResponse.json({ ok: true, omitido: "referencia" });
+    }
 
     // Paquete (ver /api/checkout): MercadoPago devuelve la metadata en snake_case.
     const meta = (payment.metadata ?? {}) as {

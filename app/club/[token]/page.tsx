@@ -25,6 +25,8 @@ const TOKEN_RE = /^[a-z0-9](?:[a-z0-9-]{1,78}[a-z0-9])?$/i;
 const ADMIN_TIMEOUT_MS = 3000;
 
 function consultarAdmin(token: string) {
+  // Un token sin formato ni se consulta (evita rutas raras hacia el admin).
+  if (!TOKEN_RE.test(token)) return Promise.reject(new Error("token"));
   return fetch(`${CLUB_API}/${token}`, {
     next: { revalidate: 300 },
     signal: AbortSignal.timeout(ADMIN_TIMEOUT_MS),

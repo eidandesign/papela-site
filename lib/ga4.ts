@@ -1,3 +1,4 @@
+import "server-only";
 // Compras para analítica (solo servidor): la misma lectura del pago de
 // MercadoPago alimenta el `purchase` del navegador (páginas */pago/gracias)
 // y el del webhook (GA4 Measurement Protocol). Ambos usan transaction_id =

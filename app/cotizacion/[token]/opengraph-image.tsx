@@ -51,6 +51,9 @@ export default async function Image({ params }: { params: Promise<{ token: strin
   let cliente = "";
   let folio = "";
   try {
+    // Mismo formato que la página: lo que no calza ni se consulta al admin
+    // (este handler recibe el parámetro ya decodificado: "..%2F" sería "../").
+    if (!/^[a-z0-9](?:[a-z0-9-]{1,78}[a-z0-9])?$/i.test(token)) throw new Error("token");
     const res = await fetch(`${COTIZACION_API}/${token}`, { next: { revalidate: 300 } });
     if (res.ok) {
       const d = await res.json();
