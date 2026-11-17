@@ -10,7 +10,8 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/solid";
 import ScrollReveal from "@/components/site/ScrollReveal";
-import { TarjetaAnatomiaVisual, TarjetaAnatomiaLeyenda } from "@/components/site/club/TarjetaAnatomia";
+import TarjetaAnatomia from "@/components/site/club/TarjetaAnatomia";
+import SeccionHistorias from "@/components/site/club/SeccionHistorias";
 import { TarjetasFlotantesFondo, TarjetasFlotantesAbanico } from "@/components/site/club/TarjetasFlotantes";
 import MonedaPapela from "@/components/site/club/MonedaPapela";
 import WhatsAppLink from "@/components/site/WhatsAppLink";
@@ -255,6 +256,9 @@ export default function TarjetaLealtadPage() {
         </div>
       </section>
 
+      {/* Cada estampita tiene su historia + cómo copiarla para redes */}
+      <SeccionHistorias />
+
       {/* Cómo funciona */}
       <section className="w-[90%] mx-auto py-12 md:py-16">
         <Encabezado eyebrow="Cómo funciona" titulo="Cómo funciona" centrado />
@@ -276,17 +280,12 @@ export default function TarjetaLealtadPage() {
         <Encabezado
           eyebrow="Anatomía"
           titulo="Conoce tu tarjeta"
-          texto="Así se ve tu tarjeta en el celular. Cada número es algo que puedes hacer con ella."
+          texto="Así se ve tu tarjeta en el celular. Toca cada número para descubrir qué hace."
           centrado
         />
-        <div className="mt-10 md:mt-14 grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-12 lg:gap-16 items-center">
-          <ScrollReveal>
-            <TarjetaAnatomiaVisual />
-          </ScrollReveal>
-          <ScrollReveal delay={0.1}>
-            <TarjetaAnatomiaLeyenda />
-          </ScrollReveal>
-        </div>
+        <ScrollReveal className="mt-10 md:mt-14 flex justify-center">
+          <TarjetaAnatomia />
+        </ScrollReveal>
       </section>
 
       {/* Preguntas frecuentes */}
