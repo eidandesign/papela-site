@@ -39,6 +39,8 @@ export async function generateMetadata({
 
   let proyecto: string | null = null;
   try {
+    // Un token sin formato ni se consulta (evita rutas raras hacia el admin).
+    if (!TOKEN_RE.test(token)) throw new Error("token");
     const res = await fetch(`${COTIZACION_API}/${token}`, { next: { revalidate: 300 } });
     if (res.ok) {
       const data = await res.json();

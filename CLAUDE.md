@@ -234,6 +234,15 @@ const [libretas, favoritos, igPosts] = await Promise.all([
 - Never use inline SVG for icons — use Heroicons
 - Allowed image domains in `next.config.ts`: Supabase storage + Cloudinary
 
+## Seguridad (refuerzo nov-2026)
+Detalle en `papela-admin/docs/SEGURIDAD-2026-11-15.md`; reglas en `SECURITY.md`.
+- **Checkout de tienda**: precio y nombre de la variación salen de `atributos.variaciones` en la base (una variación puede costar distinto que la principal); solo productos `categoria = Tienda`, sin borrados ni por metro; un producto con variaciones exige `variacionId`; cuerpo máximo 20 KB y dirección saneada (`saneaDireccion`).
+- **`/w?to=`**: además del patrón, se compara el origen del destino (`/.//otro.com` se normaliza a otro sitio).
+- **Sin GTM ni Pixel en `/club/<token>` y `/cotizacion/<token>`** (`SIN_ANALITICA` en `AnalyticsScripts.tsx`): la URL es la credencial. Los `track()` de esas páginas no llegan a GA4.
+- **Webhook**: el id firmado en la URL debe ser el del cuerpo; otra moneda no se procesa; una referencia que no es de taller, tienda ni un uuid de horario se ignora con 200 (cobros de la cuenta hechos fuera del sitio).
+- **Cabeceras**: CSP base en todo el sitio (`base-uri`, `object-src`, `frame-ancestors 'self'`); la regla de `/mini-site-preview` va DESPUÉS de la global porque con la misma llave gana la última. No hay `script-src` a propósito (GTM).
+- **Llave pública**: `anon` solo tiene SELECT de las columnas que estas consultas piden (`lib/productos.ts`, `lib/clases.ts`, checkout de talleres). Pedir una columna nueva con el cliente público exige concederla en una migración del admin.
+
 ## Related repos
 - **Admin:** `/Users/adanch/Documents/papela-admin` → deployed at `admin.papela-atelier.com`
 - **Site:** `/Users/adanch/Documents/papela-site` → deployed at `papela-atelier.com`

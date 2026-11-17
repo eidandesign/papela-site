@@ -21,6 +21,12 @@ export async function POST(req: NextRequest) {
     const mensaje = typeof body.mensaje === "string" ? body.mensaje.trim() : "";
     const sinPromociones = body.sinPromociones === true;
 
+    // Honeypot: el campo "website" está oculto para las personas. Si llega
+    // lleno es un bot; se responde ok sin guardar nada.
+    if (typeof body.website === "string" && body.website.trim()) {
+      return NextResponse.json({ ok: true });
+    }
+
     // Validación server-side (el endpoint es público)
     if (nombre.length < 2 || nombre.length > 100) {
       return NextResponse.json({ error: "Nombre inválido" }, { status: 400 });

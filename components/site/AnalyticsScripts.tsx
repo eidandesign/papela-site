@@ -6,7 +6,10 @@ import { usePathname } from "next/navigation";
 // GTM + Meta Pixel. Se saltan en /publicidad: es la pantalla de la tienda, no
 // hay visitantes reales que medir y cada carga contaría como una visita.
 // Cliente a propósito: el layout raíz es servidor y no sabe la ruta.
-const SIN_ANALITICA = ["/publicidad"];
+// Tampoco en /club/<token> ni /cotizacion/<token>: la URL completa viaja a
+// Google y Meta como page_location, y ese token es la única llave de la
+// tarjeta del miembro (saldo, movimientos) y de la cotización del cliente.
+const SIN_ANALITICA = ["/publicidad", "/club", "/cotizacion"];
 
 export default function AnalyticsScripts({ gtmId, pixelId }: { gtmId: string; pixelId: string }) {
   const pathname = usePathname();

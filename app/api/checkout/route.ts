@@ -22,7 +22,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { horarioId, claseNombre, actividad, tipoClaseId, paqueteId, fechaHora, duracion, sinPromociones } = body;
+    const { horarioId, tipoClaseId, paqueteId, sinPromociones } = body;
+    // Estos textos solo titulan el cobro en MercadoPago. Vienen del navegador,
+    // así que se limitan a texto corto de una línea (nunca fijan el precio).
+    const linea = (v: unknown, max: number) =>
+      typeof v === "string" ? v.replace(/[\u0000-\u001f<>]/g, " ").trim().slice(0, max) : "";
+    const claseNombre = linea(body.claseNombre, 80) || "Papela Atelier";
+    const actividad = linea(body.actividad, 80);
+    const fechaHora = linea(body.fechaHora, 60);
 
     if (!horarioId || typeof horarioId !== "string") {
       return NextResponse.json({ error: "horarioId inválido" }, { status: 400 });
@@ -143,7 +150,7 @@ export async function POST(req: NextRequest) {
           {
             id: horarioId,
             title: tituloClase,
-            description: `${fechaHora} · ${duracion} min`,
+            description: `${fechaHora} · ${Number(horario.duracion_minutos) || 0} min`,
             quantity: 1,
             unit_price: precio,
             currency_id: "MXN",
