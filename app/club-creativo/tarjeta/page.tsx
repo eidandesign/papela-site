@@ -17,8 +17,10 @@ import WhatsAppLink from "@/components/site/WhatsAppLink";
 
 // Página que explica la Tarjeta de Lealtad del Club Creativo (nov-2026).
 // Las reglas salen del admin (tabla `club_cashback_config` + cómo se han
-// registrado las ventas): 3% de cashback en compras de $100 o más, calculado
-// sobre lo pagado en dinero (no sobre lo pagado con Coins); sin vencimiento;
+// registrado las ventas): 5% de cashback en compras de $100 o más, calculado
+// sobre lo pagado en dinero (no sobre lo pagado con Coins); cada abono vence a
+// los 365 días (`vigencia_dias`, nov-17-2026; los Coins ganados antes no
+// vencen porque el admin fija `vence_at` al acreditar);
 // se puede pagar hasta el 100% con Coins. Cada compra da 1 estampita y su
 // rareza depende del monto (`estampitas_niveles`: raro desde $200,
 // legendario desde $500). Los premios de ejemplo son reales de `club_stickers`.
@@ -29,8 +31,9 @@ import WhatsAppLink from "@/components/site/WhatsAppLink";
 // "Cómo se consigue", "Reglas" y la caja de ejemplo de los Coins; esa info
 // quedó en las preguntas frecuentes.
 const PROGRAMA = {
-  porcentaje: 3,
+  porcentaje: 5,
   compraMinima: 100,
+  vigencia: "1 año",
   raroDesde: 200,
   legendarioDesde: 500,
   ejemploCompra: 500,
@@ -133,6 +136,10 @@ const PREGUNTAS = [
     r: "Sí, tus Coins se van sumando compra tras compra. Para usarlos, avísanos en caja: pagas parte o el total de tu compra con ellos. No hay mínimo para usarlos.",
   },
   {
+    p: "¿Mis Papela Coins vencen?",
+    r: `Sí: cada abono dura ${PROGRAMA.vigencia} desde el día en que lo ganas. En tu tarjeta ves cuánto vence y en qué fecha, y al pagar con Coins se usan primero los más próximos a vencer.`,
+  },
+  {
     p: "Si pago con Coins, ¿también gano cashback?",
     r: `Sí, sobre la parte que pagas con dinero. Por ejemplo, si tu compra es de $350 y usas $200 en Coins, ganas ${PROGRAMA.porcentaje}% de los $150 restantes.`,
   },
@@ -201,7 +208,7 @@ export default function TarjetaLealtadPage() {
                 <li className="flex gap-3"><ArrowPathIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-rosa-papel)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">Se acumulan</strong> compra tras compra.</span></li>
                 <li className="flex gap-3"><ShoppingBagIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-rosa-papel)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">Se canjean en caja:</strong> pagas parte o el total de tu compra con ellos, sin mínimo.</span></li>
                 <li className="flex gap-3"><DevicePhoneMobileIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-rosa-papel)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">Siempre a la vista</strong> en tu tarjeta.</span></li>
-                <li className="flex gap-3"><ClockIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-rosa-papel)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">No vencen.</strong></span></li>
+                <li className="flex gap-3"><ClockIcon className="w-5 h-5 mt-0.5 shrink-0 text-[var(--color-rosa-papel)]" aria-hidden="true" /><span><strong className="font-semibold text-[var(--color-cremita)]">Duran {PROGRAMA.vigencia}</strong> desde que los ganas.</span></li>
               </ul>
             </div>
           </div>

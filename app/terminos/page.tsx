@@ -154,6 +154,13 @@ export default function TerminosPage() {
           Papela Atelier puede cancelarla en caso de uso indebido.
         </p>
         <p>
+          Con tu tarjeta ganas Papela Coins: un porcentaje de lo que pagas en compras que
+          alcancen el monto mínimo vigente, que se usan como pago en Papela Atelier y no
+          son canjeables por dinero. Cada abono de Papela Coins vence un año después de
+          la fecha en que lo ganas; al pagar con ellos se usan primero los más próximos a
+          vencer. El saldo y sus fechas de vencimiento se consultan en tu tarjeta.
+        </p>
+        <p>
           Los coleccionables se otorgan en compras, talleres, clases y actividades que
           Papela Atelier define; algunos incluyen premios descargables o físicos. Los
           premios físicos se recogen en tienda y no son canjeables por dinero. Los
