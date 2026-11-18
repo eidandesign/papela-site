@@ -76,6 +76,24 @@ function Titulo({ eyebrow, titulo, texto, id }: { eyebrow: string; titulo: strin
   );
 }
 
+// "Tus beneficios" de cada modalidad: mosaicos de título + una línea, sin
+// palomitas (las palomitas quedan solo para las reglas de "Cómo funciona").
+function Beneficios({ items }: { items: { titulo: string; texto: string }[] }) {
+  return (
+    <div>
+      <p className="label text-[var(--color-cremita)]/85 mb-4">Tus beneficios</p>
+      <ul className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        {items.map((b) => (
+          <li key={b.titulo} className="rounded-2xl bg-white/[0.07] p-4">
+            <p className="font-sans font-semibold text-[16px] leading-[20px] text-[var(--color-cremita)]">{b.titulo}</p>
+            <p className="font-sans text-[14px] leading-[20px] text-[var(--color-cremita)]/80 mt-1">{b.texto}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Lista({ items, claro = false }: { items: string[]; claro?: boolean }) {
   return (
     <ul className="flex flex-col gap-3">
@@ -199,14 +217,27 @@ function Contenido() {
                         por cada clase de {clases.horasPorClase} horas impartida
                       </p>
                     </div>
-                    <Lista
-                      claro
+                    <Beneficios
                       items={[
-                        `Pago fijo por clase, ya sea que asista 1 alumno o el cupo completo de ${clases.cupoMaximo}.`,
-                        `Abrimos la clase con un mínimo de ${clases.minimoParaAbrir} alumnos inscritos.`,
-                        "Fechas, horarios y forma de pago los definimos juntos.",
+                        { titulo: `${descuentoMaestros}% de descuento`, texto: "En todas tus compras en Papela." },
+                        { titulo: "Bebidas sin costo", texto: "Café, capuchino, refresco o lo que se te antoje." },
+                        { titulo: "Snacks libres", texto: "Mientras das tu clase." },
+                        { titulo: "Espacio listo", texto: "Para enseñar y conectar con más gente." },
+                        { titulo: "Apoyo en tus clases", texto: "Te acompañamos antes y durante cada una." },
+                        { titulo: "Herramientas de Papela", texto: "Usa las que ya tenemos, sin cargar las tuyas." },
                       ]}
                     />
+                    <div className="mt-8 border-t border-white/15 pt-6">
+                      <p className="label text-[var(--color-cremita)]/85 mb-4">Cómo funciona</p>
+                      <Lista
+                        claro
+                        items={[
+                          `Pago fijo por clase, ya sea que asista 1 alumno o el cupo completo de ${clases.cupoMaximo}.`,
+                          `Abrimos la clase con un mínimo de ${clases.minimoParaAbrir} alumnos inscritos.`,
+                          "Fechas, horarios y forma de pago los definimos juntos.",
+                        ]}
+                      />
+                    </div>
                     {/* Bono por alumno nuevo referido (cláusula del contrato de clases) */}
                     {/* Un solo bloque: línea arriba lo separa de la lista y los tres
                         renglones van con el mismo espacio corto entre sí. */}
@@ -236,14 +267,27 @@ function Contenido() {
                         Papela agrega {talleres.recargoReferenciaPct}% a tu precio
                       </p>
                     </div>
-                    <Lista
-                      claro
+                    <Beneficios
                       items={[
-                        `El ${talleres.recargoReferenciaPct}% cubre espacio, publicidad, snacks y operación.`,
-                        "Dependiendo del taller, nosotros podemos poner algunos materiales o tú los agregas al costo.",
-                        "Fecha, cupo, anticipos y cuándo se te paga se acuerdan antes de publicar el taller.",
+                        { titulo: `${descuentoMaestros}% de descuento`, texto: "En todas tus compras en Papela." },
+                        { titulo: "Bebidas sin costo", texto: "Café, capuchino, refresco o lo que se te antoje." },
+                        { titulo: "Snacks libres", texto: "Mientras das tu taller." },
+                        { titulo: "Espacio listo", texto: "Para enseñar y conectar con más gente." },
+                        { titulo: "Apoyo en tu taller", texto: "Te acompañamos antes y durante el evento." },
+                        { titulo: "Herramientas de Papela", texto: "Usa las que ya tenemos, sin cargar las tuyas." },
                       ]}
                     />
+                    <div className="mt-8 border-t border-white/15 pt-6">
+                      <p className="label text-[var(--color-cremita)]/85 mb-4">Cómo funciona</p>
+                      <Lista
+                        claro
+                        items={[
+                          `El ${talleres.recargoReferenciaPct}% cubre espacio, publicidad, snacks y operación.`,
+                          "Dependiendo del taller, nosotros podemos poner algunos materiales o tú los agregas al costo.",
+                          "Fecha, cupo, anticipos y cuándo se te paga se acuerdan antes de publicar el taller.",
+                        ]}
+                      />
+                    </div>
                   </article>
               ),
             },
