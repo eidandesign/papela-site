@@ -64,7 +64,7 @@ export default function PrivacidadPage() {
         Aviso de privacidad
       </h1>
       <p className="font-sans text-sm text-[var(--color-muted)] mb-12">
-        Última actualización: 16 de noviembre de 2026
+        Última actualización: 17 de noviembre de 2026
       </p>
 
       <Seccion title="Quién es responsable de tus datos">
@@ -117,6 +117,14 @@ export default function PrivacidadPage() {
             el equipo de Papela.
           </li>
           <li>
+            <Dato>Creadores que postulan sus productos:</Dato> nombre, correo, WhatsApp,
+            redes sociales, nombre de su marca o proyecto, la descripción de sus productos,
+            rango de precios, la liga a su sitio o portafolio y las fotos de producto que
+            comparten. Los usamos solo para revisar la postulación y, si se aprueba, preparar
+            el acuerdo de consignación; las fotos se guardan en un espacio privado al que solo
+            accede el equipo de Papela.
+          </li>
+          <li>
             <Dato>WhatsApp:</Dato> cuando nos escribes, tu número y los mensajes que
             intercambiamos para atender tu pedido, reserva o proyecto.
           </li>
@@ -150,6 +158,7 @@ export default function PrivacidadPage() {
           <li>Contactarte sobre tu compra, reserva o proyecto (confirmaciones, cambios, aclaraciones).</li>
           <li>Mejorar nuestros talleres y clases a partir de las encuestas de satisfacción.</li>
           <li>Revisar las propuestas de maestros y preparar los acuerdos de colaboración.</li>
+          <li>Revisar las postulaciones de creadores y preparar los acuerdos de consignación.</li>
         </ul>
         <p>
           Finalidades secundarias (puedes oponerte a ellas marcando la casilla &ldquo;No quiero

@@ -27,6 +27,7 @@ const SITEMAP: { title: string; links: { href: string; label: string; nofollow?:
     title: "Papela",
     links: [
       { href: "/nosotros", label: "Nosotros" },
+      { href: "/creadores", label: "Creadores en Papela" },
       // Página privada para maestros (con contraseña). nofollow: que los
       // buscadores no la sigan; además lleva noindex.
       { href: "/colabora/maestros", label: "Colabora con nosotros", nofollow: true },

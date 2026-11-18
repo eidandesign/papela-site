@@ -19,7 +19,7 @@ export type EventosSitio = {
   pa_click_como_llegar: { ubicacion: string };
   select_item: { item_name: string; item_category: ItemCategory };
   begin_checkout: { item_name: string; item_category: ItemCategory } & Moneda;
-  generate_lead: { tipo: "cotizacion" | "personalizacion" | "club"; item_name?: string };
+  generate_lead: { tipo: "cotizacion" | "personalizacion" | "club" | "creadores"; item_name?: string };
   purchase: { transaction_id: string; item_name: string; item_category: ItemCategory } & Moneda;
 };
 
