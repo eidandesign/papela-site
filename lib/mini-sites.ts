@@ -128,6 +128,7 @@ export const SITE_ROOT_SEGMENTS = new Set([
   "links",
   "mini-site-preview",
   "nosotros",
+  "papeleria-puebla", // página de ubicación / SEO local (app/papeleria-puebla)
   "personaliza",
   "privacidad",
   "productos",

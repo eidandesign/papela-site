@@ -22,9 +22,11 @@ export async function generateMetadata({
     return { title: "Producto no encontrado", robots: { index: false, follow: false } };
   }
 
+  // `||` y no `??`: una descripción vacía ("") dejaba la meta en blanco y Google
+  // armaba el snippet con el banner del footer ("Ideas para crear, jugar…").
   const desc =
-    producto.descripcion?.slice(0, 155) ??
-    `${producto.nombre} — papelería y materiales de arte en Papela Atelier, Puebla.`;
+    producto.descripcion?.trim().slice(0, 155) ||
+    `${producto.nombre} en Papela Atelier, papelería creativa en Lomas de Angelópolis, Puebla. Compra en línea o recoge en tienda.`;
   const url = `${SITE_URL}/productos/${producto.slug ?? producto.id}`;
 
   return {

@@ -14,9 +14,9 @@ import TrackedLink from "@/components/site/TrackedLink";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Papela Atelier — Papelería, talleres y clases de arte en Puebla",
+  title: "Papela Atelier — Papelería creativa en Lomas de Angelópolis, Puebla",
   description:
-    "Papelería creativa en Puebla: libretas artesanales, talleres de acuarela, acrílico, cerámica y clases de arte. Un espacio para crear y expresarte.",
+    "Papelería en Puebla, en Lomas de Angelópolis: plumas MUJI, agendas, libretas, stationery, materiales de arte y papelería básica, más talleres de acuarela, cerámica y clases de arte.",
   alternates: { canonical: "https://www.papela-atelier.com" },
 };
 

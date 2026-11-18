@@ -4,6 +4,7 @@ import ConditionalShell from "@/components/site/ConditionalShell";
 import AnalyticsScripts from "@/components/site/AnalyticsScripts";
 import ReservaModal from "@/components/site/ReservaModal";
 import { waHref } from "@/lib/whatsapp";
+import { NEGOCIO } from "@/lib/negocio";
 
 const SITE_URL = "https://www.papela-atelier.com";
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-W238H5M2";
@@ -16,13 +17,23 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Papela Atelier — Papelería, talleres y clases de arte en Puebla",
+    default: "Papela Atelier — Papelería creativa en Lomas de Angelópolis, Puebla",
     template: "%s · Papela Atelier",
   },
   description:
-    "Papelería creativa en Puebla con talleres de acuarela, acrílico, cerámica y más. Libretas, materiales de arte y clases para todos los niveles.",
+    "Papelería creativa en Lomas de Angelópolis, Puebla: plumas MUJI, agendas, libretas, stationery, materiales de arte y papelería básica, más talleres y clases de arte para todos los niveles.",
   keywords: [
     "papelería Puebla",
+    "papelería en Puebla",
+    "papelería Lomas de Angelópolis",
+    "papelería Angelópolis",
+    "papelería San Andrés Cholula",
+    "papelería bonita Puebla",
+    "plumas MUJI Puebla",
+    "agendas Puebla",
+    "stationery Puebla",
+    "papelería básica Puebla",
+    "útiles escolares Puebla",
     "talleres de arte Puebla",
     "clases de pintura Puebla",
     "acuarela Puebla",
@@ -72,54 +83,48 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "LocalBusiness",
+      "@type": ["LocalBusiness", "Store"],
       "@id": `${SITE_URL}/#business`,
       name: "Papela Atelier",
+      alternateName: "Papela",
       description:
-        "Papelería creativa con talleres de arte, clases de pintura, materiales y libretas artesanales en Puebla, México.",
+        "Papelería creativa en Lomas de Angelópolis, Puebla: plumas MUJI, agendas, libretas, stationery, materiales de arte, papelería básica y personalización, con talleres y clases de arte.",
       url: SITE_URL,
-      telephone: "+522211865590",
-      email: "hola@papela-atelier.com",
+      telephone: NEGOCIO.telefonoE164,
+      email: NEGOCIO.email,
+      hasMap: NEGOCIO.mapsUrl,
       image: `${SITE_URL}/images/Logo-papela-atelier.png`,
       logo: `${SITE_URL}/images/Logo-papela-atelier.png`,
       priceRange: "$$",
       currenciesAccepted: "MXN",
       paymentAccepted: "Cash, Credit Card, MercadoPago",
-      // Dirección y horarios idénticos a la ficha de Google Business Profile —
-      // la consistencia NAP es la señal que conecta sitio ↔ ficha en Maps.
+      // Dirección, coordenadas y horarios idénticos a la ficha de Google Business
+      // Profile (lib/negocio.ts) — la consistencia NAP es la señal que conecta
+      // sitio ↔ ficha en Maps.
       address: {
         "@type": "PostalAddress",
-        streetAddress: "C. Hidalgo",
-        addressLocality: "Heroica Puebla de Zaragoza",
-        addressRegion: "Puebla",
-        postalCode: "72830",
-        addressCountry: "MX",
+        streetAddress: `${NEGOCIO.direccion.calle}, ${NEGOCIO.direccion.colonia}`,
+        addressLocality: NEGOCIO.direccion.ciudad,
+        addressRegion: NEGOCIO.direccion.estado,
+        postalCode: NEGOCIO.direccion.cp,
+        addressCountry: NEGOCIO.direccion.pais,
       },
       geo: {
         "@type": "GeoCoordinates",
-        latitude: 19.006,
-        longitude: -98.285,
+        latitude: NEGOCIO.geo.lat,
+        longitude: NEGOCIO.geo.lng,
       },
-      openingHoursSpecification: [
-        {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          opens: "10:00",
-          closes: "19:00",
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: "Saturday",
-          opens: "10:00",
-          closes: "15:30",
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: "Sunday",
-          opens: "12:00",
-          closes: "19:00",
-        },
+      areaServed: [
+        { "@type": "Place", name: "Lomas de Angelópolis" },
+        { "@type": "City", name: "Puebla" },
+        { "@type": "City", name: "San Andrés Cholula" },
       ],
+      openingHoursSpecification: NEGOCIO.horario.map((h) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: h.schema,
+        opens: h.abre,
+        closes: h.cierra,
+      })),
       sameAs: [
         "https://instagram.com/papela.atelier",
         "https://tiktok.com/@papela.atelier",
@@ -143,7 +148,7 @@ const jsonLd = {
           {
             "@type": "OfferCatalog",
             name: "Papelería y materiales",
-            description: "Libretas artesanales, materiales de arte y papelería creativa.",
+            description: "Plumas MUJI, agendas, libretas artesanales, stationery, materiales de arte y papelería básica.",
           },
         ],
       },

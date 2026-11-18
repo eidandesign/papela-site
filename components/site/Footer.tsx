@@ -4,6 +4,7 @@ import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import BackToTop from "./BackToTop";
 import WhatsAppLink from "./WhatsAppLink";
 import TrackedLink from "./TrackedLink";
+import { NEGOCIO, DIRECCION_LINEA } from "@/lib/negocio";
 
 const SITEMAP: { title: string; links: { href: string; label: string; nofollow?: boolean }[] }[] = [
   {
@@ -27,6 +28,7 @@ const SITEMAP: { title: string; links: { href: string; label: string; nofollow?:
     title: "Papela",
     links: [
       { href: "/nosotros", label: "Nosotros" },
+      { href: "/papeleria-puebla", label: "Visítanos en Lomas de Angelópolis" },
       { href: "/creadores", label: "Creadores en Papela" },
       // Página privada para maestros (con contraseña). nofollow: que los
       // buscadores no la sigan; además lleva noindex.
@@ -172,8 +174,19 @@ export default function SiteFooter({ showClubBanner = true }: { showClubBanner?:
           >
             +52 221 186 5590
           </WhatsAppLink>
-          <p className="text-sm text-[var(--color-muted)] mt-2">hola@papela-atelier.com</p>
-          <p className="text-sm text-[var(--color-muted)] mt-1">Puebla, México</p>
+          <p className="text-sm text-[var(--color-muted)] mt-2">{NEGOCIO.email}</p>
+          {/* Dirección completa (NAP) en todas las páginas, igual que en la ficha de Google. */}
+          <address className="not-italic text-sm text-[var(--color-muted)] mt-3 leading-snug">
+            {DIRECCION_LINEA}
+          </address>
+          <TrackedLink
+            evento="pa_click_como_llegar"
+            ubicacion="footer"
+            href={NEGOCIO.mapsUrl}
+            className="inline-block mt-1.5 text-sm text-[var(--color-verde)] underline underline-offset-2 hover:opacity-70 transition-opacity"
+          >
+            Cómo llegar
+          </TrackedLink>
         </div>
       </div>
 

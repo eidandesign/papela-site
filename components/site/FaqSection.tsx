@@ -13,12 +13,12 @@ const FAQS: Faq[] = [
   {
     pregunta: "¿Dónde comprar papelería bonita en Puebla?",
     respuesta:
-      "En Papela Atelier, una papelería creativa en la zona de Lomas de Angelópolis, Puebla. Tenemos libretas artesanales, plumas, stickers, materiales de arte y detalles para regalar. También puedes comprar en línea en nuestro catálogo.",
+      "En Papela Atelier, una papelería creativa en la zona de Lomas de Angelópolis, Puebla. Tenemos plumas MUJI, agendas, libretas artesanales, stationery, stickers, materiales de arte, papelería básica y detalles para regalar. También puedes comprar en línea en nuestro catálogo.",
     contenido: (
       <>
         En Papela Atelier, una papelería creativa en la zona de Lomas de Angelópolis, Puebla.
-        Tenemos libretas artesanales, plumas, stickers, materiales de arte y detalles para
-        regalar. También puedes comprar en línea en nuestro{" "}
+        Tenemos plumas MUJI, agendas, libretas artesanales, stationery, stickers, materiales de
+        arte, papelería básica y detalles para regalar. También puedes comprar en línea en nuestro{" "}
         <Link href="/productos" className="text-[var(--color-verde)] underline underline-offset-2">
           catálogo
         </Link>
