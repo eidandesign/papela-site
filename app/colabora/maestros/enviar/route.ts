@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { logger } from "@/lib/logger";
 import { leerSesion } from "@/lib/maestros/sesion";
-import { CAMPOS_FICHA, CAMPOS_OBLIGATORIOS, esUuid, saneaArchivos, saneaDatosContrato, saneaPortafolio } from "@/lib/maestros/campos";
+import { CAMPO_DISPONIBILIDAD, CAMPOS_FICHA, CAMPOS_OBLIGATORIOS, esUuid, saneaArchivos, saneaDatosContrato, saneaPortafolio } from "@/lib/maestros/campos";
+import { textoDeSeleccion } from "@/lib/maestros/disponibilidad";
+import { leerDisponibilidad } from "@/lib/maestros/disponibilidad-server";
 import { guardarSolicitud } from "@/lib/maestros/solicitud";
 import { avisarPropuesta } from "@/lib/maestros/aviso";
 
@@ -33,7 +35,12 @@ export async function POST(req: NextRequest) {
   }
 
   const datos = saneaDatosContrato(body);
-  const { solicitudId, portafolio, archivos } = (body ?? {}) as { solicitudId?: unknown; portafolio?: unknown; archivos?: unknown };
+  const { solicitudId, portafolio, archivos, opciones } = (body ?? {}) as {
+    solicitudId?: unknown;
+    portafolio?: unknown;
+    archivos?: unknown;
+    opciones?: unknown;
+  };
   if (!datos || !esUuid(solicitudId)) {
     return NextResponse.json({ error: "Elige qué vas a impartir." }, { status: 400, headers: SIN_CACHE });
   }
@@ -41,6 +48,22 @@ export async function POST(req: NextRequest) {
   if (CAMPOS_OBLIGATORIOS.some((id) => !v[id])) {
     return NextResponse.json({ error: "Déjanos tu nombre, teléfono, correo e Instagram." }, { status: 400, headers: SIN_CACHE });
   }
+  // Días y horarios: el maestro manda los ids que eligió y aquí se validan
+  // contra la agenda de este momento (pudo ocuparse mientras llenaba el
+  // formulario). El texto que se guarda lo arma el servidor, no el navegador.
+  const disponibilidad = textoDeSeleccion(datos.modalidad, opciones, await leerDisponibilidad());
+  if (!disponibilidad) {
+    return NextResponse.json(
+      {
+        error:
+          datos.modalidad === "talleres"
+            ? "Elige una fecha libre para tu taller. Si ya se ocupó, vuelve a ese paso y elige otra."
+            : "Elige de 1 a 3 horarios libres para tu clase. Si alguno ya se ocupó, vuelve a ese paso y elige otro.",
+      },
+      { status: 400, headers: SIN_CACHE },
+    );
+  }
+  v[CAMPO_DISPONIBILIDAD] = disponibilidad;
   if (CAMPOS_FICHA[datos.modalidad].some((c) => !c.soloPdf && !v[c.id])) {
     return NextResponse.json({ error: "Completa los datos de tu clase o taller." }, { status: 400, headers: SIN_CACHE });
   }

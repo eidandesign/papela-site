@@ -28,10 +28,14 @@ import {
   type Campo,
   type Modalidad,
 } from "@/lib/maestros/campos";
+import { renglonesDeSeleccion, type Disponibilidad } from "@/lib/maestros/disponibilidad";
+import SelectorDisponibilidad, { ResumenDisponibilidad } from "./SelectorDisponibilidad";
 
 // Propuesta del maestro, paso a paso y a pantalla completa (estilo Typeform):
 // 1 ¿Qué vas a impartir? · 2 Tus datos · 3 Tu actividad · 4 Tu trabajo (opcional)
 // · 5 Enviar. "Siguiente" se deshabilita mientras falte algo obligatorio.
+// Los días y horarios no se escriben: se eligen de lo que está libre en la
+// agenda (`disponibilidad`, la arma el servidor) y el envío los vuelve a validar.
 // No descarga nada: se guarda la solicitud y Papela la revisa en Admin →
 // Maestros; una vez aprobada, firman juntos el acuerdo.
 // Sin cifras ni texto del contrato: este componente viaja en un chunk público.
@@ -165,7 +169,7 @@ function Resumen({ titulo, onEditar, children }: { titulo: string; onEditar: () 
   );
 }
 
-export default function SolicitudMaestro() {
+export default function SolicitudMaestro({ disponibilidad }: { disponibilidad: Disponibilidad }) {
   const router = useRouter();
   const prefijo = useId();
   const sinMovimiento = useReducedMotion();
@@ -174,6 +178,9 @@ export default function SolicitudMaestro() {
   const [modalidad, setModalidad] = useState<Modalidad | null>(null);
   const [valores, setValores] = useState<Record<string, string>>({});
   const [errores, setErrores] = useState<Record<string, string>>({});
+  // Días y horarios elegidos (ids de lib/maestros/disponibilidad), por modalidad:
+  // cambiar de clases a talleres y regresar no pierde lo que ya se eligió.
+  const [opciones, setOpciones] = useState<Record<Modalidad, string[]>>({ clases: [], talleres: [] });
   const [solicitudId] = useState(() => crypto.randomUUID());
   const [portafolio, setPortafolio] = useState("");
   const [archivos, setArchivos] = useState<ArchivoSubido[]>([]);
@@ -227,7 +234,10 @@ export default function SolicitudMaestro() {
     const e: Record<string, string> = {};
     if (!modalidad) return e;
     for (const c of CAMPOS_FICHA[modalidad]) {
-      if (!c.soloPdf && !valores[c.id]?.trim()) e[c.id] = "Completa este campo.";
+      if (c.soloPdf) continue;
+      if (c.seleccion) {
+        if (opciones[modalidad].length === 0) e[c.id] = "Elige al menos una opción.";
+      } else if (!valores[c.id]?.trim()) e[c.id] = "Completa este campo.";
     }
     return e;
   }
@@ -248,7 +258,7 @@ export default function SolicitudMaestro() {
     if (paso === 0 && !modalidad) return;
     if (!validar(paso)) {
       // Lleva al primer campo con error (y el lector lo anuncia por aria-describedby).
-      setTimeout(() => contenidoRef.current?.querySelector<HTMLElement>("[aria-invalid=true]")?.focus(), 0);
+      setTimeout(() => contenidoRef.current?.querySelector<HTMLElement>("[aria-invalid=true], [data-invalido]")?.focus(), 0);
       return;
     }
     if (paso < PASOS.length - 1) ir(paso + 1);
@@ -362,7 +372,7 @@ export default function SolicitudMaestro() {
       const res = await fetch("/colabora/maestros/enviar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ solicitudId, modalidad, valores, portafolio, archivos }),
+        body: JSON.stringify({ solicitudId, modalidad, valores, portafolio, archivos, opciones: opciones[modalidad] }),
       });
       if (res.status === 401) {
         router.push("/colabora/maestros");
@@ -389,6 +399,7 @@ export default function SolicitudMaestro() {
   const transicion = { duration: sinMovimiento ? 0.15 : 0.38, ease: [0.32, 0.72, 0, 1] as const };
   const modalidadInfo = MODALIDADES.find((m) => m.value === modalidad);
   const camposActividad = modalidad ? CAMPOS_FICHA[modalidad].filter((c) => !c.soloPdf) : [];
+  const renglonesElegidos = modalidad ? (renglonesDeSeleccion(modalidad, opciones[modalidad], disponibilidad) ?? []) : [];
 
   const navegacion = (primario: ReactNode) => (
     <div className="mt-10 flex items-start justify-between gap-4">
@@ -620,10 +631,24 @@ export default function SolicitudMaestro() {
                       titulo={modalidad === "talleres" ? "Cuéntanos de tu taller" : "Cuéntanos de tu clase"}
                       ayuda="Cuéntanos lo básico para conocer tu propuesta."
                     />
-                    <div className="flex flex-col gap-6">
-                      {/* Día y horario disponibles comparten fila desde sm. */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {camposActividad.map((c) => (
+                    <div className="flex flex-col gap-8">
+                      {camposActividad.map((c) =>
+                        c.seleccion && modalidad ? (
+                          // Días y horarios: se eligen de lo que está libre, no se escriben.
+                          <SelectorDisponibilidad
+                            key={`${modalidad}-${c.id}`}
+                            modalidad={modalidad}
+                            disponibilidad={disponibilidad}
+                            opciones={opciones[modalidad]}
+                            onChange={(ids) => {
+                              setOpciones((prev) => ({ ...prev, [modalidad]: ids }));
+                              if (errores[c.id]) setErrores((prev) => ({ ...prev, [c.id]: "" }));
+                            }}
+                            label={c.label}
+                            error={errores[c.id] || undefined}
+                            idBase={`${prefijo}-${c.id}`}
+                          />
+                        ) : (
                           <CampoGrande
                             key={`${modalidad}-${c.id}`}
                             campo={c}
@@ -632,11 +657,9 @@ export default function SolicitudMaestro() {
                             prefijo={prefijo}
                             error={errores[c.id] || undefined}
                             requerido
-                            className={c.id === "dia" || c.id === "horario" ? "" : "sm:col-span-2"}
                           />
-                        ))}
-                      </div>
-
+                        ),
+                      )}
                     </div>
                     {navegacion(
                       <button type="submit" disabled={!actividadCompleta} className={btnPrimario}>
@@ -768,14 +791,16 @@ export default function SolicitudMaestro() {
                         </dl>
                       </Resumen>
                       <Resumen titulo={modalidad === "talleres" ? "Tu taller" : "Tu clase"} onEditar={() => ir(2)}>
-                        {camposActividad.some((c) => valores[c.id]?.trim()) ? (
+                        {camposActividad.some((c) => (c.seleccion ? renglonesElegidos.length > 0 : valores[c.id]?.trim())) ? (
                           <dl className="flex flex-col gap-2">
                             {camposActividad
-                              .filter((c) => valores[c.id]?.trim())
+                              .filter((c) => (c.seleccion ? renglonesElegidos.length > 0 : valores[c.id]?.trim()))
                               .map((c) => (
                                 <div key={c.id}>
                                   <dt className="text-sm text-[#403C3C]/60">{c.label}</dt>
-                                  <dd className="break-words whitespace-pre-line">{valores[c.id]}</dd>
+                                  <dd className="break-words whitespace-pre-line">
+                                    {c.seleccion ? <ResumenDisponibilidad renglones={renglonesElegidos} /> : valores[c.id]}
+                                  </dd>
                                 </div>
                               ))}
                           </dl>

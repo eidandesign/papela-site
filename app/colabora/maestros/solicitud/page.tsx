@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { leerSesion } from "@/lib/maestros/sesion";
+import { leerDisponibilidad } from "@/lib/maestros/disponibilidad-server";
 import SolicitudMaestro from "@/components/site/maestros/SolicitudMaestro";
 
 // /colabora/maestros/solicitud — formulario paso a paso (estilo Typeform) para
@@ -13,5 +14,6 @@ export const dynamic = "force-dynamic";
 
 export default async function SolicitudMaestroPage() {
   if (!(await leerSesion())) redirect("/colabora/maestros");
-  return <SolicitudMaestro />;
+  // Días y horarios libres según la agenda real de este momento.
+  return <SolicitudMaestro disponibilidad={await leerDisponibilidad()} />;
 }

@@ -27,7 +27,16 @@ export type Campo = {
   prefijo?: string;
   /** Tipo del input (teclado en celular). Default "text". */
   tipo?: "text" | "tel" | "email";
+  /**
+   * No se escribe: el maestro ELIGE días y horarios libres (lib/maestros/
+   * disponibilidad.ts). El texto lo arma el servidor al validar la selección
+   * contra la agenda real; lo que mande el navegador en este campo se ignora.
+   */
+  seleccion?: boolean;
 };
+
+/** Campo donde se guarda lo que el maestro eligió de la agenda (clases y talleres). */
+export const CAMPO_DISPONIBILIDAD = "disponibilidad";
 
 export const CAMPOS_PRESTADOR: Campo[] = [
   { id: "nombre", label: "Nombre completo", autoComplete: "name" },
@@ -60,14 +69,14 @@ export function usuarioInstagram(v: string): string {
 export const CAMPOS_FICHA: Record<Modalidad, Campo[]> = {
   clases: [
     { id: "disciplina", label: "Disciplina / nombre de la clase", placeholder: "Ej. Acuarela botánica" },
-    { id: "dia", label: "Día disponible", placeholder: "Ej. Jueves" },
-    { id: "horario", label: "Horario disponible", placeholder: "Ej. 5:00 a 7:00 p.m." },
+    { id: CAMPO_DISPONIBILIDAD, label: "Días y horarios que puedes", largo: true, seleccion: true },
     { id: "lugar", label: "Materiales especiales", largo: true },
     { id: "compensacion", label: "Compensación si se cancela una sesión ya confirmada", soloPdf: true },
     { id: "pago", label: "Periodicidad y medio de pago / comprobante", soloPdf: true },
   ],
   talleres: [
-    { id: "taller", label: "Nombre del taller y fecha" },
+    { id: "taller", label: "Nombre del taller" },
+    { id: CAMPO_DISPONIBILIDAD, label: "Fecha que propones", largo: true, seleccion: true },
     { id: "duracion", label: "Duración, edad recomendada y cupo" },
     { id: "minimo", label: "Mínimo de inscripciones / fecha límite" },
     { id: "costoBase", label: "Costo base propuesto y qué incluye", largo: true },
@@ -91,7 +100,7 @@ export function saneaDatosContrato(input: unknown): DatosContrato | null {
   const { modalidad, valores } = input as { modalidad?: unknown; valores?: unknown };
   if (modalidad !== "clases" && modalidad !== "talleres") return null;
   const crudos = valores && typeof valores === "object" ? (valores as Record<string, unknown>) : {};
-  const permitidos = [...CAMPOS_PRESTADOR, ...CAMPOS_FICHA[modalidad]].filter((c) => !c.soloPdf);
+  const permitidos = [...CAMPOS_PRESTADOR, ...CAMPOS_FICHA[modalidad]].filter((c) => !c.soloPdf && !c.seleccion);
   const limpios: Record<string, string> = {};
   for (const c of permitidos) {
     const v = crudos[c.id];
