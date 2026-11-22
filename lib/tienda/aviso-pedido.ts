@@ -17,13 +17,15 @@ import { waHref } from "@/lib/whatsapp";
 //
 // Variables de entorno (no van en el repo):
 //   RESEND_API_KEY        la misma llave de envío de maestros/creadores
-//   PEDIDOS_AVISO_PARA    destinatario(s) del aviso interno, separados por coma
-//                         (si falta, usa MAESTROS_AVISO_PARA; si tampoco, hola@)
+//   PEDIDOS_AVISO_PARA    opcional: destinatario(s) del aviso interno, separados
+//                         por coma. Sin ella, el aviso llega a hola@.
 //   PEDIDOS_AVISO_COPIA   copia(s), opcional
 //
 // Nunca rompe el webhook: el pedido ya quedó pagado y con stock descontado.
 
-const REMITENTE = "Papela Atelier <pedidos@papela-atelier.com>";
+// Sale de hola@ (el único buzón de Papela) para que el cliente reconozca el
+// remitente y sus respuestas lleguen a la bandeja que sí se revisa.
+const REMITENTE = `Papela Atelier <${NEGOCIO.email}>`;
 const ADMIN_URL = "https://admin.papela-atelier.com";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -235,7 +237,7 @@ export async function avisarPedidoPagado(opts: {
 
   const folio = folioPedido(pedido.external_reference);
   const emailCliente = [pedido.comprador_email, opts.emailRespaldo].find((e) => e && EMAIL_RE.test(e)) ?? null;
-  const internos = lista(process.env.PEDIDOS_AVISO_PARA || process.env.MAESTROS_AVISO_PARA);
+  const internos = lista(process.env.PEDIDOS_AVISO_PARA);
   const para = internos.length ? internos : [NEGOCIO.email];
   const copia = lista(process.env.PEDIDOS_AVISO_COPIA);
 
