@@ -4,6 +4,7 @@ import { MercadoPagoConfig, Payment } from "mercadopago";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/logger";
 import { enviarPurchaseServidor } from "@/lib/ga4";
+import { avisarPedidoPagado } from "@/lib/tienda/aviso-pedido";
 
 // ⚠️ Depende de las RPC `webhook_inscribir_taller`, `webhook_reservar_clase` y
 // `webhook_confirmar_pedido_tienda` (papela-admin/supabase/migrations/
@@ -195,6 +196,16 @@ export async function POST(req: NextRequest) {
       logger.error("webhook: pedido pagado con incidencia — revisar en el admin", { externalRef, paymentId, incidencia: r.incidencia });
     }
     nuevo = r.resultado === "ok";
+    // Confirmación al cliente + aviso a Papela (solo la vez que este webhook
+    // reclamó el pago). Nunca rompe el webhook: los errores quedan en el log.
+    if (nuevo) {
+      await avisarPedidoPagado({
+        externalReference: externalRef,
+        paymentId,
+        incidencia: r.incidencia ?? null,
+        emailRespaldo: email || null,
+      });
+    }
   }
 
   // ── Clase (horario) ────────────────────────────────────────────────────────
