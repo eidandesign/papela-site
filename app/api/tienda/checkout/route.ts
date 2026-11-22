@@ -20,6 +20,8 @@ interface CartItemInput {
   variacionNombre?: string | null;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function textoCorto(v: unknown, max: number): string | null {
@@ -63,6 +65,12 @@ export async function POST(req: NextRequest) {
     // así que se copian únicamente llaves conocidas con valores de texto.
     const compradorNombre = textoCorto(body?.compradorNombre, 100);
     const compradorTelefono = textoCorto(body?.compradorTelefono, 30);
+    // Correo para la confirmación del pedido (y la guía). Obligatorio desde
+    // nov-2026: el del pagador en MercadoPago puede ser viejo o no existir.
+    const compradorEmail = textoCorto(body?.compradorEmail, 160)?.toLowerCase() ?? null;
+    if (!compradorEmail || !EMAIL_RE.test(compradorEmail)) {
+      return NextResponse.json({ error: "Escribe un correo válido para mandarte la confirmación" }, { status: 400 });
+    }
     const direccionEnvio = saneaDireccion(body?.direccionEnvio);
 
     // Basic validation
@@ -237,6 +245,7 @@ export async function POST(req: NextRequest) {
       items: orderItems,
       monto_total: montoTotal,
       comprador_nombre: compradorNombre,
+      comprador_email: compradorEmail,
       comprador_telefono: compradorTelefono,
       direccion_envio: direccionEnvio,
     };
@@ -270,6 +279,9 @@ export async function POST(req: NextRequest) {
         auto_return: "approved",
         notification_url: `${SITE_URL}/api/webhooks/mercadopago`,
         external_reference: externalReference,
+        // Prellena el correo en MercadoPago (el cliente puede cambiarlo allá;
+        // la confirmación igual va al que escribió aquí).
+        payer: { email: compradorEmail, ...(compradorNombre ? { name: compradorNombre } : {}) },
         ...expiracionPreferencia(),
         // El webhook lo reenvía a GA4 para atribuir la compra.
         ...(gaClientId(req) ? { metadata: { ga_client_id: gaClientId(req) } } : {}),

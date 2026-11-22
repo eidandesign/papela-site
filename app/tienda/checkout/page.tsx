@@ -19,6 +19,7 @@ const ESTADOS_MX = [
 
 interface FormData {
   nombre: string;
+  email: string;
   telefono: string;
   calle: string;
   colonia: string;
@@ -28,7 +29,7 @@ interface FormData {
 }
 
 const empty: FormData = {
-  nombre: "", telefono: "", calle: "", colonia: "", cp: "", ciudad: "", estado: "",
+  nombre: "", email: "", telefono: "", calle: "", colonia: "", cp: "", ciudad: "", estado: "",
 };
 
 function Field({
@@ -112,6 +113,7 @@ export default function CheckoutPage() {
           })),
           tipoEnvio,
           compradorNombre: form.nombre,
+          compradorEmail: form.email,
           compradorTelefono: form.telefono,
           direccionEnvio,
           sinPromociones,
@@ -135,7 +137,7 @@ export default function CheckoutPage() {
   const esEnvio = tipoEnvio === "envio";
 
   return (
-    <section className="w-[90%] mx-auto pt-28 md:pt-32 pb-20">
+    <section className="w-[90%] mx-auto pt-40 md:pt-32 pb-20">
       {/* Back */}
       <Link
         href="/productos"
@@ -159,10 +161,14 @@ export default function CheckoutPage() {
             <h2 className="font-serif font-extralight text-xl text-[#403C3C]">
               Datos de contacto
             </h2>
+            <Field label="Nombre completo" name="nombre" value={form.nombre} onChange={setField} placeholder="Ana García" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Nombre completo" name="nombre" value={form.nombre} onChange={setField} placeholder="Ana García" />
-              <Field label="Teléfono" name="telefono" value={form.telefono} onChange={setField} type="tel" placeholder="222 123 4567" />
+              <Field label="Correo" name="email" value={form.email} onChange={setField} type="email" placeholder="ana@correo.com" />
+              <Field label="Teléfono / WhatsApp" name="telefono" value={form.telefono} onChange={setField} type="tel" placeholder="222 123 4567" />
             </div>
+            <p className="-mt-1 font-sans text-sm text-[var(--color-muted)]">
+              Ahí te mandamos la confirmación de tu pedido{esEnvio ? " y la guía de envío" : ""}.
+            </p>
           </div>
 
           {/* Dirección de envío */}

@@ -252,6 +252,8 @@ export default function SiteNavbar() {
     !!pathname &&
     (pathname.startsWith("/clases/") ||
       pathname.includes("/checkout") ||
+      // Páginas de resultado de pago (tienda, talleres, clases): fondo claro.
+      pathname.includes("/pago/") ||
       pathname.startsWith("/productos/coleccion/") ||
       pathname === "/privacidad" ||
       pathname === "/terminos" ||

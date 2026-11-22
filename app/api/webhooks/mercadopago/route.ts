@@ -180,7 +180,10 @@ export async function POST(req: NextRequest) {
       p_payment_id: paymentId,
       p_monto: monto,
       p_nombre: nombre || null,
-      p_email: email || null,
+      // El correo lo captura el checkout y es al que se manda la confirmación:
+      // la RPC hace coalesce(p_email, comprador_email), así que mandar el del
+      // pagador lo pisaría. Queda como respaldo en `emailRespaldo` del aviso.
+      p_email: null,
     });
     if (error) {
       logger.error("webhook: fallo confirmando pedido", { externalRef, paymentId }, error);

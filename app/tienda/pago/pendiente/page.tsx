@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function PendientePage() {
   return (
-    <section className="w-[90%] mx-auto pt-32 pb-24 flex flex-col items-center text-center gap-6">
+    <section className="w-[90%] mx-auto pt-48 md:pt-56 pb-24 flex flex-col items-center text-center gap-6">
       <span className="text-5xl">⏳</span>
       <h1 className="font-serif font-extralight text-[clamp(2rem,5vw,3.5rem)] text-[#403C3C]">
         Pago pendiente
