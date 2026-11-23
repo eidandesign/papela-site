@@ -60,7 +60,7 @@ export default function ProductCard({
             type="button"
             aria-label={`Elegir opción de ${nombre}`}
             onClick={(e) => { e.stopPropagation(); open(producto); }}
-            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center"
+            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center cursor-pointer"
           >
             <PlusIcon className="w-4 h-4" />
             {unidades > 0 && (

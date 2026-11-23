@@ -90,7 +90,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
               type="button"
               onClick={handleMinus}
               aria-label={cantidad === 1 ? `Quitar del carrito: ${nombre}` : `Quitar uno: ${nombre}`}
-              className="w-9 h-9 flex items-center justify-center text-[var(--color-cremita)] active:opacity-70 flex-shrink-0"
+              className="w-9 h-9 flex items-center justify-center text-[var(--color-cremita)] active:opacity-70 flex-shrink-0 cursor-pointer"
             >
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
@@ -111,7 +111,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
               type="button"
               onClick={handleOpenCart}
               aria-label={`${cantidad} en el carrito — ver carrito`}
-              className="min-w-[20px] text-center overflow-hidden flex items-center justify-center"
+              className="min-w-[20px] text-center overflow-hidden flex items-center justify-center cursor-pointer"
             >
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
@@ -133,7 +133,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
               onClick={handlePlus}
               aria-label={atLimit ? `Sin más existencias de ${nombre}` : `Agregar uno más: ${nombre}`}
               disabled={atLimit}
-              className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30"
+              className="w-9 h-9 flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
               style={{ color: "var(--color-cremita)" }}
             >
               <PlusIcon className="w-3.5 h-3.5" />
@@ -150,7 +150,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="w-9 h-9 flex items-center justify-center text-[var(--color-cremita)]"
+            className="w-9 h-9 flex items-center justify-center text-[var(--color-cremita)] cursor-pointer"
           >
             <motion.div
               animate={justAdded ? { rotate: 90, scale: 1.2 } : { rotate: 0, scale: 1 }}
