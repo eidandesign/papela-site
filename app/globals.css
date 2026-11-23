@@ -764,3 +764,33 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .club-deriva, .club-flota, .club-moneda-gira { animation: none; }
 }
+
+/* Botón + de las tarjetas de producto (QuickAddButton y "Elegir" de
+   ProductCard): en desktop, al pasar el mouse (o llegar con teclado) el
+   círculo se abre en pastilla "+ Agregar" / "+ Elegir". El + no se mueve: la
+   pastilla crece hacia la izquierda porque el botón va anclado a la derecha.
+   En táctil no hay hover, así que la etiqueta nunca aparece. */
+.boton-mas-texto {
+  display: inline-block;
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+    margin-left 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.2s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .boton-mas:hover .boton-mas-texto,
+  .boton-mas:focus-visible .boton-mas-texto {
+    max-width: 5rem;
+    margin-left: 6px;
+    opacity: 1;
+    transition-delay: 0s, 0s, 0.06s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boton-mas-texto { transition: none; }
+}

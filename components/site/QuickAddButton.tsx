@@ -150,7 +150,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="w-9 h-9 flex items-center justify-center text-[var(--color-cremita)] cursor-pointer"
+            className="boton-mas h-9 px-[10px] flex items-center justify-center text-[var(--color-cremita)] cursor-pointer"
           >
             <motion.div
               animate={justAdded ? { rotate: 90, scale: 1.2 } : { rotate: 0, scale: 1 }}
@@ -158,6 +158,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
             >
               <PlusIcon className="w-4 h-4" />
             </motion.div>
+            <span aria-hidden className="boton-mas-texto font-sans text-[13px] font-semibold">Agregar</span>
           </motion.button>
         )}
       </AnimatePresence>
