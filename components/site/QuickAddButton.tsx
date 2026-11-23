@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlusIcon, MinusIcon } from "@heroicons/react/24/solid";
+import { PlusIcon, MinusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useCartStore, cartKey } from "@/lib/stores/cartStore";
 import { volarAlCarrito } from "@/lib/vuelo-carrito";
 
@@ -85,14 +85,25 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
             transition={{ duration: 0.15 }}
             className="flex items-center"
           >
-            {/* − */}
+            {/* − (con 1 en el carrito es un bote: ese toque lo quita del carrito) */}
             <button
               type="button"
               onClick={handleMinus}
-              aria-label={`Quitar uno: ${nombre}`}
+              aria-label={cantidad === 1 ? `Quitar del carrito: ${nombre}` : `Quitar uno: ${nombre}`}
               className="w-9 h-9 flex items-center justify-center text-[var(--color-cremita)] active:opacity-70 flex-shrink-0"
             >
-              <MinusIcon className="w-3.5 h-3.5" />
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={cantidad === 1 ? "bote" : "menos"}
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.6, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex"
+                >
+                  {cantidad === 1 ? <TrashIcon className="w-3.5 h-3.5" /> : <MinusIcon className="w-3.5 h-3.5" />}
+                </motion.span>
+              </AnimatePresence>
             </button>
 
             {/* Número */}
