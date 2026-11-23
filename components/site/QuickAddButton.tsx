@@ -17,6 +17,9 @@ interface Props {
   variacionNombre?: string | null;
 }
 
+/** − (36) + número (24) + + (36). */
+const ANCHO_ABIERTO = 96;
+
 export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, stock, variacionId = null, variacionNombre = null }: Props) {
   const { items, addItem, updateCantidad, openCart } = useCartStore();
   const [justAdded, setJustAdded] = useState(false);
@@ -63,8 +66,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
   };
 
   return (
-    <motion.div
-      layout
+    <div
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
       className="absolute bottom-3 right-3 z-10 flex items-center overflow-hidden"
       style={{
@@ -72,19 +74,24 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
         borderRadius: 999,
         height: 36,
       }}
-      transition={{ type: "spring", stiffness: 500, damping: 35 }}
     >
-      <AnimatePresence mode="popLayout" initial={false}>
+      {/* mode="wait": primero se cierra una forma y luego abre la otra. Antes
+          el contenedor animaba su tamaño con `layout` (transform de escala) y,
+          al quitar el último, la pastilla se deformaba en óvalo un rato. Ahora
+          el ancho se anima de verdad (36 ⇄ ANCHO_ABIERTO) y nada se estira. */}
+      <AnimatePresence mode="wait" initial={false}>
         {expanded ? (
           // ── Expanded: − [n] + ──────────────────────────
           <motion.div
             key="expanded"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex items-center"
+            initial={{ width: 36, opacity: 0 }}
+            animate={{ width: ANCHO_ABIERTO, opacity: 1 }}
+            exit={{ width: 36, opacity: 0 }}
+            transition={{ width: { duration: 0.26, ease: [0.32, 0.72, 0, 1] }, opacity: { duration: 0.14 } }}
+            // justify-end: crece hacia la izquierda y el + queda donde estaba.
+            className="flex items-center justify-end overflow-hidden"
           >
+            <div className="flex items-center flex-shrink-0">
             {/* − (con 1 en el carrito es un bote: ese toque lo quita del carrito) */}
             <button
               type="button"
@@ -111,7 +118,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
               type="button"
               onClick={handleOpenCart}
               aria-label={`${cantidad} en el carrito — ver carrito`}
-              className="min-w-[20px] text-center overflow-hidden flex items-center justify-center cursor-pointer"
+              className="w-6 h-9 text-center overflow-hidden flex items-center justify-center cursor-pointer"
             >
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
@@ -138,6 +145,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
             >
               <PlusIcon className="w-3.5 h-3.5" />
             </button>
+            </div>
           </motion.div>
         ) : (
           // ── Collapsed: solo + ──────────────────────────
@@ -149,7 +157,7 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.12 }}
             className="boton-mas h-9 px-[10px] flex items-center justify-center text-[var(--color-cremita)] cursor-pointer"
           >
             <motion.div
@@ -162,6 +170,6 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
           </motion.button>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
