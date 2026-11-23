@@ -227,8 +227,10 @@ export default function CartDrawer() {
                     <span>${subtotal().toLocaleString()} MXN</span>
                   </div>
                   <div className="flex justify-between text-[var(--color-muted)]">
-                    <span>Envío</span>
-                    <span>{tipoEnvio === "envio" ? `$${COSTO_ENVIO} MXN` : "Gratis"}</span>
+                    {/* La etiqueta sigue a la opción elegida: con "recoger" decía
+                        "Envío: Gratis" y parecía envío gratis (confusión real, nov-2026). */}
+                    <span>{tipoEnvio === "envio" ? "Envío nacional" : "Recoger en tienda"}</span>
+                    <span>{tipoEnvio === "envio" ? `$${COSTO_ENVIO} MXN` : "Sin costo"}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-[var(--color-text)] text-base mt-1 pt-2 border-t border-[var(--color-border)]">
                     <span>Total</span>
