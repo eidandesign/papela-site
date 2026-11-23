@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowLeftIcon,
   BanknotesIcon,
   BuildingLibraryIcon,
   BuildingStorefrontIcon,
   CalendarDaysIcon,
   CheckIcon,
   ChevronDownIcon,
-  ChevronRightIcon,
   CreditCardIcon,
   LockClosedIcon,
   MapPinIcon,
@@ -21,6 +19,8 @@ import {
 import { useCartStore, COSTO_ENVIO, cartKey, type TipoEnvio } from "@/lib/stores/cartStore";
 import { irACheckout } from "@/lib/analitica";
 import ConsentimientoPrivacidad from "@/components/site/ConsentimientoPrivacidad";
+import MarcoCheckout from "@/components/site/checkout/MarcoCheckout";
+import CartDrawer from "@/components/site/CartDrawer";
 import { NEGOCIO, DIRECCION_LINEA } from "@/lib/negocio";
 
 const ESTADOS_MX = [
@@ -241,8 +241,6 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!mounted || items.length === 0) return null;
-
   const esEnvio = tipoEnvio === "envio";
 
   const opcionEnvio = (tipo: TipoEnvio, activo: boolean, Icon: typeof TruckIcon, titulo: string, precio: string, detalle: string) => (
@@ -274,27 +272,9 @@ export default function CheckoutPage() {
   );
 
   return (
-    <section className="w-[90%] mx-auto pt-40 md:pt-32 pb-20">
-      {/* Back + pasos */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <Link
-          href="/productos"
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-muted)] hover:text-[var(--color-verde)] transition-colors"
-        >
-          <ArrowLeftIcon className="w-3.5 h-3.5" />
-          Seguir comprando
-        </Link>
-        <ol className="flex items-center gap-1.5 font-sans text-xs text-[var(--color-muted)]" aria-label="Pasos de la compra">
-          <li className="flex items-center gap-1 text-[var(--color-verde)]">
-            <CheckIcon className="w-3.5 h-3.5" /> Carrito
-          </li>
-          <ChevronRightIcon aria-hidden="true" className="w-3 h-3" />
-          <li className="font-semibold text-[var(--color-text)]" aria-current="step">Tus datos</li>
-          <ChevronRightIcon aria-hidden="true" className="w-3 h-3" />
-          <li>Pago seguro</li>
-        </ol>
-      </div>
-
+    <MarcoCheckout backHref="/productos" backLabel="Seguir comprando" migas>
+      {mounted && items.length > 0 && (<>
+    <section className="w-[90%] mx-auto pt-10 md:pt-14 pb-16 md:pb-20">
       <h1 className="font-serif font-extralight text-[clamp(2rem,4vw,3rem)] text-[#403C3C] mb-8 md:mb-10">
         Finalizar compra
       </h1>
@@ -458,5 +438,9 @@ export default function CheckoutPage() {
         </aside>
       </div>
     </section>
+    {/* El drawer vivía en el CartButton del navbar; sin navbar, "Editar carrito" lo necesita aquí. */}
+    <CartDrawer />
+      </>)}
+    </MarcoCheckout>
   );
 }

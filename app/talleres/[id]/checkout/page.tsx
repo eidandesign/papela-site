@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { getTalleres } from "@/lib/talleres";
 import TallerCheckoutForm from "@/components/site/TallerCheckoutForm";
 import TalleresGallery from "@/components/site/TalleresGallery";
+import MarcoCheckout from "@/components/site/checkout/MarcoCheckout";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -39,8 +39,8 @@ export default async function TallerCheckoutPage({
   const agotado = taller.estado === "Agotado";
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
-      <div className="w-[90%] mx-auto pt-[150px] md:pt-[200px] pb-4">
+    <MarcoCheckout backHref="/talleres" backLabel="Volver a talleres">
+      <div className="w-[90%] mx-auto pt-10 md:pt-14 pb-4">
         {/* Heading */}
         <div className="mb-10 md:mb-16 text-center">
           <h1 className="font-serif italic text-[clamp(2rem,4vw,3.5rem)] text-[var(--color-text)] leading-tight mb-3">
@@ -54,15 +54,6 @@ export default async function TallerCheckoutPage({
         <div className="flex flex-col md:flex-row gap-8 md:gap-10 max-w-[896px] mx-auto items-start">
           {/* Left — taller info */}
           <div className="flex flex-col gap-6 w-full md:w-[428px] md:flex-shrink-0">
-            {/* Back button */}
-            <Link
-              href="/talleres"
-              className="inline-flex items-center gap-2 text-sm font-sans font-medium text-[var(--color-verde)] hover:opacity-70 transition-opacity"
-            >
-              <ArrowLeftIcon className="w-4 h-4" />
-              Volver a talleres
-            </Link>
-
             {taller.imagen_url && (
               <div className="relative w-full aspect-square md:h-[444px] md:aspect-auto rounded-2xl overflow-hidden">
                 <Image
@@ -136,6 +127,6 @@ export default async function TallerCheckoutPage({
 
       {/* Galería animada de talleres + texto */}
       <TalleresGallery />
-    </div>
+    </MarcoCheckout>
   );
 }
