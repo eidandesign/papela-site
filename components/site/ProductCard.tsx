@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import QuickAddButton from "./QuickAddButton";
+import QuickAddVariaciones from "./QuickAddVariaciones";
 import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
 import type { Producto } from "@/lib/productos";
 
@@ -20,7 +20,8 @@ export default function ProductCard({
   const open = useProductDrawerStore((s) => s.open);
   const { id, slug, nombre, precio, imagen_url, stock } = producto;
   const isCatalog = variant === "catalog";
-  // Con variaciones, el "+" abre el detalle para que el cliente elija una.
+  // Con variaciones, el "+" despliega el mini selector y agrega SIN abrir el
+  // drawer (nov-2026); el detalle completo sigue al tap en la tarjeta.
   const hasVariaciones = (producto.variaciones?.length ?? 0) > 0;
 
   return (
@@ -50,14 +51,7 @@ export default function ProductCard({
           <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
         )}
         {hasVariaciones ? (
-          <button
-            type="button"
-            aria-label="Ver opciones"
-            onClick={(e) => { e.stopPropagation(); open(producto); }}
-            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center"
-          >
-            <PlusIcon className="w-4 h-4" />
-          </button>
+          <QuickAddVariaciones producto={producto} />
         ) : (
           <QuickAddButton
             productoId={id}
