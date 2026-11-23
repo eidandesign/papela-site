@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlusIcon, MinusIcon } from "@heroicons/react/24/solid";
 import { useCartStore, cartKey } from "@/lib/stores/cartStore";
+import { volarAlCarrito } from "@/lib/vuelo-carrito";
 
 interface Props {
   productoId: string;
@@ -11,24 +12,33 @@ interface Props {
   precio: number;
   imagenUrl: string | null;
   stock: number;
+  /** Producto con UNA sola variación: se agrega directo esa variación (nov-2026). */
+  variacionId?: string | null;
+  variacionNombre?: string | null;
 }
 
-export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, stock }: Props) {
+export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, stock, variacionId = null, variacionNombre = null }: Props) {
   const { items, addItem, updateCantidad, openCart } = useCartStore();
   const [justAdded, setJustAdded] = useState(false);
 
-  const cartItem = items.find((i) => cartKey(i) === productoId);
+  const key = variacionId ? `${productoId}::${variacionId}` : productoId;
+  const cartItem = items.find((i) => cartKey(i) === key);
   const cantidad = cartItem?.cantidad ?? 0;
   const expanded = cantidad > 0;
   const atLimit = cantidad >= stock;
 
   if (stock <= 0) return null;
 
+  const agrega = (e: React.MouseEvent) => {
+    addItem({ productoId, nombre, precio, imagenUrl, stock, variacionId, variacionNombre });
+    volarAlCarrito(e.currentTarget as HTMLElement, imagenUrl);
+  };
+
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (atLimit) return;
-    addItem({ productoId, nombre, precio, imagenUrl, stock });
+    agrega(e);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 600);
   };
@@ -36,14 +46,14 @@ export default function QuickAddButton({ productoId, nombre, precio, imagenUrl, 
   const handleMinus = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    updateCantidad(productoId, cantidad - 1);
+    updateCantidad(key, cantidad - 1);
   };
 
   const handlePlus = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (atLimit) return;
-    addItem({ productoId, nombre, precio, imagenUrl, stock });
+    agrega(e);
   };
 
   const handleOpenCart = (e: React.MouseEvent) => {

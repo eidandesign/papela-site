@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { PlusIcon } from "@heroicons/react/24/solid";
 import QuickAddButton from "./QuickAddButton";
-import QuickAddVariaciones from "./QuickAddVariaciones";
+import { useCartStore } from "@/lib/stores/cartStore";
 import { useProductDrawerStore } from "@/lib/stores/productDrawerStore";
 import type { Producto } from "@/lib/productos";
 
@@ -18,11 +19,14 @@ export default function ProductCard({
   variant?: "default" | "catalog";
 }) {
   const open = useProductDrawerStore((s) => s.open);
+  const items = useCartStore((s) => s.items);
   const { id, slug, nombre, precio, imagen_url, stock } = producto;
   const isCatalog = variant === "catalog";
-  // Con variaciones, el "+" despliega el mini selector y agrega SIN abrir el
-  // drawer (nov-2026); el detalle completo sigue al tap en la tarjeta.
-  const hasVariaciones = (producto.variaciones?.length ?? 0) > 0;
+  // Regla del "+" (nov-2026, pedido del dueño): con UNA sola opción (o
+  // ninguna) agrega DIRECTO con el vuelo al carrito; con 2+ opciones abre el
+  // drawer para elegir color/variable.
+  const variaciones = (producto.variaciones ?? []).filter((v) => v.stock > 0);
+  const unidades = items.filter((i) => i.productoId === id).reduce((a, i) => a + i.cantidad, 0);
 
   return (
     <div
@@ -38,6 +42,7 @@ export default function ProductCard({
         className={`w-full ${
           isCatalog ? "aspect-square rounded-[16px]" : "aspect-[3/4] rounded-2xl"
         } bg-[var(--color-cremita-2)] mb-3 overflow-hidden relative`}
+        data-producto-imagen
       >
         {imagen_url ? (
           <Image
@@ -50,8 +55,30 @@ export default function ProductCard({
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[var(--color-cremita)] to-[var(--color-cremita-2)]" />
         )}
-        {hasVariaciones ? (
-          <QuickAddVariaciones producto={producto} />
+        {variaciones.length >= 2 ? (
+          <button
+            type="button"
+            aria-label={`Elegir opción de ${nombre}`}
+            onClick={(e) => { e.stopPropagation(); open(producto); }}
+            className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-[var(--color-verde)] text-[var(--color-cremita)] flex items-center justify-center"
+          >
+            <PlusIcon className="w-4 h-4" />
+            {unidades > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--color-terracota)] text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                {unidades}
+              </span>
+            )}
+          </button>
+        ) : variaciones.length === 1 ? (
+          <QuickAddButton
+            productoId={id}
+            nombre={nombre}
+            precio={variaciones[0].precio}
+            imagenUrl={variaciones[0].imagen_url ?? imagen_url}
+            stock={variaciones[0].stock}
+            variacionId={variaciones[0].id}
+            variacionNombre={variaciones[0].nombre}
+          />
         ) : (
           <QuickAddButton
             productoId={id}
