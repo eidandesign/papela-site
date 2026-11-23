@@ -60,7 +60,9 @@ export default async function ProductosPage() {
                 </div>
                 <Link
                   href={`/productos/coleccion/${sec.slug}`}
-                  className="group inline-flex items-center gap-1.5 flex-shrink-0 font-sans text-[14px] font-medium text-[var(--color-verde)]"
+                  // Outline verde (mismo de "Consultar por WhatsApp" del drawer):
+                  // como texto suelto casi no se veía (nov-2026, dueño).
+                  className="group inline-flex items-center gap-1.5 flex-shrink-0 rounded-full border-[1.5px] border-[var(--color-verde)] px-4 py-2 font-sans text-[14px] font-semibold text-[var(--color-verde)] transition-colors hover:bg-[var(--color-verde)] hover:text-[var(--color-cremita)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-verde)]"
                 >
                   Ver más
                   <ArrowRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1" />
