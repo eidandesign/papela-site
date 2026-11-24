@@ -152,6 +152,15 @@ GET https://admin.papela-atelier.com/api/public/productos?coleccion=favoritos
 
 To add a new carousel: call `getProductosPorColeccion("nueva-coleccion")` and tag products in the admin with that string.
 
+## Feed de catálogo de Meta (`/feed/meta.csv`)
+CSV para la tienda de Instagram/Facebook (Meta lo lee cada hora; Fase 3 lo conecta en el Business Manager). Route `app/feed/meta.csv/route.ts` (ISR 900 s + `Cache-Control s-maxage=900, swr=3600`): solo orquesta fetch → dominio → `text/csv`. Si el API del admin falla o el catálogo queda vacío, la route LANZA (nunca un CSV vacío con 200: Meta lo tomaría como catálogo vacío; con ISR el throw conserva el feed anterior).
+- **Fuente**: `GET admin.papela-atelier.com/api/public/productos` SIN filtrar por stock — a diferencia de `lib/productos-publicos.ts` (que filtra agotados a propósito para el sitio y NO se toca), el feed lleva los agotados como `out of stock` y nunca borra filas (retargeting/etiquetas viejas). `marca` llega `undefined` hasta que se deployee el PR #2 del admin (se trata como null → fallback "Papela Atelier").
+- **Separación modelo/adaptador** (`lib/feed/`): `catalogo.ts` = modelo normalizado agnóstico de canal (`ArticuloCatalogo`: 1 fila por producto simple o por variante, exclusión y reporte de filas sin foto); `meta.ts` = adaptador a filas de Meta (encabezados exactos, precio `"249.00 MXN"`, título ≤150, descripción ≤5000 con fallback, mapa `CATEGORIA_GOOGLE_POR_TAG`, exclusión por tag `sin-meta`); `csv.ts` = RFC 4180 a mano (sin dependencias). Un futuro feed de Google Merchant = OTRO adaptador sobre el mismo `ArticuloCatalogo`, sin tocar `catalogo.ts` ni la route de Meta.
+- **Tag `sin-meta`** (lo captura el dueño en el admin): saca el producto completo del feed sin deploy (productos con personajes con licencia). Jamás se usa como `product_type` ni para `google_product_category`.
+- Las categorías de `CATEGORIA_GOOGLE_POR_TAG` están verificadas letra por letra contra la taxonomía oficial de Google (Meta la usa); un tag nuevo sin entrada deja la celda vacía.
+- Tests: `npm test` → `node --test` sobre `tests/feed/` (por eso los imports dentro de `lib/feed/` llevan extensión `.ts`: el type stripping de Node no resuelve imports sin extensión; `allowImportingTsExtensions` en tsconfig).
+- `feed` está en `SITE_ROOT_SEGMENTS`; ⚠️ falta reservarlo en el admin (`reserved-slugs.ts`).
+
 ## Instagram section (homepage)
 - 3 static images in `public/images/`: `instagram-1.jpg`, `Instagram-2.jpg`, `instagram-clase.jpg` (recorte 4:5 de `clase-papela.jpg`; nov-2026 reemplazó a `Instagram-3.jpg`)
 - Desktop: 3-column grid (`hidden md:grid grid-cols-3 gap-4`)

@@ -33,7 +33,18 @@ ALTER TABLE public.clases_horarios ENABLE ROW LEVEL SECURITY;
 -- No hay INSERT / UPDATE / DELETE para anon → escrituras bloqueadas.
 -- ============================================================
 
--- productos: solo los que tienen stock > 0
+-- ⚠️ DESFASADO (nov-2026) — la policy de `productos` de abajo ya NO es la que
+-- está en producción. Las migraciones 20261115 y 20261123 de papela-admin
+-- (ya aplicadas) la reemplazaron por:
+--
+--   CREATE POLICY "anon: leer productos del catalogo"
+--     ON public.productos FOR SELECT TO anon
+--     USING (deleted_at IS NULL AND categoria = 'Tienda');
+--
+-- Es decir: anon también lee los AGOTADOS (la ficha pública de un producto
+-- agotado responde 200 con "Agotado"), pero nunca los borrados ni los de
+-- otras categorías. Este archivo se conserva solo como documentación
+-- histórica del repo; la fuente de verdad vive en papela-admin/supabase/.
 CREATE POLICY "anon: leer productos en stock"
   ON public.productos
   FOR SELECT

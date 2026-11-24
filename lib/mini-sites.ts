@@ -125,6 +125,7 @@ export const SITE_ROOT_SEGMENTS = new Set([
   "colabora", // página privada para maestros (app/colabora/maestros)
   "cotizacion",
   "creadores", // programa de consignación (app/creadores)
+  "feed", // feeds de catálogo para canales externos (app/feed/meta.csv)
   "links",
   "mini-site-preview",
   "nosotros",
