@@ -1,7 +1,9 @@
-import { construirCatalogo, type ProductoFeedApi } from "@/lib/feed/catalogo";
-import { serializarCsv } from "@/lib/feed/csv";
-import { ENCABEZADOS_META, filasMeta } from "@/lib/feed/meta";
-import { logger } from "@/lib/logger";
+// Imports relativos y con extensión .ts a propósito: tests/feed/route.test.ts
+// importa esta route con `node --test` (que no resuelve el alias @/).
+import { construirCatalogo, type ProductoFeedApi } from "../../../lib/feed/catalogo.ts";
+import { serializarCsv } from "../../../lib/feed/csv.ts";
+import { ENCABEZADOS_META, filasMeta } from "../../../lib/feed/meta.ts";
+import { logger } from "../../../lib/logger.ts";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Feed del catálogo de Meta (Instagram/Facebook Shopping):
@@ -36,14 +38,21 @@ export async function GET(): Promise<Response> {
     : [];
 
   const { articulos, sinFoto } = construirCatalogo(productos);
-  if (articulos.length === 0) {
-    logger.error("Feed Meta: el catálogo quedó vacío", { productos: productos.length });
-    throw new Error("Feed Meta: el catálogo quedó vacío");
-  }
-
   const { filas, excluidosSinMeta } = filasMeta(articulos);
   if (sinFoto.length > 0 || excluidosSinMeta > 0) {
     logger.info("Feed Meta: filas excluidas", { sinFoto, excluidosSinMeta });
+  }
+
+  // Validar DESPUÉS de la exclusión por `sin-meta`: si todos los productos con
+  // foto llegaran etiquetados, un CSV de solo encabezados con 200 sería
+  // exactamente el "catálogo vacío" que esta route promete no servir.
+  if (filas.length === 0) {
+    logger.error("Feed Meta: el catálogo quedó vacío", {
+      productos: productos.length,
+      sinFoto: sinFoto.length,
+      excluidosSinMeta,
+    });
+    throw new Error("Feed Meta: el catálogo quedó vacío");
   }
 
   const csv = serializarCsv([[...ENCABEZADOS_META], ...filas]);

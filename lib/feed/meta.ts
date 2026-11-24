@@ -40,6 +40,8 @@ export const TAG_SIN_META = "sin-meta";
 const MARCA_FALLBACK = "Papela Atelier";
 const TITULO_MAX = 150;
 const DESCRIPCION_MAX = 5000;
+/** Meta acepta hasta 20 imágenes adicionales por fila. */
+const IMAGENES_EXTRA_MAX = 20;
 
 /**
  * Mapa fijo tag → categoría de Google (Meta usa la taxonomía de Google).
@@ -96,7 +98,12 @@ export function filaMeta(a: ArticuloCatalogo): string[] {
     precioMeta(a.precio),
     a.url,
     a.imagen,
-    a.imagenesExtra.join(","),
+    // Dedupe (también contra la principal, por si el modelo no lo hizo) y
+    // tope de Meta.
+    [...new Set(a.imagenesExtra)]
+      .filter((u) => u !== a.imagen)
+      .slice(0, IMAGENES_EXTRA_MAX)
+      .join(","),
     a.marca ?? MARCA_FALLBACK,
     String(a.stock),
     categoriaGoogle(a),

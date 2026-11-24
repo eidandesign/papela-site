@@ -124,6 +124,21 @@ test("título se trunca a 150 y descripción a 5,000", () => {
   assert.equal(o.description.length, 5000);
 });
 
+test("additional_image_link: dedupe (incluida la principal) y tope de 20", () => {
+  const muchas = Array.from({ length: 30 }, (_, i) => `https://cdn.example.com/${i}.jpg`);
+  const o = comoObjeto(
+    articulo({
+      imagen: "https://cdn.example.com/0.jpg",
+      // Repetida + la principal coladas a propósito.
+      imagenesExtra: [...muchas, "https://cdn.example.com/1.jpg"],
+    })
+  );
+  const extras = o.additional_image_link.split(",");
+  assert.equal(extras.length, 20);
+  assert.equal(new Set(extras).size, 20);
+  assert.ok(!extras.includes("https://cdn.example.com/0.jpg"));
+});
+
 test("additional_image_link separa con coma", () => {
   const o = comoObjeto(
     articulo({ imagenesExtra: ["https://cdn.example.com/a.jpg", "https://cdn.example.com/b.jpg"] })
